@@ -1,18 +1,28 @@
 version: "3"
 
 vars:
-  APP_NAME: "datapimp"
-  APP_VERSION: "0.0.1"
-  BUILD_FLAGS: "-s -w -X 'main.buildName={{.APP_NAME}}' -X 'main.buildVer={{.APP_VERSION}}/{{ARCH}}'"
+  APP_NAME: datapimp
+  APP_VERSION: 0.0.1
+  BUILD_FLAGS: -s -w -X 'main.buildName={{.APP_NAME}}' -X 'main.buildVer={{.APP_VERSION}}/{{ARCH}}'
 
 tasks:
   run:
-    desc: "Run the application"
+    desc: Run the application
     cmds:
-      - go run -ldflags "{{.BUILD_FLAGS}}" main.go {{.CLI_ARGS}}
+      - go run -race -ldflags "{{.BUILD_FLAGS}}" main.go {{.CLI_ARGS}}
+
+  migrate:
+    desc: Apply db migrations
+    cmds:
+      - go run -race -ldflags "{{.BUILD_FLAGS}}" main.go --migrate-up {{.CLI_ARGS}}
+
+  demigrate:
+    desc: Revert db migrations
+    cmds:
+      - go run -race -ldflags "{{.BUILD_FLAGS}}" main.go --migrate-down {{.CLI_ARGS}}
 
   build:
-    desc: "Build the application for the current OS and architecture"
+    desc: Build the application for the current OS and architecture
     vars:
       GOOS: "{{.GOOS | default OS}}"
       GOARCH: "{{.GOARCH | default ARCH}}"
@@ -25,43 +35,44 @@ tasks:
       - ls -l build/{{.APP_NAME}}-{{.APP_VERSION}}-{{.GOOS}}-{{.GOARCH}}
 
   build.all:
-    desc: "Build the application for all OS and architectures"
+    desc: Build the application for all OS and architectures
     cmds:
-      - task: "build.darwin.amd64"
-      - task: "build.darwin.arm64"
-      - task: "build.linux.amd64"
+      - task: build.darwin.amd64
+      - task: build.darwin.arm64
+      - task: build.linux.amd64
 
   build.darwin.amd64:
-    desc: "Build the application for MacOS, AMD64 architecture"
+    desc: Build the application for MacOS, AMD64 architecture
     cmds:
-      - task: "build"
+      - task: build
         vars:
-          GOOS: "darwin"
-          GOARCH: "amd64"
+          GOOS: darwin
+          GOARCH: amd64
 
   build.darwin.arm64:
-    desc: "Build the application for MacOS, AMD64 architecture"
+    desc: Build the application for MacOS, AMD64 architecture
     cmds:
-      - task: "build"
+      - task: build
         vars:
-          GOOS: "darwin"
-          GOARCH: "arm64"
+          GOOS: darwin
+          GOARCH: arm64
 
   build.linux.amd64:
-    desc: "Build the application for Linux, AMD64 architecture"
+    desc: Build the application for Linux, AMD64 architecture
     cmds:
-      - task: "build"
+      - task: build
         vars:
-          GOOS: "linux"
-          GOARCH: "amd64"
+          GOOS: linux
+          GOARCH: amd64
 
   gen:
-    desc: "Generate code"
+    desc: Generate code
     cmds:
-      - task: "gen.proto"
+      - task: gen.proto
 
   gen.proto:
-    desc: "Generate protobuf code"
+    desc: Generate protobuf code
     cmds:
+      - rm -rvf ./gen/proto
       - buf lint proto
       - buf generate

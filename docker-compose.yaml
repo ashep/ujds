@@ -9,7 +9,7 @@ services:
     ports:
       - 127.0.0.1:${DB_PORT}:5432
     volumes:
-      - db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/dataservice
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres

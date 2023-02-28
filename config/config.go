@@ -4,17 +4,21 @@ import (
 	"io"
 	"os"
 
+	"github.com/ashep/datapimp/authservice"
 	"github.com/ashep/datapimp/dataservice"
 	"github.com/ashep/datapimp/mq"
 	"github.com/ashep/datapimp/server"
 	"gopkg.in/yaml.v3"
 )
 
+type Database struct {
+	DSN string `yaml:"dsn"`
+}
+
 type Config struct {
-	DB struct {
-		DSN string `yaml:"dsn"`
-	} `yaml:"db"`
+	DB     Database           `yaml:"db"`
 	MQ     mq.Config          `yaml:"mq"`
+	Auth   authservice.Config `yaml:"auth"`
 	Data   dataservice.Config `yaml:"data"`
 	Server server.Config      `yaml:"server"`
 }

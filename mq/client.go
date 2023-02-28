@@ -18,8 +18,7 @@ type Client struct {
 	ch   *amqp.Channel
 	l    zerolog.Logger
 
-	ready bool
-	mux   *sync.RWMutex
+	mux *sync.RWMutex
 }
 
 func NewClient(name string, cfg Config, l zerolog.Logger) (*Client, error) {
@@ -40,28 +39,36 @@ func (c *Client) Run(ctx context.Context) {
 	)
 
 	go func() {
+		n := 0
 		for {
-			if !c.ready {
-				connClose = make(chan *amqp.Error)
-				chanClose = make(chan *amqp.Error)
-
-				c.mux.Lock()
-				c.conn, c.ch, err = c.connect()
-				if err != nil {
-					c.l.Warn().Err(err).Msg("failed to connect, retrying")
-					c.mux.Unlock()
-					time.Sleep(time.Second)
-					continue
-				}
-
-				c.conn.NotifyClose(connClose)
-				c.ch.NotifyClose(chanClose)
-
-				c.ready = true
-				c.mux.Unlock()
-
-				c.l.Debug().Msg("connected")
+			select {
+			case <-ctx.Done():
+				c.l.Debug().Msg("context done")
+				return
+			default:
 			}
+
+			if n < 30 {
+				n++
+			}
+
+			connClose = make(chan *amqp.Error)
+			chanClose = make(chan *amqp.Error)
+
+			c.mux.Lock()
+			c.conn, c.ch, err = c.connect()
+			c.mux.Unlock()
+			if err != nil {
+				c.l.Warn().Err(err).Msgf("failed to connect, retrying in %d seconds", n)
+				time.Sleep(time.Second * time.Duration(n))
+				continue
+			}
+
+			n = 0
+			c.l.Debug().Msg("connected")
+
+			c.conn.NotifyClose(connClose)
+			c.ch.NotifyClose(chanClose)
 
 			select {
 			case <-ctx.Done():
@@ -70,13 +77,13 @@ func (c *Client) Run(ctx context.Context) {
 
 			case err := <-connClose:
 				c.mux.Lock()
-				c.ready = false
+				c.conn = nil
 				c.mux.Unlock()
 				c.l.Warn().Err(err).Msg("connection closed")
 
 			case err := <-chanClose:
 				c.mux.Lock()
-				c.ready = false
+				c.ch = nil
 				c.mux.Unlock()
 				c.l.Warn().Err(err).Msg("channel closed")
 			}
@@ -87,19 +94,21 @@ func (c *Client) Run(ctx context.Context) {
 }
 
 func (c *Client) Channel(ctx context.Context) (*amqp.Channel, error) {
-	ctx, ctxC := context.WithTimeout(ctx, time.Second*5)
-	defer ctxC()
+	for {
+		c.mux.RLock()
+		if c.ch != nil {
+			c.mux.RUnlock()
+			return c.ch, nil
+		}
+		c.mux.RUnlock()
 
-	for !c.ready {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(time.Millisecond * 500)
 		}
 	}
-
-	return c.ch, nil
 }
 
 func (c *Client) Publish(ctx context.Context, exchange, key string, body []byte) error {
@@ -128,6 +137,9 @@ func (c *Client) Publish(ctx context.Context, exchange, key string, body []byte)
 
 func (c *Client) Close() {
 	var err error
+
+	c.mux.RLock()
+	defer c.mux.RUnlock()
 
 	if c.ch != nil && !c.ch.IsClosed() {
 		if err = c.ch.Close(); err != nil {

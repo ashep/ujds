@@ -1,0 +1,35 @@
+syntax = "proto3";
+package datapimp.v1;
+option go_package = "github.com/ashep/datapimp/gen/proto/datapimp/v1";
+
+message CreateEntityRequest {
+  string secret = 1;
+  string permissions = 2;
+  string note = 3;
+}
+
+message CreateEntityResponse {
+  string id = 1;
+}
+
+message LoginRequest {
+  string id = 1;
+  string secret = 2;
+}
+
+message LoginResponse {
+  string token = 1;
+}
+
+message LogoutRequest {
+  string token = 1;
+}
+
+message LogoutResponse {
+}
+
+service AuthService {
+  rpc Login(LoginRequest) returns (LoginResponse);
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  rpc CreateEntity(CreateEntityRequest) returns (CreateEntityResponse);
+}

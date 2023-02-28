@@ -1,2 +1,8 @@
 mq:
   uri: amqp://guest:guest@localhost:5672/datapimp
+
+db:
+  dsn: postgres://postgres:postgres@localhost/datapimp?sslmode=disable
+
+auth:
+  admin_secret: abc12def

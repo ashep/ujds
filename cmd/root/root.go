@@ -1,7 +1,6 @@
 package root
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 
@@ -30,31 +29,21 @@ func New() *cobra.Command {
 				return
 			}
 
-			if cfg.DB.DSN == "" {
-				cfg.DB.DSN = "postgres://postgres:postgres@localhost/datapimp?sslmode=disable"
-			}
-
-			db, err := sql.Open("postgres", cfg.DB.DSN)
-			if err != nil {
-				l.Fatal().Err(err).Msg("failed to connect to db")
-				return
-			}
-
 			if migUp {
-				if err := migration.Up(db); err != nil {
+				if err := migration.Up(cfg.DB); err != nil {
 					l.Fatal().Err(err).Msg("failed to apply migrations")
 				}
 				return
 			}
 
 			if migDown {
-				if err := migration.Down(db); err != nil {
+				if err := migration.Down(cfg.DB); err != nil {
 					l.Fatal().Err(err).Msg("failed to revert migrations")
 				}
 				return
 			}
 
-			if err := app.Run(cmd.Context(), cfg, db, l); errors.Is(err, http.ErrServerClosed) {
+			if err := app.Run(cmd.Context(), cfg, l); errors.Is(err, http.ErrServerClosed) {
 				l.Info().Msg("server stopped")
 			} else if err != nil {
 				l.Error().Err(err).Msg("")
