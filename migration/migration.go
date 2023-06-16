@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ashep/datapimp/config"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -17,12 +16,7 @@ import (
 //go:embed migrations/*.sql
 var fs embed.FS
 
-func setup(cfg config.Database) (*migrate.Migrate, error) {
-	db, err := sql.Open("postgres", cfg.DSN)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open a database: %w", err)
-	}
-
+func setup(db *sql.DB) (*migrate.Migrate, error) {
 	srcDrv, err := iofs.New(fs, "migrations")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load migration scripts: %w", err)
@@ -33,7 +27,7 @@ func setup(cfg config.Database) (*migrate.Migrate, error) {
 		return nil, fmt.Errorf("failed to initialize a migration driver: %w", err)
 	}
 
-	m, err := migrate.NewWithInstance("iofs", srcDrv, "datapimp", dbDrv)
+	m, err := migrate.NewWithInstance("iofs", srcDrv, "ujds", dbDrv)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +35,8 @@ func setup(cfg config.Database) (*migrate.Migrate, error) {
 	return m, nil
 }
 
-func Up(cfg config.Database) error {
-	m, err := setup(cfg)
+func Up(db *sql.DB) error {
+	m, err := setup(db)
 	if err != nil {
 		return err
 	}
@@ -55,8 +49,8 @@ func Up(cfg config.Database) error {
 	return nil
 }
 
-func Down(cfg config.Database) error {
-	m, err := setup(cfg)
+func Down(db *sql.DB) error {
+	m, err := setup(db)
 	if err != nil {
 		return err
 	}

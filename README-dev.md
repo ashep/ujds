@@ -28,7 +28,7 @@ go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@lat
 Create and edit new migration scripts:
 
 ```shell
-migrate create -dir migration/migrations -ext sql datapimp
+migrate create -dir migration/migrations -ext sql description
 ```
 
 Edit the new scripts.

@@ -1,14 +1,18 @@
 package root
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 
-	"github.com/ashep/datapimp/app"
-	"github.com/ashep/datapimp/config"
-	"github.com/ashep/datapimp/logger"
-	"github.com/ashep/datapimp/migration"
 	"github.com/spf13/cobra"
+
+	"github.com/ashep/go-cfgloader"
+	"github.com/ashep/ujds/api"
+	"github.com/ashep/ujds/config"
+	"github.com/ashep/ujds/logger"
+	"github.com/ashep/ujds/migration"
+	"github.com/ashep/ujds/server"
 )
 
 var (
@@ -23,27 +27,45 @@ func New() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			l := logger.New(debugMode)
 
-			cfg, err := config.ParseFromPath(configPath)
-			if err != nil {
+			cfg := config.Config{}
+			if err := cfgloader.Load(configPath, &cfg, config.Schema); err != nil {
 				l.Fatal().Err(err).Msg("failed to load config")
 				return
 			}
 
+			if cfg.DB.DSN == "" {
+				l.Fatal().Msg("empty db dsn")
+				return
+			}
+
+			db, err := sql.Open("postgres", cfg.DB.DSN)
+			if err != nil {
+				l.Fatal().Err(err).Msg("failed to open db")
+				return
+			}
+
+			if err = db.PingContext(cmd.Context()); err != nil {
+				l.Fatal().Err(err).Msg("failed to connect to db")
+			}
+			l.Debug().Msg("db connection ok")
+
 			if migUp {
-				if err := migration.Up(cfg.DB); err != nil {
+				if err := migration.Up(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to apply migrations")
 				}
 				return
 			}
 
 			if migDown {
-				if err := migration.Down(cfg.DB); err != nil {
+				if err := migration.Down(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to revert migrations")
 				}
 				return
 			}
 
-			if err := app.Run(cmd.Context(), cfg, l); errors.Is(err, http.ErrServerClosed) {
+			s := server.New(cfg.Server, api.New(cfg.API, db, l), l.With().Str("pkg", "server").Logger())
+
+			if err := s.Run(cmd.Context()); errors.Is(err, http.ErrServerClosed) {
 				l.Info().Msg("server stopped")
 			} else if err != nil {
 				l.Error().Err(err).Msg("")

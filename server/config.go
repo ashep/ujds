@@ -1,5 +1,5 @@
 package server
 
 type Config struct {
-	Addr string `yaml:"listen"`
+	Address string `json:"address,omitempty" yaml:"address,omitempty"`
 }

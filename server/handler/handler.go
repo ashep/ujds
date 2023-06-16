@@ -1,21 +1,19 @@
 package handler
 
 import (
-	"github.com/ashep/datapimp/authservice"
-	"github.com/ashep/datapimp/dataservice"
 	"github.com/rs/zerolog"
+
+	"github.com/ashep/ujds/api"
 )
 
 type Handler struct {
-	auth *authservice.Service
-	data *dataservice.Service
-	l    zerolog.Logger
+	api *api.API
+	l   zerolog.Logger
 }
 
-func New(auth *authservice.Service, data *dataservice.Service, l zerolog.Logger) *Handler {
+func New(api *api.API, l zerolog.Logger) *Handler {
 	return &Handler{
-		auth: auth,
-		data: data,
-		l:    l,
+		api: api,
+		l:   l,
 	}
 }

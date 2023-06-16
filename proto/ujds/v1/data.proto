@@ -1,0 +1,71 @@
+syntax = "proto3";
+package ujds.v1;
+option go_package = "github.com/ashep/ujds/sdk/proto/ujds/v1";
+
+message CreateSchemaRequest {
+  string name = 1;
+  string schema = 2;
+}
+
+message CreateSchemaResponse {
+  uint32 version = 1;
+}
+
+message GetSchemaRequest {
+  string name = 1;
+  uint32 version = 2;
+}
+
+message GetSchemaResponse {
+  string name = 1;
+  uint32 version = 2;
+  string schema = 3;
+}
+
+message UpdateSchemaRequest {
+  string name = 1;
+  uint32 version = 2;
+  string schema = 3;
+}
+
+message UpdateSchemaResponse {
+  uint32 version = 1;
+}
+
+message SetItemsRequest {
+  message Item {
+    string id = 1;
+    string schema = 2;
+    string data = 3;
+  }
+
+  repeated Item items = 1;
+}
+
+message SetItemsResponse {}
+
+message GetItemsRequest {
+  string schema = 1;
+  uint64 version = 2;
+  uint32 limit = 3;
+  uint64 cursor = 4;
+}
+
+message GetItemsResponse {
+  message Item {
+    string id = 1;
+    uint64 version = 2;
+    string data = 3;
+  }
+
+  uint64 cursor = 1;
+  repeated Item items = 2;
+}
+
+service DataService {
+  rpc CreateSchema(CreateSchemaRequest) returns (CreateSchemaResponse) {}
+  rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
+  rpc UpdateSchema(UpdateSchemaRequest) returns (UpdateSchemaResponse) {}
+  rpc SetItems(SetItemsRequest) returns (SetItemsResponse) {}
+  rpc GetItems(GetItemsRequest) returns (GetItemsResponse) {}
+}

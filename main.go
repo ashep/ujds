@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ashep/datapimp/cmd/root"
+	"github.com/ashep/ujds/cmd/root"
 )
 
 func main() {
@@ -16,10 +16,10 @@ func main() {
 	ctx, ctxC := context.WithCancel(context.Background())
 	defer ctxC()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
-		s := <-sigs
+		s := <-sig
 		fmt.Printf("%s signal received\n", s)
 		ctxC()
 	}()

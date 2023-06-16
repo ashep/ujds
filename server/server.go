@@ -4,54 +4,40 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ashep/datapimp/authservice"
-	"github.com/ashep/datapimp/dataservice"
-	"github.com/ashep/datapimp/gen/proto/datapimp/v1/v1connect"
-	"github.com/ashep/datapimp/server/handler"
-	"github.com/ashep/datapimp/server/interceptor"
-	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
-)
 
-const (
-	exchangeName = "amq.fanout"
-	queueName    = "items"
+	"github.com/ashep/ujds/api"
+	"github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
+	"github.com/ashep/ujds/server/handler"
 )
 
 type Server struct {
-	cfg  Config
-	auth *authservice.Service
-	data *dataservice.Service
-	l    zerolog.Logger
+	cfg Config
+	api *api.API
+	l   zerolog.Logger
 }
 
-func New(cfg Config, auth *authservice.Service, data *dataservice.Service, l zerolog.Logger) *Server {
-	if cfg.Addr == "" {
-		cfg.Addr = "localhost:8080"
+func New(cfg Config, api *api.API, l zerolog.Logger) *Server {
+	if cfg.Address == "" {
+		cfg.Address = "localhost:9000"
 	}
 
 	return &Server{
-		cfg:  cfg,
-		auth: auth,
-		data: data,
-		l:    l,
+		cfg: cfg,
+		api: api,
+		l:   l,
 	}
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	mux := http.NewServeMux()
 
-	hdl := handler.New(s.auth, s.data, s.l)
+	hdl := handler.New(s.api, s.l)
 
-	interceptors := connect.WithInterceptors(interceptor.Auth(s.l))
-
-	p, h := v1connect.NewAuthServiceHandler(hdl, interceptors)
+	p, h := v1connect.NewDataServiceHandler(hdl)
 	mux.Handle(p, h)
 
-	p, h = v1connect.NewDataServiceHandler(hdl, interceptors)
-	mux.Handle(p, h)
-
-	srv := &http.Server{Addr: s.cfg.Addr, Handler: mux}
+	srv := &http.Server{Addr: s.cfg.Address, Handler: mux}
 
 	go func() {
 		<-ctx.Done()
@@ -60,6 +46,6 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
-	s.l.Debug().Str("addr", s.cfg.Addr).Msg("starting server")
+	s.l.Debug().Str("addr", s.cfg.Address).Msg("starting server")
 	return srv.ListenAndServe()
 }
