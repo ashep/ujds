@@ -7,14 +7,14 @@ import (
 	"github.com/ashep/ujds/errs"
 )
 
-type Item struct {
+type Record struct {
 	ID      string
 	Schema  string
 	Version uint64
 	Data    string
 }
 
-func (a *API) InsertItems(ctx context.Context, items []Item) error {
+func (a *API) PushRecords(ctx context.Context, items []Record) error {
 	tx, err := a.db.Begin()
 	if err != nil {
 		return err
@@ -50,13 +50,7 @@ func (a *API) InsertItems(ctx context.Context, items []Item) error {
 	return tx.Commit()
 }
 
-func (a *API) GetRecords(
-	ctx context.Context,
-	schema string,
-	version uint64,
-	cursor uint64,
-	limit uint32,
-) ([]Item, uint64, error) {
+func (a *API) GetRecords(ctx context.Context, schema string, cursor uint64, limit uint32) ([]Record, uint64, error) {
 	if limit == 0 || limit > 500 {
 		limit = 500
 	}
@@ -67,20 +61,20 @@ func (a *API) GetRecords(
 	}
 
 	q := `SELECT id, version, data FROM item WHERE id>$1 AND schema_id=$2 AND version > $3 ORDER BY version LIMIT $4`
-	rows, err := a.db.QueryContext(ctx, q, cursor, sch.ID, version, limit)
+	rows, err := a.db.QueryContext(ctx, q, cursor, sch.ID, limit)
 	if err != nil {
 		return nil, 0, err
 	}
 	defer rows.Close()
 
-	r := make([]Item, 0)
+	r := make([]Record, 0)
 	id, ver, data := "", uint64(0), ""
 	for rows.Next() {
 		if err := rows.Scan(&id, &ver, &data); err != nil {
 			return nil, 0, err
 		}
 
-		r = append(r, Item{
+		r = append(r, Record{
 			ID:      id,
 			Schema:  schema,
 			Version: ver,

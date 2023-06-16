@@ -1,24 +1,26 @@
 CREATE TABLE schema
 (
-    id   int         NOT NULL,
-    name varchar(64) NOT NULL UNIQUE,
-    data jsonb       NOT NULL DEFAULT '{}',
+    id         int         NOT NULL UNIQUE,
+    name       varchar(64) NOT NULL UNIQUE,
+    data       jsonb       NOT NULL DEFAULT '{}',
+    created_at timestamp   NOT NULL DEFAULT now(),
+    updated_at timestamp   NOT NULL DEFAULT now(),
 
-    PRIMARY KEY (name)
+    PRIMARY KEY (id)
 );
 
-CREATE SEQUENCE schema_id OWNED BY record.id;
+CREATE SEQUENCE schema_id OWNED BY schema.id;
 
 CREATE TABLE record_log
 (
-    id         varchar(64) NOT NULL,
+    id         bigint      NOT NULL UNIQUE,
     schema_id  int         NOT NULL,
-    version    bigint      NOT NULL UNIQUE,
+    record_id  varchar(64) NOT NULL,
     checksum   char(64)    NOT NULL UNIQUE,
     data       jsonb       NOT NULL DEFAULT '{}',
     created_at timestamp   NOT NULL DEFAULT now(),
 
-    PRIMARY KEY (version),
+    PRIMARY KEY (id),
     FOREIGN KEY (schema_id) REFERENCES schema (id)
 );
 
@@ -34,6 +36,6 @@ CREATE TABLE record
 
     PRIMARY KEY (id),
     FOREIGN KEY (schema_id) REFERENCES schema (id),
-    FOREIGN KEY (version) REFERENCES record_log (version)
+    FOREIGN KEY (version) REFERENCES record_log (id)
 );
 

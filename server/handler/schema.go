@@ -9,16 +9,15 @@ import (
 	"github.com/ashep/ujds/sdk/proto/ujds/v1"
 )
 
-func (h *Handler) CreateSchema(
+func (h *Handler) PushSchema(
 	ctx context.Context,
-	req *connect.Request[v1.CreateSchemaRequest],
-) (*connect.Response[v1.CreateSchemaResponse], error) {
-	ver, err := h.api.CreateSchema(ctx, req.Msg.Name, req.Msg.Schema)
-	if err != nil {
-		return nil, grpcErr(err, "api.CreateSchema failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+	req *connect.Request[v1.PushSchemaRequest],
+) (*connect.Response[v1.PushSchemaResponse], error) {
+	if err := h.api.PushSchema(ctx, req.Msg.Name, req.Msg.Data); err != nil {
+		return nil, grpcErr(err, "api.PushSchema failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
 	}
 
-	return connect.NewResponse(&v1.CreateSchemaResponse{Version: ver}), nil
+	return connect.NewResponse(&v1.PushSchemaResponse{}), nil
 }
 
 func (h *Handler) GetSchema(
@@ -35,17 +34,9 @@ func (h *Handler) GetSchema(
 	}
 
 	return connect.NewResponse(
-		&v1.GetSchemaResponse{Name: sch.Name, Schema: string(sch.Schema)}), nil
-}
-
-func (h *Handler) UpdateSchema(
-	ctx context.Context,
-	req *connect.Request[v1.UpdateSchemaRequest],
-) (*connect.Response[v1.UpdateSchemaResponse], error) {
-	ver, err := h.api.UpdateSchema(ctx, req.Msg.Name, req.Msg.Schema, req.Msg.Version)
-	if err != nil {
-		return nil, grpcErr(err, "api.UpdateSchema failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
-	}
-
-	return connect.NewResponse(&v1.UpdateSchemaResponse{Version: ver}), nil
+		&v1.GetSchemaResponse{
+			Name:      sch.Name,
+			Data:      string(sch.Data),
+			CreatedAt: uint64(sch.CreatedAt.Unix()),
+		}), nil
 }

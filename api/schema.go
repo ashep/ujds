@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/xeipuuv/gojsonschema"
 
@@ -13,21 +14,23 @@ import (
 )
 
 type Schema struct {
-	ID     int
-	Name   string
-	Schema []byte
+	ID        int
+	Name      string
+	Data      []byte
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func (a *API) CreateSchema(ctx context.Context, name, schema string) (uint32, error) {
+func (a *API) PushSchema(ctx context.Context, name, schema string) error {
 	if name == "" {
-		return 0, errs.ErrEmptyArg{Subj: "name"}
+		return errs.ErrEmptyArg{Subj: "name"}
 	}
 	if schema == "" {
-		return 0, errs.ErrEmptyArg{Subj: "schema"}
+		return errs.ErrEmptyArg{Subj: "schema"}
 	}
 
 	if err := json.Unmarshal([]byte(schema), &struct{}{}); err != nil {
-		return 0, errs.ErrInvalidArg{Subj: "json data", E: err}
+		return errs.ErrInvalidArg{Subj: "json data", E: err}
 	}
 
 	q := `INSERT INTO schema (name, version, data) 
@@ -37,12 +40,12 @@ VALUES ($1, nextval('item_schema_version_seq'), $2) RETURNING version`
 	v := uint32(0)
 	if err := row.Scan(&v); err != nil {
 		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-			return 0, errs.ErrAlreadyExists{Subj: "schema"}
+			return errs.ErrAlreadyExists{Subj: "schema"}
 		}
-		return 0, err
+		return err
 	}
 
-	return v, nil
+	return nil
 }
 
 func (a *API) GetSchema(ctx context.Context, name string) (Schema, error) {
@@ -59,7 +62,7 @@ func (a *API) GetSchema(ctx context.Context, name string) (Schema, error) {
 		return Schema{}, nil
 	}
 
-	return Schema{ID: id, Name: name, Schema: schema}, nil
+	return Schema{ID: id, Name: name, Data: schema}, nil
 }
 
 func (a *API) UpdateSchema(ctx context.Context, name, data string, ver uint32) (uint32, error) {
@@ -106,7 +109,7 @@ WHERE name=$2 AND version=$3 RETURNING version`
 }
 
 func (s Schema) Validate(data []byte) error {
-	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Schema), gojsonschema.NewBytesLoader(data))
+	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Data), gojsonschema.NewBytesLoader(data))
 	if err != nil {
 		return err
 	}

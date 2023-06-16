@@ -27,11 +27,10 @@ const (
 
 // DataServiceClient is a client for the ujds.v1.DataService service.
 type DataServiceClient interface {
-	CreateSchema(context.Context, *connect_go.Request[v1.CreateSchemaRequest]) (*connect_go.Response[v1.CreateSchemaResponse], error)
+	PushSchema(context.Context, *connect_go.Request[v1.PushSchemaRequest]) (*connect_go.Response[v1.PushSchemaResponse], error)
 	GetSchema(context.Context, *connect_go.Request[v1.GetSchemaRequest]) (*connect_go.Response[v1.GetSchemaResponse], error)
-	UpdateSchema(context.Context, *connect_go.Request[v1.UpdateSchemaRequest]) (*connect_go.Response[v1.UpdateSchemaResponse], error)
-	SetItems(context.Context, *connect_go.Request[v1.SetItemsRequest]) (*connect_go.Response[v1.SetItemsResponse], error)
-	GetItems(context.Context, *connect_go.Request[v1.GetItemsRequest]) (*connect_go.Response[v1.GetItemsResponse], error)
+	PushRecords(context.Context, *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error)
+	GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error)
 }
 
 // NewDataServiceClient constructs a client for the ujds.v1.DataService service. By default, it uses
@@ -44,9 +43,9 @@ type DataServiceClient interface {
 func NewDataServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts ...connect_go.ClientOption) DataServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &dataServiceClient{
-		createSchema: connect_go.NewClient[v1.CreateSchemaRequest, v1.CreateSchemaResponse](
+		pushSchema: connect_go.NewClient[v1.PushSchemaRequest, v1.PushSchemaResponse](
 			httpClient,
-			baseURL+"/ujds.v1.DataService/CreateSchema",
+			baseURL+"/ujds.v1.DataService/PushSchema",
 			opts...,
 		),
 		getSchema: connect_go.NewClient[v1.GetSchemaRequest, v1.GetSchemaResponse](
@@ -54,19 +53,14 @@ func NewDataServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 			baseURL+"/ujds.v1.DataService/GetSchema",
 			opts...,
 		),
-		updateSchema: connect_go.NewClient[v1.UpdateSchemaRequest, v1.UpdateSchemaResponse](
+		pushRecords: connect_go.NewClient[v1.PushRecordsRequest, v1.PushRecordsResponse](
 			httpClient,
-			baseURL+"/ujds.v1.DataService/UpdateSchema",
+			baseURL+"/ujds.v1.DataService/PushRecords",
 			opts...,
 		),
-		setItems: connect_go.NewClient[v1.SetItemsRequest, v1.SetItemsResponse](
+		getRecords: connect_go.NewClient[v1.GetRecordsRequest, v1.GetRecordsResponse](
 			httpClient,
-			baseURL+"/ujds.v1.DataService/SetItems",
-			opts...,
-		),
-		getItems: connect_go.NewClient[v1.GetItemsRequest, v1.GetItemsResponse](
-			httpClient,
-			baseURL+"/ujds.v1.DataService/GetItems",
+			baseURL+"/ujds.v1.DataService/GetRecords",
 			opts...,
 		),
 	}
@@ -74,16 +68,15 @@ func NewDataServiceClient(httpClient connect_go.HTTPClient, baseURL string, opts
 
 // dataServiceClient implements DataServiceClient.
 type dataServiceClient struct {
-	createSchema *connect_go.Client[v1.CreateSchemaRequest, v1.CreateSchemaResponse]
-	getSchema    *connect_go.Client[v1.GetSchemaRequest, v1.GetSchemaResponse]
-	updateSchema *connect_go.Client[v1.UpdateSchemaRequest, v1.UpdateSchemaResponse]
-	setItems     *connect_go.Client[v1.SetItemsRequest, v1.SetItemsResponse]
-	getItems     *connect_go.Client[v1.GetItemsRequest, v1.GetItemsResponse]
+	pushSchema  *connect_go.Client[v1.PushSchemaRequest, v1.PushSchemaResponse]
+	getSchema   *connect_go.Client[v1.GetSchemaRequest, v1.GetSchemaResponse]
+	pushRecords *connect_go.Client[v1.PushRecordsRequest, v1.PushRecordsResponse]
+	getRecords  *connect_go.Client[v1.GetRecordsRequest, v1.GetRecordsResponse]
 }
 
-// CreateSchema calls ujds.v1.DataService.CreateSchema.
-func (c *dataServiceClient) CreateSchema(ctx context.Context, req *connect_go.Request[v1.CreateSchemaRequest]) (*connect_go.Response[v1.CreateSchemaResponse], error) {
-	return c.createSchema.CallUnary(ctx, req)
+// PushSchema calls ujds.v1.DataService.PushSchema.
+func (c *dataServiceClient) PushSchema(ctx context.Context, req *connect_go.Request[v1.PushSchemaRequest]) (*connect_go.Response[v1.PushSchemaResponse], error) {
+	return c.pushSchema.CallUnary(ctx, req)
 }
 
 // GetSchema calls ujds.v1.DataService.GetSchema.
@@ -91,28 +84,22 @@ func (c *dataServiceClient) GetSchema(ctx context.Context, req *connect_go.Reque
 	return c.getSchema.CallUnary(ctx, req)
 }
 
-// UpdateSchema calls ujds.v1.DataService.UpdateSchema.
-func (c *dataServiceClient) UpdateSchema(ctx context.Context, req *connect_go.Request[v1.UpdateSchemaRequest]) (*connect_go.Response[v1.UpdateSchemaResponse], error) {
-	return c.updateSchema.CallUnary(ctx, req)
+// PushRecords calls ujds.v1.DataService.PushRecords.
+func (c *dataServiceClient) PushRecords(ctx context.Context, req *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error) {
+	return c.pushRecords.CallUnary(ctx, req)
 }
 
-// SetItems calls ujds.v1.DataService.SetItems.
-func (c *dataServiceClient) SetItems(ctx context.Context, req *connect_go.Request[v1.SetItemsRequest]) (*connect_go.Response[v1.SetItemsResponse], error) {
-	return c.setItems.CallUnary(ctx, req)
-}
-
-// GetItems calls ujds.v1.DataService.GetItems.
-func (c *dataServiceClient) GetItems(ctx context.Context, req *connect_go.Request[v1.GetItemsRequest]) (*connect_go.Response[v1.GetItemsResponse], error) {
-	return c.getItems.CallUnary(ctx, req)
+// GetRecords calls ujds.v1.DataService.GetRecords.
+func (c *dataServiceClient) GetRecords(ctx context.Context, req *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error) {
+	return c.getRecords.CallUnary(ctx, req)
 }
 
 // DataServiceHandler is an implementation of the ujds.v1.DataService service.
 type DataServiceHandler interface {
-	CreateSchema(context.Context, *connect_go.Request[v1.CreateSchemaRequest]) (*connect_go.Response[v1.CreateSchemaResponse], error)
+	PushSchema(context.Context, *connect_go.Request[v1.PushSchemaRequest]) (*connect_go.Response[v1.PushSchemaResponse], error)
 	GetSchema(context.Context, *connect_go.Request[v1.GetSchemaRequest]) (*connect_go.Response[v1.GetSchemaResponse], error)
-	UpdateSchema(context.Context, *connect_go.Request[v1.UpdateSchemaRequest]) (*connect_go.Response[v1.UpdateSchemaResponse], error)
-	SetItems(context.Context, *connect_go.Request[v1.SetItemsRequest]) (*connect_go.Response[v1.SetItemsResponse], error)
-	GetItems(context.Context, *connect_go.Request[v1.GetItemsRequest]) (*connect_go.Response[v1.GetItemsResponse], error)
+	PushRecords(context.Context, *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error)
+	GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error)
 }
 
 // NewDataServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -122,9 +109,9 @@ type DataServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewDataServiceHandler(svc DataServiceHandler, opts ...connect_go.HandlerOption) (string, http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/ujds.v1.DataService/CreateSchema", connect_go.NewUnaryHandler(
-		"/ujds.v1.DataService/CreateSchema",
-		svc.CreateSchema,
+	mux.Handle("/ujds.v1.DataService/PushSchema", connect_go.NewUnaryHandler(
+		"/ujds.v1.DataService/PushSchema",
+		svc.PushSchema,
 		opts...,
 	))
 	mux.Handle("/ujds.v1.DataService/GetSchema", connect_go.NewUnaryHandler(
@@ -132,19 +119,14 @@ func NewDataServiceHandler(svc DataServiceHandler, opts ...connect_go.HandlerOpt
 		svc.GetSchema,
 		opts...,
 	))
-	mux.Handle("/ujds.v1.DataService/UpdateSchema", connect_go.NewUnaryHandler(
-		"/ujds.v1.DataService/UpdateSchema",
-		svc.UpdateSchema,
+	mux.Handle("/ujds.v1.DataService/PushRecords", connect_go.NewUnaryHandler(
+		"/ujds.v1.DataService/PushRecords",
+		svc.PushRecords,
 		opts...,
 	))
-	mux.Handle("/ujds.v1.DataService/SetItems", connect_go.NewUnaryHandler(
-		"/ujds.v1.DataService/SetItems",
-		svc.SetItems,
-		opts...,
-	))
-	mux.Handle("/ujds.v1.DataService/GetItems", connect_go.NewUnaryHandler(
-		"/ujds.v1.DataService/GetItems",
-		svc.GetItems,
+	mux.Handle("/ujds.v1.DataService/GetRecords", connect_go.NewUnaryHandler(
+		"/ujds.v1.DataService/GetRecords",
+		svc.GetRecords,
 		opts...,
 	))
 	return "/ujds.v1.DataService/", mux
@@ -153,22 +135,18 @@ func NewDataServiceHandler(svc DataServiceHandler, opts ...connect_go.HandlerOpt
 // UnimplementedDataServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedDataServiceHandler struct{}
 
-func (UnimplementedDataServiceHandler) CreateSchema(context.Context, *connect_go.Request[v1.CreateSchemaRequest]) (*connect_go.Response[v1.CreateSchemaResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.CreateSchema is not implemented"))
+func (UnimplementedDataServiceHandler) PushSchema(context.Context, *connect_go.Request[v1.PushSchemaRequest]) (*connect_go.Response[v1.PushSchemaResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.PushSchema is not implemented"))
 }
 
 func (UnimplementedDataServiceHandler) GetSchema(context.Context, *connect_go.Request[v1.GetSchemaRequest]) (*connect_go.Response[v1.GetSchemaResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.GetSchema is not implemented"))
 }
 
-func (UnimplementedDataServiceHandler) UpdateSchema(context.Context, *connect_go.Request[v1.UpdateSchemaRequest]) (*connect_go.Response[v1.UpdateSchemaResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.UpdateSchema is not implemented"))
+func (UnimplementedDataServiceHandler) PushRecords(context.Context, *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.PushRecords is not implemented"))
 }
 
-func (UnimplementedDataServiceHandler) SetItems(context.Context, *connect_go.Request[v1.SetItemsRequest]) (*connect_go.Response[v1.SetItemsResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.SetItems is not implemented"))
-}
-
-func (UnimplementedDataServiceHandler) GetItems(context.Context, *connect_go.Request[v1.GetItemsRequest]) (*connect_go.Response[v1.GetItemsResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.GetItems is not implemented"))
+func (UnimplementedDataServiceHandler) GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.DataService.GetRecords is not implemented"))
 }

@@ -2,70 +2,59 @@ syntax = "proto3";
 package ujds.v1;
 option go_package = "github.com/ashep/ujds/sdk/proto/ujds/v1";
 
-message CreateSchemaRequest {
+message PushSchemaRequest {
   string name = 1;
-  string schema = 2;
+  string data = 2;
 }
 
-message CreateSchemaResponse {
-  uint32 version = 1;
+message PushSchemaResponse {
 }
 
 message GetSchemaRequest {
   string name = 1;
-  uint32 version = 2;
 }
 
 message GetSchemaResponse {
   string name = 1;
-  uint32 version = 2;
-  string schema = 3;
+  uint64 created_at = 2;
+  uint64 updated_at = 3;
+  string data = 4;
 }
 
-message UpdateSchemaRequest {
-  string name = 1;
-  uint32 version = 2;
-  string schema = 3;
-}
-
-message UpdateSchemaResponse {
-  uint32 version = 1;
-}
-
-message SetItemsRequest {
-  message Item {
+message PushRecordsRequest {
+  message Record {
     string id = 1;
     string schema = 2;
     string data = 3;
   }
 
-  repeated Item items = 1;
+  repeated Record records = 1;
 }
 
-message SetItemsResponse {}
+message PushRecordsResponse {}
 
-message GetItemsRequest {
+message GetRecordsRequest {
   string schema = 1;
-  uint64 version = 2;
-  uint32 limit = 3;
-  uint64 cursor = 4;
+  uint32 limit = 2;
+  uint64 cursor = 3;
 }
 
-message GetItemsResponse {
-  message Item {
+message GetRecordsResponse {
+  message Record {
     string id = 1;
     uint64 version = 2;
-    string data = 3;
+    uint64 created_at = 3;
+    uint64 updated_at = 4;
+    string data = 5;
   }
 
   uint64 cursor = 1;
-  repeated Item items = 2;
+  repeated Record records = 2;
 }
 
 service DataService {
-  rpc CreateSchema(CreateSchemaRequest) returns (CreateSchemaResponse) {}
+  rpc PushSchema(PushSchemaRequest) returns (PushSchemaResponse) {}
   rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
-  rpc UpdateSchema(UpdateSchemaRequest) returns (UpdateSchemaResponse) {}
-  rpc SetItems(SetItemsRequest) returns (SetItemsResponse) {}
-  rpc GetItems(GetItemsRequest) returns (GetItemsResponse) {}
+  rpc PushRecords(PushRecordsRequest) returns (PushRecordsResponse) {}
+  rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {}
 }
