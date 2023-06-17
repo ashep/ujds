@@ -3,11 +3,11 @@ package handler
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 
 	"github.com/ashep/ujds/api"
-	"github.com/ashep/ujds/errs"
 	"github.com/ashep/ujds/sdk/proto/ujds/v1"
 )
 
@@ -16,20 +16,20 @@ func (h *Handler) PushRecords(
 	req *connect.Request[v1.PushRecordsRequest],
 ) (*connect.Response[v1.PushRecordsResponse], error) {
 	if len(req.Msg.Records) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no records provided"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty records"))
 	}
 
 	apiRecords := make([]api.Record, 0)
 	for _, rec := range req.Msg.Records {
 		apiRecords = append(apiRecords, api.Record{
-			ID:     rec.Id,
+			Id:     rec.Id,
 			Schema: rec.Schema,
 			Data:   rec.Data,
 		})
 	}
 
-	if err := h.api.PushRecords(ctx, apiRecords); errors.Is(err, errs.ErrEmptyArg{}) {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	if err := h.api.PushRecords(ctx, apiRecords); err != nil {
+		return nil, grpcErr(err, "api.PushRecords failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
 	}
 
 	return connect.NewResponse(&v1.PushRecordsResponse{}), nil
@@ -43,23 +43,24 @@ func (h *Handler) GetRecords(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty schema"))
 	}
 
-	records, cur, err := h.api.GetRecords(ctx, req.Msg.Schema, req.Msg.Cursor, req.Msg.Limit)
-	if errors.Is(err, errs.ErrNotFound{}) {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("not found"))
-	} else if err != nil {
-		h.l.Error().
-			Err(err).
-			Str("schema", req.Msg.Schema).
-			Msg("get records")
-		return nil, connect.NewError(connect.CodeInternal, nil)
+	since := time.Unix(req.Msg.Since, 0)
+	records, cur, err := h.api.GetRecords(ctx, req.Msg.Schema, since, req.Msg.Cursor, req.Msg.Limit)
+	if err != nil {
+		return nil, grpcErr(err, "api.GetRecords failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+	}
+
+	if len(records) == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("no records found"))
 	}
 
 	itemsR := make([]*v1.GetRecordsResponse_Record, len(records))
-	for i, item := range records {
+	for i, rec := range records {
 		itemsR[i] = &v1.GetRecordsResponse_Record{
-			Id:      item.ID,
-			Version: item.Version,
-			Data:    item.Data,
+			Id:        rec.Id,
+			Schema:    rec.Schema,
+			Data:      rec.Data,
+			CreatedAt: rec.CreatedAt.Unix(),
+			UpdatedAt: rec.UpdatedAt.Unix(),
 		}
 	}
 

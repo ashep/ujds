@@ -29,6 +29,6 @@ tasks:
   gen.proto:
     desc: Generate protobuf code
     cmds:
-      - rm -rvf ./gen/proto
+      - rm -rvf ./sdk/proto
       - buf lint proto
       - buf generate

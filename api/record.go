@@ -2,46 +2,115 @@ package api
 
 import (
 	"context"
+	"crypto/sha256"
+	"database/sql"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/ashep/ujds/errs"
 )
 
 type Record struct {
-	ID      string
-	Schema  string
-	Version uint64
-	Data    string
+	Id        string
+	Schema    string
+	Version   uint64
+	Data      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
-func (a *API) PushRecords(ctx context.Context, items []Record) error {
+func (a *API) PushRecords(ctx context.Context, records []Record) error {
+	var err error
+
+	schemas := make(map[string]*Schema)
+
 	tx, err := a.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	q := `INSERT INTO item (id, schema_id, data, version) VALUES ($1, $2, $3, $3)`
-	for i, item := range items {
-		if item.ID == "" {
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("item id (%d)", i)}
+	qGetRecord, err := tx.PrepareContext(ctx, `SELECT log_id FROM record WHERE checksum=$1`)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (schema_id, record_id, data) 
+		VALUES ($1, $2, $3) RETURNING id`)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, schema_id, log_id, checksum) 
+VALUES ($1, $2, $3, $4) ON CONFLICT (id, schema_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	for i, rec := range records {
+		if rec.Id == "" {
+			_ = tx.Rollback()
+			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: id", i)}
 		}
-		if item.Schema == "" {
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("item schmea (%d)", i)}
+		if rec.Schema == "" {
+			_ = tx.Rollback()
+			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: schema", i)}
 		}
-		if item.Data == "" {
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("item data (%d)", i)}
+		if rec.Data == "" {
+			_ = tx.Rollback()
+			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: data", i)}
 		}
 
-		sch, err := a.GetSchema(ctx, item.Schema)
-		if err != nil {
+		// Get schema
+		var sch *Schema
+		var ok bool
+		if sch, ok = schemas[rec.Schema]; !ok {
+			sch, err = a.GetSchema(ctx, rec.Schema)
+			if err != nil && errors.Is(err, errs.ErrNotFound{}) {
+				_ = tx.Rollback()
+				return errs.ErrNotFound{Subj: fmt.Sprintf("record %d: schema", i)}
+			} else if err != nil {
+				_ = tx.Rollback()
+				return err
+			}
+		}
+
+		// Validate data against schema
+		recDataB := []byte(rec.Data)
+		if err = sch.Validate(recDataB); err != nil {
+			_ = tx.Rollback()
+			return errs.ErrInvalidArg{Subj: fmt.Sprintf("record data (%d)", i), E: err}
+		}
+
+		// Check if we already have such data recorded as latest version
+		logId := uint64(0)
+		sumSrc := append(recDataB, []byte(rec.Schema)...)
+		sumSrc = append(sumSrc, []byte(rec.Id)...)
+		sum := sha256.Sum256(sumSrc)
+		row := qGetRecord.QueryRowContext(ctx, sum[:])
+		if err = row.Scan(&logId); errors.Is(err, sql.ErrNoRows) {
+			// Ok, continue to insert
+		} else if err != nil {
+			_ = tx.Rollback()
+			return err
+		} else {
+			// A record with the same data found, skip it
+			continue
+		}
+
+		row = qInsertLog.QueryRowContext(ctx, sch.Id, rec.Id, rec.Data)
+		if err = row.Scan(&logId); err != nil && errors.Is(err, sql.ErrNoRows) {
+			_ = tx.Rollback()
+			return nil
+		} else if err != nil {
+			_ = tx.Rollback()
 			return err
 		}
 
-		// TODO: validate data
-		data := item.Data
-
-		_, err = tx.ExecContext(ctx, q, item.ID, sch.ID, data)
-		if err != nil {
+		if _, err = qInsertRecord.ExecContext(ctx, rec.Id, sch.Id, logId, sum[:]); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -50,37 +119,50 @@ func (a *API) PushRecords(ctx context.Context, items []Record) error {
 	return tx.Commit()
 }
 
-func (a *API) GetRecords(ctx context.Context, schema string, cursor uint64, limit uint32) ([]Record, uint64, error) {
+func (a *API) GetRecords(
+	ctx context.Context,
+	schema string,
+	since time.Time,
+	cursor uint64,
+	limit uint32,
+) ([]Record, uint64, error) {
 	if limit == 0 || limit > 500 {
 		limit = 500
 	}
 
-	sch, err := a.GetSchema(ctx, schema)
+	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
+		LEFT JOIN record_log l ON r.log_id = l.id 
+		LEFT JOIN schema s ON r.schema_id = s.id 
+		WHERE s.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
+	rows, err := a.db.QueryContext(ctx, q, schema, since, cursor, limit)
 	if err != nil {
 		return nil, 0, err
 	}
-
-	q := `SELECT id, version, data FROM item WHERE id>$1 AND schema_id=$2 AND version > $3 ORDER BY version LIMIT $4`
-	rows, err := a.db.QueryContext(ctx, q, cursor, sch.ID, limit)
-	if err != nil {
-		return nil, 0, err
-	}
-	defer rows.Close()
+	defer func() {
+		_ = rows.Close()
+	}()
 
 	r := make([]Record, 0)
-	id, ver, data := "", uint64(0), ""
+	recId, logId, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
 	for rows.Next() {
-		if err := rows.Scan(&id, &ver, &data); err != nil {
+		if err := rows.Scan(&recId, &logId, &data, &crAt, &upAt); err != nil {
 			return nil, 0, err
 		}
 
 		r = append(r, Record{
-			ID:      id,
-			Schema:  schema,
-			Version: ver,
-			Data:    data,
+			Id:        recId,
+			Schema:    schema,
+			Version:   logId,
+			Data:      data,
+			CreatedAt: crAt,
+			UpdatedAt: upAt,
 		})
 	}
 
-	return r, ver + 1, nil
+	nextCursor := uint64(0)
+	if len(r) > 0 {
+		nextCursor = logId + 1
+	}
+
+	return r, nextCursor, nil
 }

@@ -6,11 +6,14 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/ashep/ujds/cmd/root"
 )
 
 func main() {
+	time.Local = time.UTC
+
 	cmd := root.New()
 
 	ctx, ctxC := context.WithCancel(context.Background())

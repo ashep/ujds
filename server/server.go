@@ -33,9 +33,8 @@ func (s *Server) Run(ctx context.Context) error {
 	mux := http.NewServeMux()
 
 	hdl := handler.New(s.api, s.l)
-
-	p, h := v1connect.NewDataServiceHandler(hdl)
-	mux.Handle(p, h)
+	mux.Handle(v1connect.NewSchemaServiceHandler(hdl))
+	mux.Handle(v1connect.NewRecordServiceHandler(hdl))
 
 	srv := &http.Server{Addr: s.cfg.Address, Handler: mux}
 
