@@ -1,25 +1,20 @@
 version: "3"
 
-vars:
-  APP_NAME: ujds
-  APP_VERSION: 0.0.1
-  BUILD_FLAGS: -s -w -X 'main.buildName={{.APP_NAME}}' -X 'main.buildVer={{.APP_VERSION}}/{{ARCH}}'
-
 tasks:
   run:
     desc: Run the application
     cmds:
-      - go run -race -ldflags "{{.BUILD_FLAGS}}" main.go {{.CLI_ARGS}}
+      - go run -race main.go {{.CLI_ARGS}}
 
   migrate:
     desc: Apply db migrations
     cmds:
-      - go run -ldflags "{{.BUILD_FLAGS}}" main.go --migrate-up {{.CLI_ARGS}}
+      - go run main.go --migrate-up {{.CLI_ARGS}}
 
   demigrate:
     desc: Revert db migrations
     cmds:
-      - go run -ldflags "{{.BUILD_FLAGS}}" main.go --migrate-down {{.CLI_ARGS}}
+      - go run main.go --migrate-down {{.CLI_ARGS}}
 
   gen:
     desc: Generate code

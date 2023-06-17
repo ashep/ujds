@@ -13,8 +13,10 @@ func (h *Handler) PushSchema(
 	req *connect.Request[v1.PushSchemaRequest],
 ) (*connect.Response[v1.PushSchemaResponse], error) {
 	if err := h.api.UpsertSchema(ctx, req.Msg.Name, req.Msg.Data); err != nil {
-		return nil, grpcErr(err, "api.PushSchema failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+		return nil, grpcErr(err, req.Spec().Procedure, "api.PushSchema failed", h.l)
 	}
+
+	h.l.Info().Str("name", req.Msg.Name).Msg("schema pushed")
 
 	return connect.NewResponse(&v1.PushSchemaResponse{}), nil
 }
@@ -26,7 +28,7 @@ func (h *Handler) GetSchema(
 	sch, err := h.api.GetSchema(ctx, req.Msg.Name)
 
 	if err != nil {
-		return nil, grpcErr(err, "api.GetSchema failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+		return nil, grpcErr(err, req.Spec().Procedure, "api.GetSchema failed", h.l)
 	}
 
 	return connect.NewResponse(

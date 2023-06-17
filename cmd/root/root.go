@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -16,7 +17,6 @@ import (
 )
 
 var (
-	debugMode  bool
 	configPath string
 	migUp      bool
 	migDown    bool
@@ -25,7 +25,12 @@ var (
 func New() *cobra.Command {
 	cmd := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
-			l := logger.New(debugMode)
+			appName := os.Getenv("APP_NAME")
+			if appName == "" {
+				appName = "ujds"
+			}
+
+			l := logger.New().With().Str("app", appName).Logger()
 
 			cfg := config.Config{}
 			if err := cfgloader.Load(configPath, &cfg, config.Schema); err != nil {
@@ -47,7 +52,7 @@ func New() *cobra.Command {
 			if err = db.PingContext(cmd.Context()); err != nil {
 				l.Fatal().Err(err).Msg("failed to connect to db")
 			}
-			l.Debug().Msg("db connection ok")
+			l.Info().Msg("db connection ok")
 
 			if migUp {
 				if err := migration.Up(db); err != nil {
@@ -63,7 +68,8 @@ func New() *cobra.Command {
 				return
 			}
 
-			s := server.New(cfg.Server, api.New(cfg.API, db, l), l.With().Str("pkg", "server").Logger())
+			a := api.New(cfg.API, db, l.With().Str("pkg", "api").Logger())
+			s := server.New(cfg.Server, a, l.With().Str("pkg", "server").Logger())
 
 			if err := s.Run(cmd.Context()); errors.Is(err, http.ErrServerClosed) {
 				l.Info().Msg("server stopped")
@@ -76,7 +82,6 @@ func New() *cobra.Command {
 	cmd.Flags().BoolVar(&migUp, "migrate-up", false, "apply database migrations")
 	cmd.Flags().BoolVar(&migDown, "migrate-down", false, "revert database migrations")
 
-	cmd.PersistentFlags().BoolVarP(&debugMode, "debug", "d", false, "enable debug mode")
 	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "config.yaml", "path to the config file")
 
 	return cmd

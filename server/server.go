@@ -19,7 +19,7 @@ type Server struct {
 
 func New(cfg Config, api *api.API, l zerolog.Logger) *Server {
 	if cfg.Address == "" {
-		cfg.Address = "localhost:9000"
+		cfg.Address = ":9000"
 	}
 
 	return &Server{
@@ -45,6 +45,6 @@ func (s *Server) Run(ctx context.Context) error {
 		}
 	}()
 
-	s.l.Debug().Str("addr", s.cfg.Address).Msg("starting server")
+	s.l.Info().Str("addr", s.cfg.Address).Msg("starting server")
 	return srv.ListenAndServe()
 }

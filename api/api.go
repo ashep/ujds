@@ -12,8 +12,7 @@ type API struct {
 	db  *sql.DB
 	l   zerolog.Logger
 
-	mux         sync.RWMutex
-	schemaCache map[string]Schema
+	mux sync.RWMutex
 }
 
 func New(cfg Config, db *sql.DB, l zerolog.Logger) *API {
@@ -21,8 +20,5 @@ func New(cfg Config, db *sql.DB, l zerolog.Logger) *API {
 		cfg: cfg,
 		db:  db,
 		l:   l,
-
-		mux:         sync.RWMutex{},
-		schemaCache: make(map[string]Schema),
 	}
 }

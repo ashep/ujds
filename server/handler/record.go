@@ -15,6 +15,10 @@ func (h *Handler) PushRecords(
 	ctx context.Context,
 	req *connect.Request[v1.PushRecordsRequest],
 ) (*connect.Response[v1.PushRecordsResponse], error) {
+	if req.Msg.Schema == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty schema"))
+	}
+
 	if len(req.Msg.Records) == 0 {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty records"))
 	}
@@ -22,15 +26,16 @@ func (h *Handler) PushRecords(
 	apiRecords := make([]api.Record, 0)
 	for _, rec := range req.Msg.Records {
 		apiRecords = append(apiRecords, api.Record{
-			Id:     rec.Id,
-			Schema: rec.Schema,
-			Data:   rec.Data,
+			Id:   rec.Id,
+			Data: rec.Data,
 		})
 	}
 
-	if err := h.api.PushRecords(ctx, apiRecords); err != nil {
-		return nil, grpcErr(err, "api.PushRecords failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+	if err := h.api.PushRecords(ctx, req.Msg.Schema, apiRecords); err != nil {
+		return nil, grpcErr(err, req.Spec().Procedure, "api.PushRecords failed", h.l)
 	}
+
+	h.l.Info().Str("schema", req.Msg.Schema).Int("count", len(req.Msg.Records)).Msg("push records")
 
 	return connect.NewResponse(&v1.PushRecordsResponse{}), nil
 }
@@ -46,7 +51,7 @@ func (h *Handler) GetRecords(
 	since := time.Unix(req.Msg.Since, 0)
 	records, cur, err := h.api.GetRecords(ctx, req.Msg.Schema, since, req.Msg.Cursor, req.Msg.Limit)
 	if err != nil {
-		return nil, grpcErr(err, "api.GetRecords failed", h.l.With().Str("proc", req.Spec().Procedure).Logger())
+		return nil, grpcErr(err, req.Spec().Procedure, "api.GetRecords failed", h.l)
 	}
 
 	if len(records) == 0 {

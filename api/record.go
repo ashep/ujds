@@ -20,10 +20,13 @@ type Record struct {
 	UpdatedAt time.Time
 }
 
-func (a *API) PushRecords(ctx context.Context, records []Record) error {
+func (a *API) PushRecords(ctx context.Context, schema string, records []Record) error {
 	var err error
 
-	schemas := make(map[string]*Schema)
+	sch, err := a.GetSchema(ctx, schema)
+	if err != nil {
+		return err
+	}
 
 	tx, err := a.db.Begin()
 	if err != nil {
@@ -55,27 +58,9 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, schema_id) DO UPDATE SET log_id=$3, che
 			_ = tx.Rollback()
 			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: id", i)}
 		}
-		if rec.Schema == "" {
-			_ = tx.Rollback()
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: schema", i)}
-		}
 		if rec.Data == "" {
 			_ = tx.Rollback()
 			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: data", i)}
-		}
-
-		// Get schema
-		var sch *Schema
-		var ok bool
-		if sch, ok = schemas[rec.Schema]; !ok {
-			sch, err = a.GetSchema(ctx, rec.Schema)
-			if err != nil && errors.Is(err, errs.ErrNotFound{}) {
-				_ = tx.Rollback()
-				return errs.ErrNotFound{Subj: fmt.Sprintf("record %d: schema", i)}
-			} else if err != nil {
-				_ = tx.Rollback()
-				return err
-			}
 		}
 
 		// Validate data against schema

@@ -5,11 +5,11 @@ option go_package = "github.com/ashep/ujds/sdk/proto/ujds/v1";
 message PushRecordsRequest {
   message Record {
     string id = 1;
-    string schema = 2;
-    string data = 3;
+    string data = 2;
   }
 
-  repeated Record records = 1;
+  string schema = 1;
+  repeated Record records = 2;
 }
 
 message PushRecordsResponse {}
