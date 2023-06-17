@@ -1,0 +1,43 @@
+name: tests
+on: push
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Install dependencies
+        run: go install
+
+      - name: Test
+        run: go test -v ./...
+
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Docker login
+        run: docker login -u ${{ secrets.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASSWD }}
+
+      - name: Build
+        run: docker build --build-arg ARCH=x86_64 --build-arg APP_NAME=${{ github.repository }} --build-arg APP_VERSION=${{ github.ref_name }} -t ${{ github.repository }} .
+
+      - name: Push ref
+        if: github.ref_name != 'master'
+        run: |
+          docker tag ${{ github.repository }} ${{ secrets.REGISTRY_USER }}/${{ github.repository }}:${{ github.ref_name }}
+          docker push ${{ secrets.REGISTRY_USER }}/${{ github.repository }}:${{ github.ref_name }}
+
+      - name: Push latest
+        if: github.ref_name == 'main'
+        run: |
+          docker tag ${{ github.repository }} ${{ secrets.REGISTRY_USER }}/${{ github.repository }}:latest
+          docker push ${{ secrets.REGISTRY_USER }}/${{ github.repository }}:latest
