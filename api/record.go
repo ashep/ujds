@@ -14,7 +14,7 @@ import (
 type Record struct {
 	Id        string
 	Schema    string
-	Version   uint64
+	Rev       uint64
 	Data      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -137,7 +137,7 @@ func (a *API) GetRecords(
 		r = append(r, Record{
 			Id:        recId,
 			Schema:    schema,
-			Version:   logId,
+			Rev:       logId,
 			Data:      data,
 			CreatedAt: crAt,
 			UpdatedAt: upAt,

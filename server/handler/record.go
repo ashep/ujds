@@ -62,6 +62,7 @@ func (h *Handler) GetRecords(
 	for i, rec := range records {
 		itemsR[i] = &v1.GetRecordsResponse_Record{
 			Id:        rec.Id,
+			Rev:       rec.Rev,
 			Schema:    rec.Schema,
 			Data:      rec.Data,
 			CreatedAt: rec.CreatedAt.Unix(),

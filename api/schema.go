@@ -32,8 +32,7 @@ func (a *API) UpsertSchema(ctx context.Context, name, data string) error {
 		return errs.ErrInvalidArg{Subj: "data", E: err}
 	}
 
-	q := `INSERT INTO schema (name, data) VALUES ($1, $2) 
-ON CONFLICT (name) DO UPDATE SET data=$2, updated_at=now()`
+	q := `INSERT INTO schema (name, data) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET data=$2, updated_at=now()`
 	if _, err := a.db.ExecContext(ctx, q, name, data); err != nil {
 		return err
 	}
