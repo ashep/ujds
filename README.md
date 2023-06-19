@@ -1,9 +1,9 @@
 # UJDS
 
-**Universal JSON Data Store (UJDS)** accepts arbitrary JSON data called **data items** from producers, checks them
-against JSON **schemas** and stores in the database.
+**Universal JSON Data Storage** is a service which gets JSON data called **records**, validates with JSON 
+**schema** and stores into the database, keeping track of changes history.
 
-Each JSON **schema** has a **name** which is referenced by each data item.   
+Stored records can be queried by others, given them only data which have been changed since last query.  
 
 ## HTTP API
 

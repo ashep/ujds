@@ -6,12 +6,12 @@ tasks:
     cmds:
       - go run -race main.go {{.CLI_ARGS}}
 
-  migrate:
+  migrate-up:
     desc: Apply db migrations
     cmds:
       - go run main.go --migrate-up {{.CLI_ARGS}}
 
-  demigrate:
+  migrate-down:
     desc: Revert db migrations
     cmds:
       - go run main.go --migrate-down {{.CLI_ARGS}}

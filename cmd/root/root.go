@@ -17,9 +17,9 @@ import (
 )
 
 var (
-	configPath string
-	migUp      bool
-	migDown    bool
+	cfgPath string
+	migUp   bool
+	migDown bool
 )
 
 func New() *cobra.Command {
@@ -33,7 +33,21 @@ func New() *cobra.Command {
 			l := logger.New().With().Str("app", appName).Logger()
 
 			cfg := config.Config{}
-			if err := cfgloader.Load(configPath, &cfg, config.Schema); err != nil {
+
+			fi, err := os.Stat(cfgPath)
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				l.Fatal().Err(err).Msgf("failed to get %s info", cfgPath)
+				return
+			}
+
+			if fi != nil {
+				if err := cfgloader.LoadFromPath(cfgPath, &cfg, config.Schema); err != nil {
+					l.Fatal().Err(err).Msg("failed to load config")
+					return
+				}
+			}
+
+			if err := cfgloader.LoadFromEnv(appName, &cfg); err != nil {
 				l.Fatal().Err(err).Msg("failed to load config")
 				return
 			}
@@ -82,7 +96,7 @@ func New() *cobra.Command {
 	cmd.Flags().BoolVar(&migUp, "migrate-up", false, "apply database migrations")
 	cmd.Flags().BoolVar(&migDown, "migrate-down", false, "revert database migrations")
 
-	cmd.PersistentFlags().StringVarP(&configPath, "config", "c", "config.yaml", "path to the config file")
+	cmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "config.yaml", "path to the config file")
 
 	return cmd
 }
