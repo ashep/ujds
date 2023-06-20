@@ -13,7 +13,7 @@ import (
 
 type Record struct {
 	Id        string
-	Schema    string
+	Index     string
 	Rev       uint64
 	Data      string
 	CreatedAt time.Time
@@ -23,7 +23,7 @@ type Record struct {
 func (a *API) PushRecords(ctx context.Context, schema string, records []Record) error {
 	var err error
 
-	sch, err := a.GetSchema(ctx, schema)
+	sch, err := a.GetIndex(ctx, schema)
 	if err != nil {
 		return err
 	}
@@ -39,15 +39,15 @@ func (a *API) PushRecords(ctx context.Context, schema string, records []Record) 
 		return err
 	}
 
-	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (schema_id, record_id, data) 
+	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (index_id, record_id, data) 
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
 	}
 
-	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, schema_id, log_id, checksum) 
-VALUES ($1, $2, $3, $4) ON CONFLICT (id, schema_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
+	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum) 
+VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -72,7 +72,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, schema_id) DO UPDATE SET log_id=$3, che
 
 		// Check if we already have such data recorded as latest version
 		logId := uint64(0)
-		sumSrc := append(recDataB, []byte(rec.Schema)...)
+		sumSrc := append(recDataB, []byte(rec.Index)...)
 		sumSrc = append(sumSrc, []byte(rec.Id)...)
 		sum := sha256.Sum256(sumSrc)
 		row := qGetRecord.QueryRowContext(ctx, sum[:])
@@ -117,7 +117,7 @@ func (a *API) GetRecords(
 
 	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id 
-		LEFT JOIN schema s ON r.schema_id = s.id 
+		LEFT JOIN index s ON r.index_id = s.id 
 		WHERE s.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
 	rows, err := a.db.QueryContext(ctx, q, schema, since, cursor, limit)
 	if err != nil {
@@ -136,7 +136,7 @@ func (a *API) GetRecords(
 
 		r = append(r, Record{
 			Id:        recId,
-			Schema:    schema,
+			Index:     schema,
 			Rev:       logId,
 			Data:      data,
 			CreatedAt: crAt,

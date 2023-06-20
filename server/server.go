@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
 	"github.com/ashep/ujds/api"
@@ -30,11 +31,12 @@ func New(cfg Config, api *api.API, l zerolog.Logger) *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
+	interceptors := connect.WithInterceptors(NewAuthInterceptor(s.cfg.AuthToken))
 	mux := http.NewServeMux()
 
 	hdl := handler.New(s.api, s.l)
-	mux.Handle(v1connect.NewSchemaServiceHandler(hdl))
-	mux.Handle(v1connect.NewRecordServiceHandler(hdl))
+	mux.Handle(v1connect.NewIndexServiceHandler(hdl, interceptors))
+	mux.Handle(v1connect.NewRecordServiceHandler(hdl, interceptors))
 
 	srv := &http.Server{Addr: s.cfg.Address, Handler: mux}
 

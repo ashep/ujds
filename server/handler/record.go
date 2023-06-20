@@ -15,8 +15,8 @@ func (h *Handler) PushRecords(
 	ctx context.Context,
 	req *connect.Request[v1.PushRecordsRequest],
 ) (*connect.Response[v1.PushRecordsResponse], error) {
-	if req.Msg.Schema == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty schema"))
+	if req.Msg.Index == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
 	}
 
 	if len(req.Msg.Records) == 0 {
@@ -31,11 +31,9 @@ func (h *Handler) PushRecords(
 		})
 	}
 
-	if err := h.api.PushRecords(ctx, req.Msg.Schema, apiRecords); err != nil {
+	if err := h.api.PushRecords(ctx, req.Msg.Index, apiRecords); err != nil {
 		return nil, grpcErr(err, req.Spec().Procedure, "api.PushRecords failed", h.l)
 	}
-
-	h.l.Info().Str("schema", req.Msg.Schema).Int("count", len(req.Msg.Records)).Msg("push records")
 
 	return connect.NewResponse(&v1.PushRecordsResponse{}), nil
 }
@@ -44,12 +42,12 @@ func (h *Handler) GetRecords(
 	ctx context.Context,
 	req *connect.Request[v1.GetRecordsRequest],
 ) (*connect.Response[v1.GetRecordsResponse], error) {
-	if req.Msg.Schema == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty schema"))
+	if req.Msg.Index == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
 	}
 
 	since := time.Unix(req.Msg.Since, 0)
-	records, cur, err := h.api.GetRecords(ctx, req.Msg.Schema, since, req.Msg.Cursor, req.Msg.Limit)
+	records, cur, err := h.api.GetRecords(ctx, req.Msg.Index, since, req.Msg.Cursor, req.Msg.Limit)
 	if err != nil {
 		return nil, grpcErr(err, req.Spec().Procedure, "api.GetRecords failed", h.l)
 	}
@@ -63,7 +61,7 @@ func (h *Handler) GetRecords(
 		itemsR[i] = &v1.GetRecordsResponse_Record{
 			Id:        rec.Id,
 			Rev:       rec.Rev,
-			Schema:    rec.Schema,
+			Index:     rec.Index,
 			Data:      rec.Data,
 			CreatedAt: rec.CreatedAt.Unix(),
 			UpdatedAt: rec.UpdatedAt.Unix(),

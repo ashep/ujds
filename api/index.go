@@ -20,27 +20,27 @@ type Schema struct {
 	UpdatedAt time.Time
 }
 
-func (a *API) UpsertSchema(ctx context.Context, name, data string) error {
+func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 	if name == "" {
 		return errs.ErrEmptyArg{Subj: "name"}
 	}
-	if data == "" {
-		return errs.ErrEmptyArg{Subj: "data"}
+	if schema == "" {
+		return errs.ErrEmptyArg{Subj: "schema"}
 	}
 
-	if err := json.Unmarshal([]byte(data), &struct{}{}); err != nil {
-		return errs.ErrInvalidArg{Subj: "data", E: err}
+	if err := json.Unmarshal([]byte(schema), &struct{}{}); err != nil {
+		return errs.ErrInvalidArg{Subj: "schema", E: err}
 	}
 
-	q := `INSERT INTO schema (name, data) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET data=$2, updated_at=now()`
-	if _, err := a.db.ExecContext(ctx, q, name, data); err != nil {
+	q := `INSERT INTO index (name, schema) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET schema=$2, updated_at=now()`
+	if _, err := a.db.ExecContext(ctx, q, name, schema); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (a *API) GetSchema(ctx context.Context, name string) (*Schema, error) {
+func (a *API) GetIndex(ctx context.Context, name string) (*Schema, error) {
 	var (
 		id        int
 		data      []byte
@@ -48,7 +48,7 @@ func (a *API) GetSchema(ctx context.Context, name string) (*Schema, error) {
 		updatedAt time.Time
 	)
 
-	q := `SELECT id, data, created_at, updated_at FROM schema WHERE name=$1`
+	q := `SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`
 	row := a.db.QueryRowContext(ctx, q, name)
 	if err := row.Scan(&id, &data, &createdAt, &updatedAt); errors.Is(err, sql.ErrNoRows) {
 		return nil, errs.ErrNotFound{Subj: "schema"}

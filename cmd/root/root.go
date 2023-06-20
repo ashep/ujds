@@ -72,6 +72,7 @@ func New() *cobra.Command {
 				if err := migration.Up(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to apply migrations")
 				}
+				l.Info().Msg("migrations applied")
 				return
 			}
 
@@ -79,10 +80,11 @@ func New() *cobra.Command {
 				if err := migration.Down(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to revert migrations")
 				}
+				l.Info().Msg("migrations reverted")
 				return
 			}
 
-			a := api.New(cfg.API, db, l.With().Str("pkg", "api").Logger())
+			a := api.New(db, l.With().Str("pkg", "api").Logger())
 			s := server.New(cfg.Server, a, l.With().Str("pkg", "server").Logger())
 
 			if err := s.Run(cmd.Context()); errors.Is(err, http.ErrServerClosed) {

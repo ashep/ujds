@@ -8,14 +8,14 @@ message PushRecordsRequest {
     string data = 2;
   }
 
-  string schema = 1;
+  string index = 1;
   repeated Record records = 2;
 }
 
 message PushRecordsResponse {}
 
 message GetRecordsRequest {
-  string schema = 1;
+  string index = 1;
   int64 since = 2;
   uint32 limit = 3;
   uint64 cursor = 4;
@@ -25,7 +25,7 @@ message GetRecordsResponse {
   message Record {
     string id = 1;
     uint64 rev = 2;
-    string schema = 3;
+    string index = 3;
     int64 created_at = 4;
     int64 updated_at = 5;
     string data = 6;

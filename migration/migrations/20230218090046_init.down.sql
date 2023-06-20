@@ -1,3 +1,3 @@
 DROP TABLE record;
 DROP TABLE record_log;
-DROP TABLE schema;
+DROP TABLE index;
