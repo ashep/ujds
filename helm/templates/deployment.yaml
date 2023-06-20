@@ -47,6 +47,12 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: UJDS_DB_DSN
+              value: {{ .Values.ujds.db.dsn | quote }}
+            - name: UJDS_SERVER_AUTH_TOKEN
+              value: {{ .Values.ujds.server.auth_token | quote }}
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

@@ -80,3 +80,9 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+ujds:
+  db:
+    dsn: postgres://postgres:postgres@localhost/ujds?sslmode=disable
+  server:
+    auth_token: ""
