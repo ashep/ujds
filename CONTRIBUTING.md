@@ -1,6 +1,18 @@
 # DataPimp Developer's Documentation
 
-## How to generate protobuf related code
+## Local run
+
+```shell
+task run
+```
+
+or
+
+```shell
+go run -race internal/main/main.go
+```
+
+## Generate protobuf code
 
 Make sure you have installed necessary tools:
 
@@ -12,6 +24,12 @@ go install github.com/bufbuild/connect-go/cmd/protoc-gen-connect-go@latest
 ```
 
 Then run:
+
+```shell
+task gen
+```
+
+or
 
 ```shell
 buf lint && buf generate

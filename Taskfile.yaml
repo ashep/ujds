@@ -4,7 +4,7 @@ tasks:
   run:
     desc: Run the application
     cmds:
-      - go run -race main.go {{.CLI_ARGS}}
+      - go run -race internal/main/main.go {{.CLI_ARGS}}
 
   migrate-up:
     desc: Apply db migrations
