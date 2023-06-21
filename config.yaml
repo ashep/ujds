@@ -2,4 +2,4 @@ db:
   dsn: postgres://postgres:postgres@localhost/ujds?sslmode=disable
 
 server:
-  auth_token: foo
+  auth_token: ""

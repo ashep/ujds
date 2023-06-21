@@ -27,6 +27,22 @@ spec:
       serviceAccountName: {{ include "ujds.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: {{ .Chart.Name }}-migrate
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: UJDS_DB_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: ujds
+                  key: db_dsn
+          command:
+            - /app/app
+          args:
+            - --migrate-up
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -35,23 +51,27 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: 9000
               protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            tcpSocket:
+              port: 9000
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            tcpSocket:
+              port: 9000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
             - name: UJDS_DB_DSN
-              value: {{ .Values.ujds.db.dsn | quote }}
-            - name: UJDS_SERVER_AUTH_TOKEN
-              value: {{ .Values.ujds.server.auth_token | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: ujds
+                  key: db_dsn
+            - name: UJDS_SERVER_AUTHTOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ujds
+                  key: server_auth_token
 
       {{- with .Values.nodeSelector }}
       nodeSelector:
