@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashep/ujds/errs"
+	"github.com/ashep/ujds/internal/errs"
 )
 
 type Record struct {

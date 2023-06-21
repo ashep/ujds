@@ -7,9 +7,9 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/api"
+	"github.com/ashep/ujds/internal/api"
+	"github.com/ashep/ujds/internal/server/handler"
 	"github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
-	"github.com/ashep/ujds/server/handler"
 )
 
 type Server struct {

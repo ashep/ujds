@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ashep/ujds/cmd/root"
+	"github.com/ashep/ujds/internal/cmd/root"
 )
 
 func main() {

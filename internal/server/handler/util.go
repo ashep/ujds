@@ -6,7 +6,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/errs"
+	"github.com/ashep/ujds/internal/errs"
 )
 
 func grpcErr(err error, proc, msg string, l zerolog.Logger) error {

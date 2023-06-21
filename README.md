@@ -7,6 +7,14 @@ Stored records can be queried by others, given them only data which have been ch
 
 ## HTTP API
 
+### Create/update index
+
+### Get index
+
+### Push a record to an index
+
+### Get records from index
+
 ## Changelog
 
 ## Authors

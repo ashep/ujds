@@ -3,7 +3,7 @@ package config
 import (
 	_ "embed"
 
-	"github.com/ashep/ujds/server"
+	"github.com/ashep/ujds/internal/server"
 )
 
 //go:embed schema.json

@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/api"
+	"github.com/ashep/ujds/internal/api"
 )
 
 type Handler struct {

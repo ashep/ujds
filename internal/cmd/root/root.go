@@ -9,11 +9,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/ashep/go-cfgloader"
-	"github.com/ashep/ujds/api"
-	"github.com/ashep/ujds/config"
-	"github.com/ashep/ujds/logger"
-	"github.com/ashep/ujds/migration"
-	"github.com/ashep/ujds/server"
+	"github.com/ashep/ujds/internal/api"
+	"github.com/ashep/ujds/internal/config"
+	"github.com/ashep/ujds/internal/logger"
+	"github.com/ashep/ujds/internal/migration"
+	"github.com/ashep/ujds/internal/server"
 )
 
 var (

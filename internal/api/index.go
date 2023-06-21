@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/xeipuuv/gojsonschema"
 
-	"github.com/ashep/ujds/errs"
+	"github.com/ashep/ujds/internal/errs"
 )
 
 type Schema struct {
@@ -25,7 +26,7 @@ func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 		return errs.ErrEmptyArg{Subj: "name"}
 	}
 	if schema == "" {
-		return errs.ErrEmptyArg{Subj: "schema"}
+		schema = "{}"
 	}
 
 	if err := json.Unmarshal([]byte(schema), &struct{}{}); err != nil {
@@ -60,6 +61,10 @@ func (a *API) GetIndex(ctx context.Context, name string) (*Schema, error) {
 }
 
 func (s *Schema) Validate(data []byte) error {
+	if bytes.Equal(s.Data, []byte("{}")) {
+		return nil
+	}
+
 	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Data), gojsonschema.NewBytesLoader(data))
 	if err != nil {
 		return err

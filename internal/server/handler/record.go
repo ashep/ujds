@@ -7,7 +7,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 
-	"github.com/ashep/ujds/api"
+	"github.com/ashep/ujds/internal/api"
 	"github.com/ashep/ujds/sdk/proto/ujds/v1"
 )
 
