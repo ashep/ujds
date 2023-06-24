@@ -1,16 +1,19 @@
-# DataPimp
+# UJDS
 
-**DataPimp** is a service which acts as a proxy between data providers and consumers. It accepts data items from 
-producers and forwards them for processing to one or more consumers.
+**Universal JSON Data Storage** is a service which gets JSON data called **records**, validates with JSON 
+**schema** and stores into the database, keeping track of changes history.
 
-Every incoming data item has a kind which is described by a JSON schema. When **DataPimp** receives a data item, it 
-checks whether the item is valid against corresponding schema and if it is, accepts the item, forwarding it to 
-subscribed consumers.
-
-Each consumer can accept or reject a data item, notifying **DataPimp** with additional information, such as a reason of
-rejection and/or anything else. **DataPimp** stores each data item history. 
+Stored records can be queried by others, given them only data which have been changed since last query.  
 
 ## HTTP API
+
+### Create/update index
+
+### Get index
+
+### Push a record to an index
+
+### Get records from index
 
 ## Changelog
 
