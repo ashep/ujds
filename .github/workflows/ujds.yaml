@@ -30,13 +30,13 @@ jobs:
       - name: Build
         run: docker build --build-arg ARCH=x86_64 --build-arg APP_NAME=${{ github.event.repository.name }} --build-arg APP_VERSION=${{ github.ref_name }} -t ${{ github.event.repository.name }} .
 
-      - name: Push ref
+      - name: Push dev
         if: github.ref_name != 'main'
         run: |
-          docker tag ${{ github.event.repository.name }} ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:${{ github.ref_name }}
-          docker push ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:${{ github.ref_name }}
+          docker tag ${{ github.event.repository.name }} ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:dev
+          docker push ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:dev
 
-      - name: Push latest
+      - name: Push main
         if: github.ref_name == 'main'
         run: |
           docker tag ${{ github.event.repository.name }} ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:latest
