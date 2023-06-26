@@ -151,3 +151,24 @@ func (a *API) GetRecords(
 
 	return r, nextCursor, nil
 }
+
+func (a *API) ClearRecords(ctx context.Context, index string) error {
+	tx, err := a.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, `DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1)`, index)
+	if err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("failed to delete records: %w", err)
+	}
+
+	_, err = tx.ExecContext(ctx, `DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1)`, index)
+	if err != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("failed to delete records: %w", err)
+	}
+
+	return tx.Commit()
+}

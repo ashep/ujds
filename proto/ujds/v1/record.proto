@@ -35,7 +35,15 @@ message GetRecordsResponse {
   repeated Record records = 2;
 }
 
+message ClearRecordsRequest {
+  string index = 1;
+}
+
+message ClearRecordsResponse {
+}
+
 service RecordService {
   rpc PushRecords(PushRecordsRequest) returns (PushRecordsResponse) {}
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {}
+  rpc ClearRecords(ClearRecordsRequest) returns (ClearRecordsResponse) {}
 }
