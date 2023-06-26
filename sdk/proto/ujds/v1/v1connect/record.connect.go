@@ -29,6 +29,7 @@ const (
 type RecordServiceClient interface {
 	PushRecords(context.Context, *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error)
 	GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error)
+	ClearRecords(context.Context, *connect_go.Request[v1.ClearRecordsRequest]) (*connect_go.Response[v1.ClearRecordsResponse], error)
 }
 
 // NewRecordServiceClient constructs a client for the ujds.v1.RecordService service. By default, it
@@ -51,13 +52,19 @@ func NewRecordServiceClient(httpClient connect_go.HTTPClient, baseURL string, op
 			baseURL+"/ujds.v1.RecordService/GetRecords",
 			opts...,
 		),
+		clearRecords: connect_go.NewClient[v1.ClearRecordsRequest, v1.ClearRecordsResponse](
+			httpClient,
+			baseURL+"/ujds.v1.RecordService/ClearRecords",
+			opts...,
+		),
 	}
 }
 
 // recordServiceClient implements RecordServiceClient.
 type recordServiceClient struct {
-	pushRecords *connect_go.Client[v1.PushRecordsRequest, v1.PushRecordsResponse]
-	getRecords  *connect_go.Client[v1.GetRecordsRequest, v1.GetRecordsResponse]
+	pushRecords  *connect_go.Client[v1.PushRecordsRequest, v1.PushRecordsResponse]
+	getRecords   *connect_go.Client[v1.GetRecordsRequest, v1.GetRecordsResponse]
+	clearRecords *connect_go.Client[v1.ClearRecordsRequest, v1.ClearRecordsResponse]
 }
 
 // PushRecords calls ujds.v1.RecordService.PushRecords.
@@ -70,10 +77,16 @@ func (c *recordServiceClient) GetRecords(ctx context.Context, req *connect_go.Re
 	return c.getRecords.CallUnary(ctx, req)
 }
 
+// ClearRecords calls ujds.v1.RecordService.ClearRecords.
+func (c *recordServiceClient) ClearRecords(ctx context.Context, req *connect_go.Request[v1.ClearRecordsRequest]) (*connect_go.Response[v1.ClearRecordsResponse], error) {
+	return c.clearRecords.CallUnary(ctx, req)
+}
+
 // RecordServiceHandler is an implementation of the ujds.v1.RecordService service.
 type RecordServiceHandler interface {
 	PushRecords(context.Context, *connect_go.Request[v1.PushRecordsRequest]) (*connect_go.Response[v1.PushRecordsResponse], error)
 	GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error)
+	ClearRecords(context.Context, *connect_go.Request[v1.ClearRecordsRequest]) (*connect_go.Response[v1.ClearRecordsResponse], error)
 }
 
 // NewRecordServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -93,6 +106,11 @@ func NewRecordServiceHandler(svc RecordServiceHandler, opts ...connect_go.Handle
 		svc.GetRecords,
 		opts...,
 	))
+	mux.Handle("/ujds.v1.RecordService/ClearRecords", connect_go.NewUnaryHandler(
+		"/ujds.v1.RecordService/ClearRecords",
+		svc.ClearRecords,
+		opts...,
+	))
 	return "/ujds.v1.RecordService/", mux
 }
 
@@ -105,4 +123,8 @@ func (UnimplementedRecordServiceHandler) PushRecords(context.Context, *connect_g
 
 func (UnimplementedRecordServiceHandler) GetRecords(context.Context, *connect_go.Request[v1.GetRecordsRequest]) (*connect_go.Response[v1.GetRecordsResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.RecordService.GetRecords is not implemented"))
+}
+
+func (UnimplementedRecordServiceHandler) ClearRecords(context.Context, *connect_go.Request[v1.ClearRecordsRequest]) (*connect_go.Response[v1.ClearRecordsResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.v1.RecordService.ClearRecords is not implemented"))
 }

@@ -24,16 +24,14 @@ func (h *Handler) GetIndex(
 	req *connect.Request[v1.GetIndexRequest],
 ) (*connect.Response[v1.GetIndexResponse], error) {
 	index, err := h.api.GetIndex(ctx, req.Msg.Name)
-
 	if err != nil {
 		return nil, grpcErr(err, req.Spec().Procedure, "api.GetIndex failed", h.l)
 	}
 
-	return connect.NewResponse(
-		&v1.GetIndexResponse{
-			Name:      index.Name,
-			Schema:    string(index.Data),
-			CreatedAt: uint64(index.CreatedAt.Unix()),
-			UpdatedAt: uint64(index.UpdatedAt.Unix()),
-		}), nil
+	return connect.NewResponse(&v1.GetIndexResponse{
+		Name:      index.Name,
+		Schema:    string(index.Data),
+		CreatedAt: uint64(index.CreatedAt.Unix()),
+		UpdatedAt: uint64(index.UpdatedAt.Unix()),
+	}), nil
 }

@@ -70,3 +70,14 @@ func (h *Handler) GetRecords(
 
 	return connect.NewResponse(&v1.GetRecordsResponse{Cursor: cur, Records: itemsR}), nil
 }
+
+func (h *Handler) ClearRecords(
+	ctx context.Context,
+	req *connect.Request[v1.ClearRecordsRequest],
+) (*connect.Response[v1.ClearRecordsResponse], error) {
+	if err := h.api.ClearRecords(ctx, req.Msg.Index); err != nil {
+		return nil, grpcErr(err, req.Spec().Procedure, "api.ClearRecords failed", h.l)
+	}
+
+	return connect.NewResponse(&v1.ClearRecordsResponse{}), nil
+}
