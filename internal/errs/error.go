@@ -1,5 +1,9 @@
 package errs
 
+import (
+	"errors"
+)
+
 type NotFoundError struct {
 	Subj string
 }
@@ -9,7 +13,9 @@ func (e NotFoundError) Error() string {
 }
 
 func (e NotFoundError) Is(target error) bool {
-	_, ok := target.(NotFoundError)
+	var notFoundError NotFoundError
+	ok := errors.As(target, &notFoundError)
+
 	return ok
 }
 
@@ -22,7 +28,9 @@ func (e EmptyArgError) Error() string {
 }
 
 func (e EmptyArgError) Is(target error) bool {
-	_, ok := target.(EmptyArgError)
+	var emptyArgError EmptyArgError
+	ok := errors.As(target, &emptyArgError)
+
 	return ok
 }
 
@@ -49,7 +57,9 @@ func (e InvalidArgError) Error() string {
 }
 
 func (e InvalidArgError) Is(target error) bool {
-	_, ok := target.(InvalidArgError)
+	var invalidArgError InvalidArgError
+	ok := errors.As(target, &invalidArgError)
+
 	return ok
 }
 
@@ -62,18 +72,21 @@ func (e AlreadyExistsError) Error() string {
 }
 
 func (e AlreadyExistsError) Is(target error) bool {
-	_, ok := target.(AlreadyExistsError)
+	var alreadyExistsError AlreadyExistsError
+	ok := errors.As(target, &alreadyExistsError)
+
 	return ok
 }
 
-type AccessDeniedError struct {
-}
+type AccessDeniedError struct{}
 
 func (e AccessDeniedError) Error() string {
 	return "access denied"
 }
 
 func (e AccessDeniedError) Is(target error) bool {
-	_, ok := target.(AccessDeniedError)
+	var accessDeniedError AccessDeniedError
+	ok := errors.As(target, &accessDeniedError)
+
 	return ok
 }

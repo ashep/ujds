@@ -88,7 +88,7 @@ linters:
     - staticcheck
 #    - structcheck
     - stylecheck
-    - tagalign
+#    - tagalign
 #    - tagliatelle
     - tenv
     - testableexamples

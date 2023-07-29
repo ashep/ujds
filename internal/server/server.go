@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
@@ -11,6 +13,8 @@ import (
 	"github.com/ashep/ujds/internal/server/handler"
 	"github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
 )
+
+const readTimeout = time.Second * 5
 
 type Server struct {
 	cfg Config
@@ -38,7 +42,11 @@ func (s *Server) Run(ctx context.Context) error {
 	mux.Handle(v1connect.NewIndexServiceHandler(hdl, interceptors))
 	mux.Handle(v1connect.NewRecordServiceHandler(hdl, interceptors))
 
-	srv := &http.Server{Addr: s.cfg.Address, Handler: mux}
+	srv := &http.Server{
+		Addr:        s.cfg.Address,
+		Handler:     mux,
+		ReadTimeout: readTimeout,
+	}
 
 	go func() {
 		<-ctx.Done()
@@ -50,5 +58,9 @@ func (s *Server) Run(ctx context.Context) error {
 
 	s.l.Info().Str("addr", s.cfg.Address).Msg("starting server")
 
-	return srv.ListenAndServe()
+	if err := srv.ListenAndServe(); err != nil {
+		return fmt.Errorf("ListenAndServe failed: %w", err)
+	}
+
+	return nil
 }

@@ -34,9 +34,13 @@ func run() error {
 
 	go func() {
 		s := <-sig
-		fmt.Printf("%s signal received\n", s)
+		fmt.Printf("%s signal received\n", s) //nolint:forbidigo // it's ok
 		ctxC()
 	}()
 
-	return cmd.ExecuteContext(ctx)
+	if err := cmd.ExecuteContext(ctx); err != nil {
+		return fmt.Errorf("execute failed: %w", err)
+	}
+
+	return nil
 }

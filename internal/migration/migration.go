@@ -27,7 +27,7 @@ func setup(db *sql.DB) (*migrate.Migrate, error) {
 
 	m, err := migrate.NewWithInstance("iofs", srcDrv, "ujds", dbDrv)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("migrate.NewWithInstance failed: %w", err)
 	}
 
 	return m, nil
@@ -36,13 +36,13 @@ func setup(db *sql.DB) (*migrate.Migrate, error) {
 func Up(db *sql.DB) error {
 	m, err := setup(db)
 	if err != nil {
-		return err
+		return fmt.Errorf("setup failed: %w", err)
 	}
 
 	if err = m.Up(); errors.Is(err, migrate.ErrNoChange) { //nolint:revive // this is intentional empty block
 		// ok
 	} else if err != nil {
-		return err
+		return fmt.Errorf("up failed: %w", err)
 	}
 
 	return nil
@@ -51,13 +51,13 @@ func Up(db *sql.DB) error {
 func Down(db *sql.DB) error {
 	m, err := setup(db)
 	if err != nil {
-		return err
+		return fmt.Errorf("setup failed: %w", err)
 	}
 
 	if err = m.Down(); errors.Is(err, migrate.ErrNoChange) { //nolint:revive // this is intentional empty block
 		// ok
 	} else if err != nil {
-		return err
+		return fmt.Errorf("down failed: %w", err)
 	}
 
 	return nil

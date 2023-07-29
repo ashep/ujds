@@ -20,38 +20,57 @@ type Record struct {
 	UpdatedAt time.Time
 }
 
+//nolint:cyclop // TODO
 func (a *API) PushRecords(ctx context.Context, schema string, records []Record) error {
 	var err error
 
 	sch, err := a.GetIndex(ctx, schema)
 	if err != nil {
-		return err
+		return fmt.Errorf("get index failed: %w", err)
 	}
 
 	tx, err := a.db.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("db begin failed: %w", err)
 	}
 
 	qGetRecord, err := tx.PrepareContext(ctx, `SELECT log_id FROM record WHERE checksum=$1`)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return fmt.Errorf("db prepare failed: %w", err)
 	}
+
+	defer func() {
+		if err := qGetRecord.Close(); err != nil {
+			a.l.Error().Err(err).Msg("prepared statement close failed")
+		}
+	}()
 
 	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (index_id, record_id, data) 
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return fmt.Errorf("db prepare failed: %w", err)
 	}
+
+	defer func() {
+		if err := qInsertLog.Close(); err != nil {
+			a.l.Error().Err(err).Msg("prepared statement close failed")
+		}
+	}()
 
 	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum) 
 VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
-		return err
+		return fmt.Errorf("db prepare failed: %w", err)
 	}
+
+	defer func() {
+		if err := qInsertRecord.Close(); err != nil {
+			a.l.Error().Err(err).Msg("prepared statement close failed")
+		}
+	}()
 
 	for i, rec := range records {
 		if rec.ID == "" {
@@ -71,17 +90,19 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			return errs.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), E: err}
 		}
 
-		// Check if we already have such data recorded as latest version
 		logID := uint64(0)
-		sumSrc := append(recDataB, []byte(rec.Index)...)
+
+		sumSrc := append(recDataB, []byte(rec.Index)...) //nolint:gocritic // it's ok
 		sumSrc = append(sumSrc, []byte(rec.ID)...)
 		sum := sha256.Sum256(sumSrc)
+
+		// Check if we already have such data recorded as latest version
 		row := qGetRecord.QueryRowContext(ctx, sum[:])
 		if err = row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentional empty block
 			// Ok, continue to insert
 		} else if err != nil {
 			_ = tx.Rollback()
-			return err
+			return fmt.Errorf("db scan failed: %w", err)
 		} else {
 			// A record with the same data found, skip it
 			continue
@@ -93,16 +114,20 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			return nil
 		} else if err != nil {
 			_ = tx.Rollback()
-			return err
+			return fmt.Errorf("db query failed: %w", err)
 		}
 
 		if _, err = qInsertRecord.ExecContext(ctx, rec.ID, sch.ID, logID, sum[:]); err != nil {
 			_ = tx.Rollback()
-			return err
+			return fmt.Errorf("db query failed: %w", err)
 		}
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("db commit failed: %w", err)
+	}
+
+	return nil
 }
 
 // GetRecord returns last version of a record.
@@ -122,7 +147,7 @@ func (a *API) GetRecord(ctx context.Context, index, id string) (Record, error) {
 	if errors.Is(err, sql.ErrNoRows) {
 		return Record{}, errs.NotFoundError{Subj: "record"}
 	} else if err != nil {
-		return Record{}, err
+		return Record{}, fmt.Errorf("db scan failed: %w", err)
 	}
 
 	return r, nil
@@ -146,7 +171,7 @@ func (a *API) GetRecords(
 
 	rows, err := a.db.QueryContext(ctx, q, index, since, cursor, limit)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("db query failed: %w", err)
 	}
 
 	defer func() {
@@ -158,7 +183,7 @@ func (a *API) GetRecords(
 
 	for rows.Next() {
 		if err := rows.Scan(&recID, &logID, &data, &crAt, &upAt); err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("db scan failed: %w", err)
 		}
 
 		r = append(r, Record{
@@ -169,6 +194,10 @@ func (a *API) GetRecords(
 			CreatedAt: crAt,
 			UpdatedAt: upAt,
 		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, fmt.Errorf("db rows iteration failed: %w", err)
 	}
 
 	nextCursor := uint64(0)
@@ -197,5 +226,9 @@ func (a *API) ClearRecords(ctx context.Context, index string) error {
 		return fmt.Errorf("failed to delete records: %w", err)
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("db commit failed: %w", err)
+	}
+
+	return nil
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/bufbuild/connect-go"
 
-	"github.com/ashep/ujds/sdk/proto/ujds/v1"
+	v1 "github.com/ashep/ujds/sdk/proto/ujds/v1"
 )
 
 func (h *Handler) PushIndex(

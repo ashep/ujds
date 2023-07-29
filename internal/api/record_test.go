@@ -16,7 +16,11 @@ import (
 )
 
 func TestAPI_GetRecord(tt *testing.T) {
+	tt.Parallel()
+
 	tt.Run("ErrRowScan", func(t *testing.T) {
+		t.Parallel()
+
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -32,6 +36,8 @@ func TestAPI_GetRecord(tt *testing.T) {
 	})
 
 	tt.Run("ErrRecordNotFound", func(t *testing.T) {
+		t.Parallel()
+
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -47,6 +53,8 @@ func TestAPI_GetRecord(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
+		t.Parallel()
+
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
