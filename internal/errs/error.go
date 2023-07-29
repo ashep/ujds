@@ -1,37 +1,45 @@
 package errs
 
-type ErrNotFound struct {
+import (
+	"errors"
+)
+
+type NotFoundError struct {
 	Subj string
 }
 
-func (e ErrNotFound) Error() string {
+func (e NotFoundError) Error() string {
 	return e.Subj + " is not found"
 }
 
-func (e ErrNotFound) Is(target error) bool {
-	_, ok := target.(ErrNotFound)
+func (e NotFoundError) Is(target error) bool {
+	var notFoundError NotFoundError
+	ok := errors.As(target, &notFoundError)
+
 	return ok
 }
 
-type ErrEmptyArg struct {
+type EmptyArgError struct {
 	Subj string
 }
 
-func (e ErrEmptyArg) Error() string {
+func (e EmptyArgError) Error() string {
 	return e.Subj + " is empty"
 }
 
-func (e ErrEmptyArg) Is(target error) bool {
-	_, ok := target.(ErrEmptyArg)
+func (e EmptyArgError) Is(target error) bool {
+	var emptyArgError EmptyArgError
+	ok := errors.As(target, &emptyArgError)
+
 	return ok
 }
 
-type ErrInvalidArg struct {
+type InvalidArgError struct {
 	Subj string
 	E    error
 }
 
-func (e ErrInvalidArg) Error() string {
+func (e InvalidArgError) Error() string {
 	s := ""
 
 	if e.Subj != "" {
@@ -48,32 +56,37 @@ func (e ErrInvalidArg) Error() string {
 	return s
 }
 
-func (e ErrInvalidArg) Is(target error) bool {
-	_, ok := target.(ErrInvalidArg)
+func (e InvalidArgError) Is(target error) bool {
+	var invalidArgError InvalidArgError
+	ok := errors.As(target, &invalidArgError)
+
 	return ok
 }
 
-type ErrAlreadyExists struct {
+type AlreadyExistsError struct {
 	Subj string
 }
 
-func (e ErrAlreadyExists) Error() string {
+func (e AlreadyExistsError) Error() string {
 	return e.Subj + " is already exists"
 }
 
-func (e ErrAlreadyExists) Is(target error) bool {
-	_, ok := target.(ErrAlreadyExists)
+func (e AlreadyExistsError) Is(target error) bool {
+	var alreadyExistsError AlreadyExistsError
+	ok := errors.As(target, &alreadyExistsError)
+
 	return ok
 }
 
-type ErrAccessDenied struct {
-}
+type AccessDeniedError struct{}
 
-func (e ErrAccessDenied) Error() string {
+func (e AccessDeniedError) Error() string {
 	return "access denied"
 }
 
-func (e ErrAccessDenied) Is(target error) bool {
-	_, ok := target.(ErrAccessDenied)
+func (e AccessDeniedError) Is(target error) bool {
+	var accessDeniedError AccessDeniedError
+	ok := errors.As(target, &accessDeniedError)
+
 	return ok
 }

@@ -11,16 +11,16 @@ import (
 
 func grpcErr(err error, proc, msg string, l zerolog.Logger) error {
 	switch {
-	case errors.Is(err, errs.ErrNotFound{}):
+	case errors.Is(err, errs.NotFoundError{}):
 		l.Info().Str("proc", proc).Err(err).Msg(msg)
 		return connect.NewError(connect.CodeNotFound, err)
-	case errors.Is(err, errs.ErrInvalidArg{}), errors.Is(err, errs.ErrEmptyArg{}):
+	case errors.Is(err, errs.InvalidArgError{}), errors.Is(err, errs.EmptyArgError{}):
 		l.Info().Str("proc", proc).Err(err).Msg(msg)
 		return connect.NewError(connect.CodeInvalidArgument, err)
-	case errors.Is(err, errs.ErrAlreadyExists{}):
+	case errors.Is(err, errs.AlreadyExistsError{}):
 		l.Info().Str("proc", proc).Err(err).Msg(msg)
 		return connect.NewError(connect.CodeAlreadyExists, err)
-	case errors.Is(err, errs.ErrAccessDenied{}):
+	case errors.Is(err, errs.AccessDeniedError{}):
 		l.Info().Str("proc", proc).Err(err).Msg(msg)
 		return connect.NewError(connect.CodeUnauthenticated, err)
 	default:

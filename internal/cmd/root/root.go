@@ -1,8 +1,10 @@
 package root
 
 import (
+	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -16,13 +18,13 @@ import (
 	"github.com/ashep/ujds/internal/server"
 )
 
-var (
-	cfgPath string
-	migUp   bool
-	migDown bool
-)
-
 func New() *cobra.Command {
+	var (
+		cfgPath string
+		migUp   bool
+		migDown bool
+	)
+
 	cmd := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			appName := os.Getenv("APP_NAME")
@@ -32,41 +34,17 @@ func New() *cobra.Command {
 
 			l := logger.New().With().Str("app", appName).Logger()
 
-			cfg := config.Config{}
-
-			fi, err := os.Stat(cfgPath)
-			if err != nil && !errors.Is(err, os.ErrNotExist) {
-				l.Fatal().Err(err).Msgf("failed to get %s info", cfgPath)
-				return
-			}
-
-			if fi != nil {
-				if err := cfgloader.LoadFromPath(cfgPath, &cfg, config.Schema); err != nil {
-					l.Fatal().Err(err).Msg("failed to load config")
-					return
-				}
-			}
-
-			if err := cfgloader.LoadFromEnv(appName, &cfg); err != nil {
-				l.Fatal().Err(err).Msg("failed to load config")
-				return
-			}
-
-			if cfg.DB.DSN == "" {
-				l.Fatal().Msg("empty db dsn")
-				return
-			}
-
-			db, err := sql.Open("postgres", cfg.DB.DSN)
+			cfg, err := loadConfig(appName, cfgPath)
 			if err != nil {
-				l.Fatal().Err(err).Msg("failed to open db")
+				l.Fatal().Err(err).Msg("config load failed")
 				return
 			}
 
-			if err = db.PingContext(cmd.Context()); err != nil {
-				l.Fatal().Err(err).Msg("failed to connect to db")
+			db, err := dbConn(cmd.Context(), cfg.DB.DSN)
+			if err != nil {
+				l.Fatal().Err(err).Msg("database connection failed")
+				return
 			}
-			l.Info().Msg("db connection ok")
 
 			if migUp {
 				if err := migration.Up(db); err != nil {
@@ -101,4 +79,42 @@ func New() *cobra.Command {
 	cmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "config.yaml", "path to the config file")
 
 	return cmd
+}
+
+func loadConfig(appName, cfgPath string) (config.Config, error) {
+	cfg := config.Config{}
+
+	fi, err := os.Stat(cfgPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return cfg, fmt.Errorf("failed to get %s info: %w", cfgPath, err)
+	}
+
+	if fi != nil {
+		if err := cfgloader.LoadFromPath(cfgPath, &cfg, config.Schema); err != nil {
+			return cfg, fmt.Errorf("failed to load from path: %w", err)
+		}
+	}
+
+	if err := cfgloader.LoadFromEnv(appName, &cfg); err != nil {
+		return cfg, fmt.Errorf("failed to load from env: %w", err)
+	}
+
+	return cfg, nil
+}
+
+func dbConn(ctx context.Context, dsn string) (*sql.DB, error) {
+	if dsn == "" {
+		return nil, errors.New("empty dsn")
+	}
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("open failed: %w", err)
+	}
+
+	if err = db.PingContext(ctx); err != nil {
+		return nil, fmt.Errorf("ping failed: %w", err)
+	}
+
+	return db, nil
 }
