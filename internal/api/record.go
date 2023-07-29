@@ -104,9 +104,32 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	return tx.Commit()
 }
 
+// GetRecord returns last version of a record.
+func (a *API) GetRecord(ctx context.Context, index, id string) (Record, error) {
+	q := `SELECT r.log_id, l.data, r.created_at, r.updated_at FROM record r
+		LEFT JOIN record_log l ON r.log_id = l.id 
+		LEFT JOIN index i ON r.index_id = i.id 
+		WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`
+	row := a.db.QueryRowContext(ctx, q, index, id)
+
+	r := Record{
+		Id:    id,
+		Index: index,
+	}
+
+	err := row.Scan(&r.Rev, &r.Data, &r.CreatedAt, &r.UpdatedAt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return Record{}, errs.ErrNotFound{Subj: "record"}
+	} else if err != nil {
+		return Record{}, err
+	}
+
+	return r, nil
+}
+
 func (a *API) GetRecords(
 	ctx context.Context,
-	schema string,
+	index string,
 	since time.Time,
 	cursor uint64,
 	limit uint32,
@@ -117,9 +140,9 @@ func (a *API) GetRecords(
 
 	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id 
-		LEFT JOIN index s ON r.index_id = s.id 
-		WHERE s.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
-	rows, err := a.db.QueryContext(ctx, q, schema, since, cursor, limit)
+		LEFT JOIN index i ON r.index_id = i.id 
+		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
+	rows, err := a.db.QueryContext(ctx, q, index, since, cursor, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -136,7 +159,7 @@ func (a *API) GetRecords(
 
 		r = append(r, Record{
 			Id:        recId,
-			Index:     schema,
+			Index:     index,
 			Rev:       logId,
 			Data:      data,
 			CreatedAt: crAt,

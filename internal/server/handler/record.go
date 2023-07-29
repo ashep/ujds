@@ -38,6 +38,29 @@ func (h *Handler) PushRecords(
 	return connect.NewResponse(&v1.PushRecordsResponse{}), nil
 }
 
+func (h *Handler) GetRecord(
+	ctx context.Context,
+	req *connect.Request[v1.GetRecordRequest],
+) (*connect.Response[v1.GetRecordResponse], error) {
+	if req.Msg.Index == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
+	}
+
+	rec, err := h.api.GetRecord(ctx, req.Msg.Index, req.Msg.Id)
+	if err != nil {
+		return nil, grpcErr(err, req.Spec().Procedure, "api.ClearRecords failed", h.l)
+	}
+
+	return connect.NewResponse(&v1.GetRecordResponse{Record: &v1.Record{
+		Id:        rec.Id,
+		Rev:       rec.Rev,
+		Index:     rec.Index,
+		CreatedAt: rec.CreatedAt.Unix(),
+		UpdatedAt: rec.UpdatedAt.Unix(),
+		Data:      rec.Data,
+	}}), nil
+}
+
 func (h *Handler) GetRecords(
 	ctx context.Context,
 	req *connect.Request[v1.GetRecordsRequest],
@@ -56,9 +79,9 @@ func (h *Handler) GetRecords(
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no records found"))
 	}
 
-	itemsR := make([]*v1.GetRecordsResponse_Record, len(records))
+	itemsR := make([]*v1.Record, len(records))
 	for i, rec := range records {
-		itemsR[i] = &v1.GetRecordsResponse_Record{
+		itemsR[i] = &v1.Record{
 			Id:        rec.Id,
 			Rev:       rec.Rev,
 			Index:     rec.Index,
