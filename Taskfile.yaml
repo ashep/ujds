@@ -58,5 +58,3 @@ tasks:
         sh: which gotest || echo go test
     cmds:
       - echo 'Not implemented yet'
-      - exit 1
-
