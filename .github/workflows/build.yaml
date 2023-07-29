@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: ./.github/actions/prepare.yaml
+      - uses: ./.github/actions/prepare
       - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.53
@@ -17,7 +17,7 @@ jobs:
     needs:
       - lint
     steps:
-      - uses: ./.github/actions/prepare.yaml
+      - uses: ./.github/actions/prepare
       - run: task run test.unit
       - run: task run test.func
 

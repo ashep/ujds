@@ -9,4 +9,3 @@ runs:
       with:
         cache: false
         go-version-file: go.mod
-
