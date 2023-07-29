@@ -19,19 +19,15 @@ jobs:
     name: Run linters
     runs-on: ubuntu-latest
     continue-on-error: true
-    needs:
-      - prepare
     steps:
-      - name: pwd
-        run: | 
-          pwd
-          ls -la
+      - name: Checkout
+        uses: actions/checkout@v3
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           cache: false
           go-version-file: go.mod
-      - name: Lint
+      - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: v1.53
@@ -40,7 +36,7 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     needs:
-      - prepare
+      - lint
     steps:
       - name: Unit tests
         run: task run test.unit
@@ -50,7 +46,6 @@ jobs:
   build-image:
     runs-on: ubuntu-latest
     needs:
-      - prepare
       - test
     steps:
       - name: Docker login
