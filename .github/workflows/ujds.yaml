@@ -37,6 +37,11 @@ jobs:
     needs:
       - prepare
     steps:
+      - name: Foo
+        run: |
+          ls -la ~
+          env
+          which task
       - name: Unit tests
         run: task run test.unit
       - name: Functional tests

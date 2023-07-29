@@ -49,7 +49,7 @@ tasks:
       GOTEST:
         sh: which gotest || echo go test
     cmds:
-      - '{{.GOTEST}} ./...'
+      - '{{.GOTEST}} -v -race ./...'
 
   test.func:
     desc: Run functional tests
