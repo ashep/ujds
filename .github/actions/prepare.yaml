@@ -1,0 +1,12 @@
+name: Prepare
+description: Installs and setups all necessary binaries
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v3
+    - uses: arduino/setup-task@v1
+    - uses: actions/setup-go@v4
+      with:
+        cache: false
+        go-version-file: go.mod
+

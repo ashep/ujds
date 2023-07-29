@@ -1,34 +1,13 @@
-name: tests
+name: build
 on: push
 jobs:
-  prepare:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup tools
-        uses: arduino/setup-task@v1
-      - name: Setup dependencies
-        run: go mod vendor
-      - name: pwd
-        run: |
-          pwd
-          ls -la
-
   lint:
     name: Run linters
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          cache: false
-          go-version-file: go.mod
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+      - uses: ./.github/actions/prepare.yaml
+      - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.53
 
@@ -38,10 +17,9 @@ jobs:
     needs:
       - lint
     steps:
-      - name: Unit tests
-        run: task run test.unit
-      - name: Functional tests
-        run: task run test.func
+      - uses: ./.github/actions/prepare.yaml
+      - run: task run test.unit
+      - run: task run test.func
 
   build-image:
     runs-on: ubuntu-latest
