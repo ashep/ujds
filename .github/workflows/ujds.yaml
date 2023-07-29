@@ -10,6 +10,10 @@ jobs:
         uses: arduino/setup-task@v1
       - name: Setup dependencies
         run: go mod vendor
+      - name: pwd
+        run: |
+          pwd
+          ls -la
 
   lint:
     name: Run linters
