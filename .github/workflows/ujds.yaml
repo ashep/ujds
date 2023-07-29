@@ -41,6 +41,8 @@ jobs:
         run: |
           ls -la ~
           env
+          ls -la ${GOROOT_1_20_X64}
+          ls -la ${GOROOT_1_20_X64}/bin
           which task
       - name: Unit tests
         run: task run test.unit
