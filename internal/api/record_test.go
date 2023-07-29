@@ -32,7 +32,7 @@ func TestAPI_GetRecord(tt *testing.T) {
 		a := api.New(db, zerolog.Nop())
 
 		_, err = a.GetRecord(context.Background(), "theIndex", "theID")
-		require.EqualError(t, err, "theSQLError")
+		require.EqualError(t, err, "db scan failed: theSQLError")
 	})
 
 	tt.Run("ErrRecordNotFound", func(t *testing.T) {
