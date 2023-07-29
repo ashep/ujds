@@ -7,7 +7,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v3
-      - uses: .github/actions/prepare
+      - uses: ./.github/actions/prepare
       - uses: golangci/golangci-lint-action@v3
         with:
           version: v1.53
