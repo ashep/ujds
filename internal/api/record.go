@@ -12,7 +12,7 @@ import (
 )
 
 type Record struct {
-	Id        string
+	ID        string
 	Index     string
 	Rev       uint64
 	Data      string
@@ -54,29 +54,30 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	}
 
 	for i, rec := range records {
-		if rec.Id == "" {
+		if rec.ID == "" {
 			_ = tx.Rollback()
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: id", i)}
+			return errs.EmptyArgError{Subj: fmt.Sprintf("record %d: id", i)}
 		}
+
 		if rec.Data == "" {
 			_ = tx.Rollback()
-			return errs.ErrEmptyArg{Subj: fmt.Sprintf("record %d: data", i)}
+			return errs.EmptyArgError{Subj: fmt.Sprintf("record %d: data", i)}
 		}
 
 		// Validate data against schema
 		recDataB := []byte(rec.Data)
 		if err = sch.Validate(recDataB); err != nil {
 			_ = tx.Rollback()
-			return errs.ErrInvalidArg{Subj: fmt.Sprintf("record data (%d)", i), E: err}
+			return errs.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), E: err}
 		}
 
 		// Check if we already have such data recorded as latest version
-		logId := uint64(0)
+		logID := uint64(0)
 		sumSrc := append(recDataB, []byte(rec.Index)...)
-		sumSrc = append(sumSrc, []byte(rec.Id)...)
+		sumSrc = append(sumSrc, []byte(rec.ID)...)
 		sum := sha256.Sum256(sumSrc)
 		row := qGetRecord.QueryRowContext(ctx, sum[:])
-		if err = row.Scan(&logId); errors.Is(err, sql.ErrNoRows) {
+		if err = row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentional empty block
 			// Ok, continue to insert
 		} else if err != nil {
 			_ = tx.Rollback()
@@ -86,8 +87,8 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			continue
 		}
 
-		row = qInsertLog.QueryRowContext(ctx, sch.Id, rec.Id, rec.Data)
-		if err = row.Scan(&logId); err != nil && errors.Is(err, sql.ErrNoRows) {
+		row = qInsertLog.QueryRowContext(ctx, sch.ID, rec.ID, rec.Data)
+		if err = row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
 			_ = tx.Rollback()
 			return nil
 		} else if err != nil {
@@ -95,7 +96,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			return err
 		}
 
-		if _, err = qInsertRecord.ExecContext(ctx, rec.Id, sch.Id, logId, sum[:]); err != nil {
+		if _, err = qInsertRecord.ExecContext(ctx, rec.ID, sch.ID, logID, sum[:]); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -113,13 +114,13 @@ func (a *API) GetRecord(ctx context.Context, index, id string) (Record, error) {
 	row := a.db.QueryRowContext(ctx, q, index, id)
 
 	r := Record{
-		Id:    id,
+		ID:    id,
 		Index: index,
 	}
 
 	err := row.Scan(&r.Rev, &r.Data, &r.CreatedAt, &r.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return Record{}, errs.ErrNotFound{Subj: "record"}
+		return Record{}, errs.NotFoundError{Subj: "record"}
 	} else if err != nil {
 		return Record{}, err
 	}
@@ -142,25 +143,28 @@ func (a *API) GetRecords(
 		LEFT JOIN record_log l ON r.log_id = l.id 
 		LEFT JOIN index i ON r.index_id = i.id 
 		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
+
 	rows, err := a.db.QueryContext(ctx, q, index, since, cursor, limit)
 	if err != nil {
 		return nil, 0, err
 	}
+
 	defer func() {
 		_ = rows.Close()
 	}()
 
 	r := make([]Record, 0)
-	recId, logId, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
+	recID, logID, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
+
 	for rows.Next() {
-		if err := rows.Scan(&recId, &logId, &data, &crAt, &upAt); err != nil {
+		if err := rows.Scan(&recID, &logID, &data, &crAt, &upAt); err != nil {
 			return nil, 0, err
 		}
 
 		r = append(r, Record{
-			Id:        recId,
+			ID:        recID,
 			Index:     index,
-			Rev:       logId,
+			Rev:       logID,
 			Data:      data,
 			CreatedAt: crAt,
 			UpdatedAt: upAt,
@@ -169,7 +173,7 @@ func (a *API) GetRecords(
 
 	nextCursor := uint64(0)
 	if len(r) > 0 {
-		nextCursor = logId + 1
+		nextCursor = logID + 1
 	}
 
 	return r, nextCursor, nil

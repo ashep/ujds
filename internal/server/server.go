@@ -42,11 +42,13 @@ func (s *Server) Run(ctx context.Context) error {
 
 	go func() {
 		<-ctx.Done()
+
 		if errF := srv.Close(); errF != nil {
 			s.l.Error().Err(errF).Msg("failed to close server")
 		}
 	}()
 
 	s.l.Info().Str("addr", s.cfg.Address).Msg("starting server")
+
 	return srv.ListenAndServe()
 }

@@ -16,13 +16,13 @@ import (
 	"github.com/ashep/ujds/internal/server"
 )
 
-var (
-	cfgPath string
-	migUp   bool
-	migDown bool
-)
-
 func New() *cobra.Command {
+	var (
+		cfgPath string
+		migUp   bool
+		migDown bool
+	)
+
 	cmd := &cobra.Command{
 		Run: func(cmd *cobra.Command, args []string) {
 			appName := os.Getenv("APP_NAME")

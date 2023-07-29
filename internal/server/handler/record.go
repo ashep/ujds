@@ -26,7 +26,7 @@ func (h *Handler) PushRecords(
 	apiRecords := make([]api.Record, 0)
 	for _, rec := range req.Msg.Records {
 		apiRecords = append(apiRecords, api.Record{
-			Id:   rec.Id,
+			ID:   rec.Id,
 			Data: rec.Data,
 		})
 	}
@@ -52,7 +52,7 @@ func (h *Handler) GetRecord(
 	}
 
 	return connect.NewResponse(&v1.GetRecordResponse{Record: &v1.Record{
-		Id:        rec.Id,
+		Id:        rec.ID,
 		Rev:       rec.Rev,
 		Index:     rec.Index,
 		CreatedAt: rec.CreatedAt.Unix(),
@@ -70,6 +70,7 @@ func (h *Handler) GetRecords(
 	}
 
 	since := time.Unix(req.Msg.Since, 0)
+
 	records, cur, err := h.api.GetRecords(ctx, req.Msg.Index, since, req.Msg.Cursor, req.Msg.Limit)
 	if err != nil {
 		return nil, grpcErr(err, req.Spec().Procedure, "api.GetRecords failed", h.l)
@@ -82,7 +83,7 @@ func (h *Handler) GetRecords(
 	itemsR := make([]*v1.Record, len(records))
 	for i, rec := range records {
 		itemsR[i] = &v1.Record{
-			Id:        rec.Id,
+			Id:        rec.ID,
 			Rev:       rec.Rev,
 			Index:     rec.Index,
 			Data:      rec.Data,

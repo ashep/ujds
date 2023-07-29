@@ -43,7 +43,7 @@ func TestAPI_GetRecord(tt *testing.T) {
 		a := api.New(db, zerolog.Nop())
 
 		_, err = a.GetRecord(context.Background(), "theIndex", "theID")
-		require.ErrorIs(t, err, errs.ErrNotFound{Subj: "record"})
+		require.ErrorIs(t, err, errs.NotFoundError{Subj: "record"})
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
@@ -62,7 +62,7 @@ func TestAPI_GetRecord(tt *testing.T) {
 		rec, err := a.GetRecord(context.Background(), "theIndex", "theID")
 		require.NoError(t, err)
 
-		assert.Equal(t, "theID", rec.Id)
+		assert.Equal(t, "theID", rec.ID)
 		assert.Equal(t, "theIndex", rec.Index)
 		assert.Equal(t, uint64(123), rec.Rev)
 		assert.Equal(t, "theData", rec.Data)
