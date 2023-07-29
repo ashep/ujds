@@ -10,10 +10,6 @@ jobs:
       - name: Setup tools
         uses: arduino/setup-task@v1
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: go.mod
 
       - name: Setup dependencies
         run: go mod vendor
@@ -25,12 +21,15 @@ jobs:
     needs:
       - prepare
     steps:
-      - name: Setup
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          cache: false
+          go-version-file: go.mod
+      - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
-          version: v1.53
-      - name: golangci-lint
-        run: task lint.golangci
+          version: latest
 
   test:
     name: Run tests
@@ -38,13 +37,6 @@ jobs:
     needs:
       - prepare
     steps:
-      - name: Foo
-        run: |
-          ls -la ~
-          env
-          ls -la ${GOROOT_1_20_X64}
-          ls -la ${GOROOT_1_20_X64}/bin
-          which task
       - name: Unit tests
         run: task run test.unit
       - name: Functional tests
