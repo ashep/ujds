@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ashep/go-apperrors"
 	"github.com/xeipuuv/gojsonschema"
-
-	"github.com/ashep/ujds/internal/apperrors"
 )
 
 type Index struct {

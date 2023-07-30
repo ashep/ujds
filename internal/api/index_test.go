@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/api"
-	"github.com/ashep/ujds/internal/apperrors"
 )
 
 func TestIndex_Validate(tt *testing.T) {

@@ -5,19 +5,19 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: ashep/go-ci-github/actions/prepare@main
+      - uses: ashep/go-ci/actions/prepare@main
       - run: task lint:golangci
 
   unit-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: ashep/go-ci-github/actions/prepare@main
+      - uses: ashep/go-ci/actions/prepare@main
       - run: task test:unit
 
   func-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: ashep/go-ci-github/actions/prepare@main
+      - uses: ashep/go-ci/actions/prepare@main
       - run: task test:func
 
   build:
@@ -26,6 +26,7 @@ jobs:
       - unit-tests
       - func-tests
     steps:
+      - uses: ashep/go-ci/actions/prepare@main
       - run: task build
 
 #  build:

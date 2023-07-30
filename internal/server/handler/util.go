@@ -3,10 +3,9 @@ package handler
 import (
 	"errors"
 
+	"github.com/ashep/go-apperrors"
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
-
-	"github.com/ashep/ujds/internal/apperrors"
 )
 
 func grpcErr(err error, proc, msg string, l zerolog.Logger) error {

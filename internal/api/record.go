@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashep/ujds/internal/apperrors"
+	"github.com/ashep/go-apperrors"
 )
 
 type Record struct {
