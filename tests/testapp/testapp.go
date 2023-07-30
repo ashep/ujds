@@ -2,6 +2,7 @@ package testapp
 
 import (
 	"context"
+	"database/sql"
 	"net"
 	"strconv"
 	"strings"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/ashep/ujds/internal/application"
 	"github.com/ashep/ujds/internal/server"
-	"github.com/ashep/ujds/tests/testdb"
 )
 
 const (
@@ -26,7 +26,7 @@ const (
 
 type TestApp struct {
 	app *application.App
-	db  *testdb.TestDB
+	db  *TestDB
 	l   zerolog.Logger
 	lb  *strings.Builder
 }
@@ -34,7 +34,7 @@ type TestApp struct {
 func New(t *testing.T) *TestApp {
 	t.Helper()
 
-	db := testdb.New(t)
+	db := newDB(t)
 	db.Reset(t)
 
 	lb := &strings.Builder{}
@@ -127,4 +127,8 @@ func (a *TestApp) AssertNoLogErrors(t *testing.T) {
 func (a *TestApp) AssertNoLogWarns(t *testing.T) {
 	t.Helper()
 	assert.NotContains(t, a.Logs(), `"level":"warn"`)
+}
+
+func (a *TestApp) DB() *sql.DB {
+	return a.db.db
 }

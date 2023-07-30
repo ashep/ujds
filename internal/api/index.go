@@ -9,26 +9,27 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashep/ujds/internal/errs"
 	"github.com/xeipuuv/gojsonschema"
+
+	"github.com/ashep/ujds/internal/apperrors"
 )
 
 type Index struct {
 	ID        int
 	Name      string
-	Data      []byte
+	Schema    []byte
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
 func (s *Index) Validate(data []byte) error {
-	if bytes.Equal(s.Data, []byte("{}")) {
+	if len(s.Schema) == 0 || bytes.Equal(s.Schema, []byte("{}")) {
 		return nil
 	}
 
-	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Data), gojsonschema.NewBytesLoader(data))
+	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Schema), gojsonschema.NewBytesLoader(data))
 	if err != nil {
-		return fmt.Errorf("schema vaildate failed: %w", err)
+		return fmt.Errorf("schema validate failed: %w", err)
 	}
 
 	if !res.Valid() {
@@ -40,7 +41,7 @@ func (s *Index) Validate(data []byte) error {
 
 func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 	if name == "" {
-		return errs.EmptyArgError{Subj: "name"}
+		return apperrors.EmptyArgError{Subj: "name"}
 	}
 
 	if schema == "" {
@@ -48,7 +49,7 @@ func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 	}
 
 	if err := json.Unmarshal([]byte(schema), &struct{}{}); err != nil {
-		return errs.InvalidArgError{Subj: "schema", E: err}
+		return apperrors.InvalidArgError{Subj: "schema", Reason: err}
 	}
 
 	q := `INSERT INTO index (name, schema) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET schema=$2, updated_at=now()`
@@ -62,7 +63,7 @@ func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 func (a *API) GetIndex(ctx context.Context, name string) (*Index, error) {
 	var (
 		id        int
-		data      []byte
+		schema    []byte
 		createdAt time.Time
 		updatedAt time.Time
 	)
@@ -70,11 +71,11 @@ func (a *API) GetIndex(ctx context.Context, name string) (*Index, error) {
 	q := `SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`
 
 	row := a.db.QueryRowContext(ctx, q, name)
-	if err := row.Scan(&id, &data, &createdAt, &updatedAt); errors.Is(err, sql.ErrNoRows) {
-		return nil, errs.NotFoundError{Subj: "schema"}
+	if err := row.Scan(&id, &schema, &createdAt, &updatedAt); errors.Is(err, sql.ErrNoRows) {
+		return nil, apperrors.NotFoundError{Subj: "schema"}
 	} else if err != nil {
 		return nil, fmt.Errorf("db scan failed: %w", err)
 	}
 
-	return &Index{ID: id, Name: name, Data: data, CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
+	return &Index{ID: id, Name: name, Schema: schema, CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
 }

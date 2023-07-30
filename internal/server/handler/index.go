@@ -30,7 +30,7 @@ func (h *Handler) GetIndex(
 
 	return connect.NewResponse(&v1.GetIndexResponse{
 		Name:      index.Name,
-		Schema:    string(index.Data),
+		Schema:    string(index.Schema),
 		CreatedAt: uint64(index.CreatedAt.Unix()),
 		UpdatedAt: uint64(index.UpdatedAt.Unix()),
 	}), nil

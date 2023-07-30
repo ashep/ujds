@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/api"
-	"github.com/ashep/ujds/internal/errs"
+	"github.com/ashep/ujds/internal/apperrors"
 )
 
 func TestAPI_GetRecord(tt *testing.T) {
@@ -49,7 +49,7 @@ func TestAPI_GetRecord(tt *testing.T) {
 		a := api.New(db, zerolog.Nop())
 
 		_, err = a.GetRecord(context.Background(), "theIndex", "theID")
-		require.ErrorIs(t, err, errs.NotFoundError{Subj: "record"})
+		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "record"})
 	})
 
 	tt.Run("Ok", func(t *testing.T) {

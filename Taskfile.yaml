@@ -52,7 +52,7 @@ tasks:
       GOTEST:
         sh: which gotest || echo go test
     cmds:
-      - '{{.GOTEST}} -v -mod=vendor -race ./...'
+      - '{{.GOTEST}} -v -mod=vendor -race {{default "./..." .CLI_ARGS}}'
 
   test.func:
     desc: Run functional tests

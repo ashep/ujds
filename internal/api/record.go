@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashep/ujds/internal/errs"
+	"github.com/ashep/ujds/internal/apperrors"
 )
 
 type Record struct {
@@ -75,19 +75,19 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	for i, rec := range records {
 		if rec.ID == "" {
 			_ = tx.Rollback()
-			return errs.EmptyArgError{Subj: fmt.Sprintf("record %d: id", i)}
+			return apperrors.EmptyArgError{Subj: fmt.Sprintf("record %d: id", i)}
 		}
 
 		if rec.Data == "" {
 			_ = tx.Rollback()
-			return errs.EmptyArgError{Subj: fmt.Sprintf("record %d: data", i)}
+			return apperrors.EmptyArgError{Subj: fmt.Sprintf("record %d: data", i)}
 		}
 
 		// Validate data against schema
 		recDataB := []byte(rec.Data)
 		if err = sch.Validate(recDataB); err != nil {
 			_ = tx.Rollback()
-			return errs.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), E: err}
+			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err}
 		}
 
 		logID := uint64(0)
@@ -145,7 +145,7 @@ func (a *API) GetRecord(ctx context.Context, index, id string) (Record, error) {
 
 	err := row.Scan(&r.Rev, &r.Data, &r.CreatedAt, &r.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return Record{}, errs.NotFoundError{Subj: "record"}
+		return Record{}, apperrors.NotFoundError{Subj: "record"}
 	} else if err != nil {
 		return Record{}, fmt.Errorf("db scan failed: %w", err)
 	}

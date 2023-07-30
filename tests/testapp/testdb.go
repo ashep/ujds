@@ -1,4 +1,4 @@
-package testdb
+package testapp
 
 import (
 	"database/sql"
@@ -14,7 +14,7 @@ type TestDB struct {
 	db *sql.DB
 }
 
-func New(t *testing.T) *TestDB {
+func newDB(t *testing.T) *TestDB {
 	t.Helper()
 
 	db, err := sql.Open("postgres", "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable")
