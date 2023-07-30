@@ -2,7 +2,6 @@ package api_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -15,26 +14,33 @@ import (
 )
 
 func TestIndex_Validate(tt *testing.T) {
+	tt.Parallel()
+
 	tt.Run("OkNilSchema", func(t *testing.T) {
+		t.Parallel()
 		require.NoError(t, (&api.Index{}).Validate([]byte(`{"foo":"bar"}`)))
 	})
 
 	tt.Run("OkEmptySchema", func(t *testing.T) {
+		t.Parallel()
 		require.NoError(t, (&api.Index{Schema: []byte("{}")}).Validate([]byte(`{"foo":"bar"}`)))
 	})
 
 	tt.Run("ErrInvalidSchema", func(t *testing.T) {
+		t.Parallel()
 		err := (&api.Index{Schema: []byte("{]")}).Validate([]byte(`{"foo":"bar"}`))
 		require.EqualError(t, err, "schema validate failed: invalid character ']' looking for beginning of object key string")
 	})
 
 	tt.Run("ErrValidationError", func(t *testing.T) {
+		t.Parallel()
 		i := &api.Index{Schema: []byte(`{"properties":{"foo":{"type":"number"}}}`)}
 		err := i.Validate([]byte(`{"foo":"bar"}`))
 		require.EqualError(t, err, "foo: Invalid type. Expected: number, given: string")
 	})
 
 	tt.Run("ErrValidationError", func(t *testing.T) {
+		t.Parallel()
 		i := &api.Index{Schema: []byte(`{"properties":{"foo":{"type":"string"}}}`)}
 		err := i.Validate([]byte(`{"foo":"bar"}`))
 		require.NoError(t, err)
@@ -42,7 +48,11 @@ func TestIndex_Validate(tt *testing.T) {
 }
 
 func TestAPI_UpsertIndex(tt *testing.T) {
+	tt.Parallel()
+
 	tt.Run("ErrEmptyName", func(t *testing.T) {
+		t.Parallel()
+
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -54,6 +64,8 @@ func TestAPI_UpsertIndex(tt *testing.T) {
 	})
 
 	tt.Run("ErrInvalidSchema", func(t *testing.T) {
+		t.Parallel()
+
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -62,7 +74,7 @@ func TestAPI_UpsertIndex(tt *testing.T) {
 
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "schema",
-			Reason: errors.New("invalid character ']' looking for beginning of object key string")},
-		)
+			Reason: "invalid character ']' looking for beginning of object key string",
+		})
 	})
 }

@@ -10,7 +10,10 @@ import (
 	"github.com/ashep/ujds/internal/apperrors"
 )
 
+//nolint:dupl // false positive
 func TestNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	err := apperrors.NotFoundError{Subj: "foo"}
 
 	assert.Equal(t, "foo is not found", err.Error())
@@ -25,7 +28,10 @@ func TestNotFoundError(t *testing.T) {
 	assert.True(t, errors.As(fmt.Errorf("wrap: %w", err), &apperrors.NotFoundError{}))
 }
 
+//nolint:dupl // false positive
 func TestAlreadyExistsError(t *testing.T) {
+	t.Parallel()
+
 	err := apperrors.AlreadyExistsError{Subj: "foo"}
 
 	assert.Equal(t, "foo is already exists", err.Error())
@@ -40,7 +46,24 @@ func TestAlreadyExistsError(t *testing.T) {
 	assert.True(t, errors.As(fmt.Errorf("wrap: %w", err), &apperrors.AlreadyExistsError{}))
 }
 
+func TestAccessDeniedError(t *testing.T) {
+	t.Parallel()
+
+	err := apperrors.AccessDeniedError{}
+
+	assert.Equal(t, "access denied", err.Error())
+
+	assert.True(t, errors.Is(err, apperrors.AccessDeniedError{}))
+	assert.True(t, errors.Is(fmt.Errorf("wrap: %w", err), apperrors.AccessDeniedError{}))
+
+	assert.True(t, errors.As(err, &apperrors.AccessDeniedError{}))
+	assert.True(t, errors.As(fmt.Errorf("wrap: %w", err), &apperrors.AccessDeniedError{}))
+}
+
+//nolint:dupl // false positive
 func TestEmptyArgError(t *testing.T) {
+	t.Parallel()
+
 	err := apperrors.EmptyArgError{Subj: "foo"}
 
 	assert.Equal(t, "foo is empty", err.Error())
@@ -56,6 +79,8 @@ func TestEmptyArgError(t *testing.T) {
 }
 
 func TestInvalidArgError(t *testing.T) {
+	t.Parallel()
+
 	err := apperrors.InvalidArgError{Subj: "foo", Reason: "theReason"}
 
 	assert.Equal(t, "invalid foo: theReason", err.Error())
