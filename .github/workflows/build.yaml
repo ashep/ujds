@@ -30,7 +30,7 @@ jobs:
       - unit-tests
       - func-tests
     steps:
-      run: tasl build
+      - run: task build
 
 #  build:
 #    name: Build
