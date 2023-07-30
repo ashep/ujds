@@ -6,10 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: ashep/go-ci-github/actions/prepare@v1
-      - uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
+      - uses: ashep/go-ci-github/actions/prepare
+      - run: task lint
 
   test:
     name: Test
@@ -17,7 +15,7 @@ jobs:
     needs:
       - lint
     steps:
-      - uses: ashep/go-ci-github/actions/prepare@v1
+      - uses: ashep/go-ci-github/actions/prepare
       - run: go mod vendor
       - run: task test.unit
       - run: task test.func
@@ -28,8 +26,7 @@ jobs:
     needs:
       - test
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/prepare
+      - uses: ashep/go-ci-github/actions/prepare
       - run: docker login -u ${{ vars.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASSWD }}
       - run: docker build --build-arg ARCH=x86_64 --build-arg APP_NAME=${{ github.event.repository.name }} --build-arg APP_VERSION=${{ github.ref_name }} -t ${{ github.event.repository.name }} .
       - if: github.ref_name != 'main'

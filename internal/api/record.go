@@ -87,7 +87,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 		recDataB := []byte(rec.Data)
 		if err = sch.Validate(recDataB); err != nil {
 			_ = tx.Rollback()
-			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err}
+			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
 		}
 
 		logID := uint64(0)

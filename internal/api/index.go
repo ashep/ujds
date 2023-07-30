@@ -49,7 +49,7 @@ func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 	}
 
 	if err := json.Unmarshal([]byte(schema), &struct{}{}); err != nil {
-		return apperrors.InvalidArgError{Subj: "schema", Reason: err}
+		return apperrors.InvalidArgError{Subj: "schema", Reason: err.Error()}
 	}
 
 	q := `INSERT INTO index (name, schema) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET schema=$2, updated_at=now()`

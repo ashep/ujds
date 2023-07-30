@@ -1,81 +1,25 @@
-version: "3"
+version: '3'
 
-vars:
-  APP_NAME: ujds
+includes:
+  app:
+    taskfile: .ci/Taskfile.app.yaml
+    optional: true
+  gen:
+    taskfile: .ci/Taskfile.gen.yaml
+    optional: true
+  lint:
+    taskfile: .ci/Taskfile.lint.yaml
+    optional: true
+  test:
+    taskfile: .ci/Taskfile.test.yaml
+    optional: true
+  build:
+    taskfile: .ci/Taskfile.build.yaml
+    optional: true
 
 tasks:
-  run:
-    desc: Run the application
-    cmds:
-      - go run -race main.go {{.CLI_ARGS}}
-
-  migrate-up:
-    desc: Apply db migrations
-    cmds:
-      - go run main.go --migrate-up {{.CLI_ARGS}}
-
-  migrate-down:
-    desc: Revert db migrations
-    cmds:
-      - go run main.go --migrate-down {{.CLI_ARGS}}
-
-  gen:
-    desc: Run code generation
-    cmds:
-      - task: gen.proto
-
-  gen.proto:
-    desc: Generate protobuf code
-    cmds:
-      - rm -rvf ./sdk/proto
-      - buf lint proto
-      - buf generate
-
-  lint:
-    desc: Run all linters
-    cmds:
-      - task: lint.golangci
-
-  lint.golangci:
-    desc: Run 'golangci-lint' linter
-    cmds:
-      - golangci-lint run ./...
-
-  test:
-    desc: Run all tests
-    cmds:
-      - task: test.unit
-
-  test.unit:
-    desc: Run unit tests
-    vars:
-      GOTEST:
-        sh: which gotest || echo go test
-    cmds:
-      - '{{.GOTEST}} -v -mod=vendor -race {{default "./..." .CLI_ARGS}}'
-
-  test.func:
-    desc: Run functional tests
-    vars:
-      GOTEST:
-        sh: which gotest || echo go test
-    cmds:
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml up --remove-orphans -d
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml run --rm --remove-orphans tests go test -v -mod=vendor -tags=functest ./tests/...
-
-  test.func.it:
-    desc: Interactively attach to functional tests container
-    cmds:
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml up --remove-orphans -d
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml run --rm -i tests sh
-
-  test.func.clean:
-    desc: Cleanup test environment
-    cmds:
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml down --remove-orphans
-      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml down -v
-
-  clean:
-    desc: Cleanup
-    cmds:
-      - task: test.func.clean
+ init:
+   desc: Initialize environment
+   cmds:
+     - rm -rf .ci
+     - git clone https://github.com/ashep/go-ci.git .ci
