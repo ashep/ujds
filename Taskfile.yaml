@@ -1,5 +1,8 @@
 version: "3"
 
+vars:
+  APP_NAME: ujds
+
 tasks:
   run:
     desc: Run the application
@@ -57,4 +60,22 @@ tasks:
       GOTEST:
         sh: which gotest || echo go test
     cmds:
-      - echo 'Not implemented yet'
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml up --remove-orphans -d
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml run --rm --remove-orphans tests go test -v -mod=vendor -tags=functest ./tests/...
+
+  test.func.it:
+    desc: Interactively attach to functional tests container
+    cmds:
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml up --remove-orphans -d
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml run --rm -i tests sh
+
+  test.func.clean:
+    desc: Cleanup test environment
+    cmds:
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml down --remove-orphans
+      - docker compose -p {{.APP_NAME}}_tests -f docker-compose.tests.yaml down -v
+
+  clean:
+    desc: Cleanup
+    cmds:
+      - task: test.func.clean
