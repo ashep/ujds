@@ -25,24 +25,21 @@ jobs:
     needs:
       - unit-tests
       - func-tests
+    env:
+      TASK_APP_NAME: ${{ github.event.repository.name }}
+      TASK_APP_VERSION: ${{ github.ref_name }}
     steps:
       - uses: ashep/go-ci/actions/prepare@main
-      - run: task build
+      - run: task docker:build
 
-#  build:
-#    name: Build
-#    runs-on: ubuntu-latest
-#    needs:
-#      - test
-#    steps:
-#      - uses: ashep/go-ci-github/actions/prepare@main
-#      - run: docker login -u ${{ vars.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASSWD }}
-#      - run: docker build --build-arg ARCH=x86_64 --build-arg APP_NAME=${{ github.event.repository.name }} --build-arg APP_VERSION=${{ github.ref_name }} -t ${{ github.event.repository.name }} .
-#      - if: github.ref_name != 'main'
-#        run: |
-#          docker tag ${{ github.event.repository.name }} ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:dev
-#          docker push ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:dev
-#      - if: github.ref_name == 'main'
-#        run: |
-#          docker tag ${{ github.event.repository.name }} ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:latest
-#          docker push ${{ vars.REGISTRY_USER }}/${{ github.event.repository.name }}:latest
+  publish:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    env:
+      TASK_APP_NAME: ${{ github.event.repository.name }}
+      TASK_APP_VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: ashep/go-ci-github/actions/prepare@main
+      - run: docker login -u ${{ vars.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASSWD }}
+      - run: task docker:push

@@ -1,5 +1,14 @@
 version: '3'
 
+vars:
+  APP_NAME:
+    sh: basename $(pwd)
+  APP_VERSION:
+    sh: git rev-parse --abbrev-ref HEAD
+  ARCH:
+    sh: uname -m
+  REGISTRY_REPO: ashep/{{.APP_NAME}}
+
 includes:
   app:
     taskfile: .ci/Taskfile.app.yaml
@@ -13,13 +22,13 @@ includes:
   test:
     taskfile: .ci/Taskfile.test.yaml
     optional: true
-  build:
-    taskfile: .ci/Taskfile.build.yaml
+  docker:
+    taskfile: .ci/Taskfile.docker.yaml
     optional: true
 
 tasks:
- init:
-   desc: Initialize environment
-   cmds:
-     - rm -rf .ci
-     - git clone https://github.com/ashep/go-ci.git .ci
+  init:
+    desc: Initialize environment
+    cmds:
+      - rm -rf .ci
+      - git clone https://github.com/ashep/go-ci.git .ci
