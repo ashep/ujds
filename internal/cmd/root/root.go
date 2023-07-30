@@ -5,17 +5,14 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"net/http"
 	"os"
 
+	"github.com/ashep/go-cfgloader"
 	"github.com/spf13/cobra"
 
-	"github.com/ashep/go-cfgloader"
-	"github.com/ashep/ujds/internal/api"
-	"github.com/ashep/ujds/internal/config"
+	"github.com/ashep/ujds/internal/application"
 	"github.com/ashep/ujds/internal/logger"
 	"github.com/ashep/ujds/internal/migration"
-	"github.com/ashep/ujds/internal/server"
 )
 
 func New() *cobra.Command {
@@ -40,35 +37,43 @@ func New() *cobra.Command {
 				return
 			}
 
-			db, err := dbConn(cmd.Context(), cfg.DB.DSN)
-			if err != nil {
-				l.Fatal().Err(err).Msg("database connection failed")
-				return
-			}
-
 			if migUp {
+				db, err := dbConn(cmd.Context(), cfg.DB.DSN)
+				if err != nil {
+					l.Fatal().Err(err).Msg("database connection failed")
+					return
+				}
+
 				if err := migration.Up(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to apply migrations")
+					return
 				}
+
 				l.Info().Msg("migrations applied")
+
 				return
 			}
 
 			if migDown {
+				db, err := dbConn(cmd.Context(), cfg.DB.DSN)
+				if err != nil {
+					l.Fatal().Err(err).Msg("database connection failed")
+					return
+				}
+
 				if err := migration.Down(db); err != nil {
 					l.Fatal().Err(err).Msg("failed to revert migrations")
+					return
 				}
+
 				l.Info().Msg("migrations reverted")
+
 				return
 			}
 
-			a := api.New(db, l.With().Str("pkg", "api").Logger())
-			s := server.New(cfg.Server, a, l.With().Str("pkg", "server").Logger())
-
-			if err := s.Run(cmd.Context()); errors.Is(err, http.ErrServerClosed) {
-				l.Info().Msg("server stopped")
-			} else if err != nil {
-				l.Error().Err(err).Msg("")
+			err = application.New(cfg, l).Run(cmd.Context())
+			if err != nil {
+				l.Fatal().Err(err).Msg("app run failed")
 			}
 		},
 	}
@@ -81,8 +86,8 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func loadConfig(appName, cfgPath string) (config.Config, error) {
-	cfg := config.Config{}
+func loadConfig(appName, cfgPath string) (application.Config, error) {
+	cfg := application.Config{}
 
 	fi, err := os.Stat(cfgPath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -90,7 +95,7 @@ func loadConfig(appName, cfgPath string) (config.Config, error) {
 	}
 
 	if fi != nil {
-		if err := cfgloader.LoadFromPath(cfgPath, &cfg, config.Schema); err != nil {
+		if err := cfgloader.LoadFromPath(cfgPath, &cfg, application.Schema); err != nil {
 			return cfg, fmt.Errorf("failed to load from path: %w", err)
 		}
 	}
@@ -104,7 +109,7 @@ func loadConfig(appName, cfgPath string) (config.Config, error) {
 
 func dbConn(ctx context.Context, dsn string) (*sql.DB, error) {
 	if dsn == "" {
-		return nil, errors.New("empty dsn")
+		dsn = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 	}
 
 	db, err := sql.Open("postgres", dsn)
