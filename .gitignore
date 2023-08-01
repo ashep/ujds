@@ -1,4 +1,5 @@
 .ci
 .idea
-/vendor
 /config.yaml
+/tmp
+/vendor
