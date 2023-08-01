@@ -2,4 +2,4 @@ name: build
 on: push
 jobs:
   build:
-    uses: ashep/go-ci/workflows/build-go-app.yaml@main
+    uses: ashep/go-ci/.github/workflows/build-go-app.yaml@main
