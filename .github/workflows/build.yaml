@@ -25,12 +25,12 @@ jobs:
     needs:
       - unit-tests
       - func-tests
-    env:
-      TASK_APP_NAME: ${{ github.event.repository.name }}
-      TASK_APP_VERSION: ${{ github.ref_name }}
     steps:
       - uses: ashep/go-ci/actions/prepare@main
-      - run: task docker:build
+      - uses: ashep/go-ci/actions/build@main
+        with:
+          app_name: ${{ github.event.repository.name }}
+          app_version: ${{ github.ref_name }}
 
   publish:
     runs-on: ubuntu-latest
