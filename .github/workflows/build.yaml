@@ -1,48 +1,5 @@
 name: build
 on: push
 jobs:
-  golangci-lint:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: ashep/go-ci/actions/prepare@main
-      - run: task lint:golangci
-
-  unit-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ashep/go-ci/actions/prepare@main
-      - run: task test:unit
-
-  func-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: ashep/go-ci/actions/prepare@main
-      - run: task test:func
-
   build:
-    runs-on: ubuntu-latest
-    needs:
-      - unit-tests
-      - func-tests
-    steps:
-      - uses: ashep/go-ci/actions/prepare@main
-      - uses: ashep/go-ci/actions/build@main
-        with:
-          app_name: ${{ github.event.repository.name }}
-          app_version: ${{ github.ref_name }}
-
-  publish:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    env:
-      TASK_APP_NAME: ${{ github.event.repository.name }}
-      TASK_APP_VERSION: ${{ github.ref_name }}
-    steps:
-      - run: docker login -u ${{ vars.REGISTRY_USER }} -p ${{ secrets.REGISTRY_PASSWD }}
-      - uses: ashep/go-ci/actions/prepare@main
-      - uses: ashep/go-ci/actions/publish@main
-        with:
-          app_name: ${{ github.event.repository.name }}
-          app_version: ${{ github.ref_name }}
+    uses: ashep/go-ci/workflows/build-go-app.yaml@main
