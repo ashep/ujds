@@ -4,6 +4,6 @@ jobs:
   build:
     uses: ashep/go-ci/.github/workflows/go-app.yaml@main
     with:
-      registry_user: ${{ vars.REGISTRY_PASSWORD }}
+      registry_user: ${{ vars.REGISTRY_USER }}
     secrets:
       registry_password: ${{ secrets.REGISTRY_PASSWORD }}
