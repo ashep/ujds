@@ -3,3 +3,7 @@ on: push
 jobs:
   build:
     uses: ashep/go-ci/.github/workflows/build-go-app.yaml@main
+    with:
+      registry_user: ${{ vars.REGISTRY_PASSWORD }}
+    secrets:
+      registry_password: ${{ secrets.REGISTRY_PASSWORD }}
