@@ -2,12 +2,11 @@ version: '3'
 
 vars:
   APP_NAME:
-    sh: basename $(pwd)
+    sh: echo "${APP_NAME:-$(basename $(pwd))}"
   APP_VERSION:
-    sh: git rev-parse --abbrev-ref HEAD
+    sh: echo "${APP_VERSION:-$(git rev-parse --abbrev-ref HEAD)}"
   ARCH:
-    sh: uname -m
-  REGISTRY_REPO: ashep/{{.APP_NAME}}
+    sh: echo "${ARCH:-$(uname -m)}"
 
 includes:
   app:
