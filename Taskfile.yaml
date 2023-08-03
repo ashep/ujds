@@ -30,4 +30,4 @@ tasks:
     desc: Initialize environment
     cmds:
       - rm -rf .ci
-      - git clone https://github.com/ashep/go-ci.git .ci
+      - git clone --branch v1 https://github.com/ashep/ci.git .ci

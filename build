@@ -1,0 +1,14 @@
+task: Available tasks for this project:
+* init:                   Initialize environment
+* app:migrate-down:       Revert db migrations
+* app:migrate-up:         Apply db migrations
+* app:run:                Run the application
+* gen:default:            Run all code generation tools      (aliases: gen)
+* gen:proto:              Generate protobuf code
+* lint:default:           Run all linters      (aliases: lint)
+* lint:golangci:          Run 'golangci-lint' linter
+* test:clean:             Cleanup test environment
+* test:default:           Run all tests      (aliases: test)
+* test:func:              Run functional tests
+* test:func:manual:       Attach to functional tests container
+* test:unit:              Run unit tests
