@@ -1,7 +1,6 @@
-package api
+package indexrepository
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
@@ -10,35 +9,19 @@ import (
 	"time"
 
 	"github.com/ashep/go-apperrors"
-	"github.com/xeipuuv/gojsonschema"
+	"github.com/rs/zerolog"
 )
 
-type Index struct {
-	ID        int
-	Name      string
-	Schema    []byte
-	CreatedAt time.Time
-	UpdatedAt time.Time
+type Repository struct {
+	db *sql.DB
+	l  zerolog.Logger
 }
 
-func (s *Index) Validate(data []byte) error {
-	if len(s.Schema) == 0 || bytes.Equal(s.Schema, []byte("{}")) {
-		return nil
-	}
-
-	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(s.Schema), gojsonschema.NewBytesLoader(data))
-	if err != nil {
-		return fmt.Errorf("schema validate failed: %w", err)
-	}
-
-	if !res.Valid() {
-		return errors.New(res.Errors()[0].String())
-	}
-
-	return nil
+func New(db *sql.DB, l zerolog.Logger) *Repository {
+	return &Repository{db: db, l: l}
 }
 
-func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
+func (a *Repository) Upsert(ctx context.Context, name, schema string) error {
 	if name == "" {
 		return apperrors.EmptyArgError{Subj: "name"}
 	}
@@ -59,7 +42,7 @@ func (a *API) UpsertIndex(ctx context.Context, name, schema string) error {
 	return nil
 }
 
-func (a *API) GetIndex(ctx context.Context, name string) (*Index, error) {
+func (a *Repository) Get(ctx context.Context, name string) (Index, error) {
 	var (
 		id        int
 		schema    []byte
@@ -71,10 +54,10 @@ func (a *API) GetIndex(ctx context.Context, name string) (*Index, error) {
 
 	row := a.db.QueryRowContext(ctx, q, name)
 	if err := row.Scan(&id, &schema, &createdAt, &updatedAt); errors.Is(err, sql.ErrNoRows) {
-		return nil, apperrors.NotFoundError{Subj: "schema"}
+		return Index{}, apperrors.NotFoundError{Subj: "schema"}
 	} else if err != nil {
-		return nil, fmt.Errorf("db scan failed: %w", err)
+		return Index{}, fmt.Errorf("db scan failed: %w", err)
 	}
 
-	return &Index{ID: id, Name: name, Schema: schema, CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
+	return Index{ID: id, Name: name, Schema: schema, CreatedAt: createdAt, UpdatedAt: updatedAt}, nil
 }

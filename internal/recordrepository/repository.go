@@ -1,4 +1,4 @@
-package api
+package recordrepository
 
 import (
 	"context"
@@ -9,27 +9,25 @@ import (
 	"time"
 
 	"github.com/ashep/go-apperrors"
+	"github.com/rs/zerolog"
+
+	"github.com/ashep/ujds/internal/indexrepository"
 )
 
-type Record struct {
-	ID        string
-	Index     string
-	Rev       uint64
-	Data      string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+type Repository struct {
+	db *sql.DB
+	l  zerolog.Logger
+}
+
+func New(db *sql.DB, l zerolog.Logger) *Repository {
+	return &Repository{db: db, l: l}
 }
 
 //nolint:cyclop // TODO
-func (a *API) PushRecords(ctx context.Context, schema string, records []Record) error {
+func (r *Repository) Push(ctx context.Context, index indexrepository.Index, records []Record) error {
 	var err error
 
-	sch, err := a.GetIndex(ctx, schema)
-	if err != nil {
-		return fmt.Errorf("get index failed: %w", err)
-	}
-
-	tx, err := a.db.Begin()
+	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("db begin failed: %w", err)
 	}
@@ -42,11 +40,11 @@ func (a *API) PushRecords(ctx context.Context, schema string, records []Record) 
 
 	defer func() {
 		if err := qGetRecord.Close(); err != nil {
-			a.l.Error().Err(err).Msg("prepared statement close failed")
+			r.l.Error().Err(err).Msg("prepared statement close failed")
 		}
 	}()
 
-	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (index_id, record_id, data) 
+	qInsertLog, err := tx.PrepareContext(ctx, `INSERT INTO record_log (index_id, record_id, data)
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
 		_ = tx.Rollback()
@@ -55,11 +53,11 @@ func (a *API) PushRecords(ctx context.Context, schema string, records []Record) 
 
 	defer func() {
 		if err := qInsertLog.Close(); err != nil {
-			a.l.Error().Err(err).Msg("prepared statement close failed")
+			r.l.Error().Err(err).Msg("prepared statement close failed")
 		}
 	}()
 
-	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum) 
+	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum)
 VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
@@ -68,7 +66,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 
 	defer func() {
 		if err := qInsertRecord.Close(); err != nil {
-			a.l.Error().Err(err).Msg("prepared statement close failed")
+			r.l.Error().Err(err).Msg("prepared statement close failed")
 		}
 	}()
 
@@ -85,7 +83,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 
 		// Validate data against schema
 		recDataB := []byte(rec.Data)
-		if err = sch.Validate(recDataB); err != nil {
+		if err = index.Validate(recDataB); err != nil {
 			_ = tx.Rollback()
 			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
 		}
@@ -108,7 +106,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			continue
 		}
 
-		row = qInsertLog.QueryRowContext(ctx, sch.ID, rec.ID, rec.Data)
+		row = qInsertLog.QueryRowContext(ctx, index.ID, rec.ID, rec.Data)
 		if err = row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
 			_ = tx.Rollback()
 			return nil
@@ -117,7 +115,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 			return fmt.Errorf("db query failed: %w", err)
 		}
 
-		if _, err = qInsertRecord.ExecContext(ctx, rec.ID, sch.ID, logID, sum[:]); err != nil {
+		if _, err = qInsertRecord.ExecContext(ctx, rec.ID, index.ID, logID, sum[:]); err != nil {
 			_ = tx.Rollback()
 			return fmt.Errorf("db query failed: %w", err)
 		}
@@ -130,46 +128,40 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	return nil
 }
 
-// GetRecord returns last version of a record.
-func (a *API) GetRecord(ctx context.Context, index, id string) (Record, error) {
+// Get returns last version of a record.
+func (r *Repository) Get(ctx context.Context, indexName string, id string) (Record, error) {
 	q := `SELECT r.log_id, l.data, r.created_at, r.updated_at FROM record r
-		LEFT JOIN record_log l ON r.log_id = l.id 
-		LEFT JOIN index i ON r.index_id = i.id 
+		LEFT JOIN record_log l ON r.log_id = l.id
+		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`
-	row := a.db.QueryRowContext(ctx, q, index, id)
+	row := r.db.QueryRowContext(ctx, q, indexName, id)
 
-	r := Record{
+	rec := Record{
 		ID:    id,
-		Index: index,
+		Index: indexName,
 	}
 
-	err := row.Scan(&r.Rev, &r.Data, &r.CreatedAt, &r.UpdatedAt)
+	err := row.Scan(&rec.Rev, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return Record{}, apperrors.NotFoundError{Subj: "record"}
 	} else if err != nil {
 		return Record{}, fmt.Errorf("db scan failed: %w", err)
 	}
 
-	return r, nil
+	return rec, nil
 }
 
-func (a *API) GetRecords(
-	ctx context.Context,
-	index string,
-	since time.Time,
-	cursor uint64,
-	limit uint32,
-) ([]Record, uint64, error) {
+func (r *Repository) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]Record, uint64, error) {
 	if limit == 0 || limit > 500 {
 		limit = 500
 	}
 
 	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
-		LEFT JOIN record_log l ON r.log_id = l.id 
-		LEFT JOIN index i ON r.index_id = i.id 
+		LEFT JOIN record_log l ON r.log_id = l.id
+		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
 
-	rows, err := a.db.QueryContext(ctx, q, index, since, cursor, limit)
+	rows, err := r.db.QueryContext(ctx, q, indexName, since, cursor, limit)
 	if err != nil {
 		return nil, 0, fmt.Errorf("db query failed: %w", err)
 	}
@@ -178,7 +170,7 @@ func (a *API) GetRecords(
 		_ = rows.Close()
 	}()
 
-	r := make([]Record, 0)
+	rcs := make([]Record, 0)
 	recID, logID, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
 
 	for rows.Next() {
@@ -186,9 +178,9 @@ func (a *API) GetRecords(
 			return nil, 0, fmt.Errorf("db scan failed: %w", err)
 		}
 
-		r = append(r, Record{
+		rcs = append(rcs, Record{
 			ID:        recID,
-			Index:     index,
+			Index:     indexName,
 			Rev:       logID,
 			Data:      data,
 			CreatedAt: crAt,
@@ -201,26 +193,26 @@ func (a *API) GetRecords(
 	}
 
 	nextCursor := uint64(0)
-	if len(r) > 0 {
+	if len(rcs) > 0 {
 		nextCursor = logID + 1
 	}
 
-	return r, nextCursor, nil
+	return rcs, nextCursor, nil
 }
 
-func (a *API) ClearRecords(ctx context.Context, index string) error {
-	tx, err := a.db.BeginTx(ctx, nil)
+func (r *Repository) Clear(ctx context.Context, indexName string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, `DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1)`, index)
+	_, err = tx.ExecContext(ctx, `DELETE FROM record WHERE index_id=$1`, indexName)
 	if err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("failed to delete records: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, `DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1)`, index)
+	_, err = tx.ExecContext(ctx, `DELETE FROM record_log WHERE index_id=$1`, indexName)
 	if err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("failed to delete records: %w", err)
