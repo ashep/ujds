@@ -13,9 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/application"
+	"github.com/ashep/ujds/internal/app"
 	"github.com/ashep/ujds/internal/server"
-	"github.com/ashep/ujds/tests/testdb"
 )
 
 const (
@@ -25,8 +24,8 @@ const (
 )
 
 type TestApp struct {
-	app *application.App
-	db  *testdb.TestDB
+	app *app.App
+	db  *TestDB
 	l   zerolog.Logger
 	lb  *strings.Builder
 }
@@ -34,14 +33,14 @@ type TestApp struct {
 func New(t *testing.T) *TestApp {
 	t.Helper()
 
-	db := testdb.New(t)
+	db := newDB(t)
 	db.Reset(t)
 
 	lb := &strings.Builder{}
 	l := zerolog.New(lb)
 
-	app := application.New(application.Config{
-		DB: application.Database{
+	a := app.New(app.Config{
+		DB: app.Database{
 			DSN: "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable",
 		},
 		Server: server.Config{
@@ -51,7 +50,7 @@ func New(t *testing.T) *TestApp {
 	}, l)
 
 	return &TestApp{
-		app: app,
+		app: a,
 		db:  db,
 		l:   l,
 		lb:  lb,
@@ -127,4 +126,8 @@ func (a *TestApp) AssertNoLogErrors(t *testing.T) {
 func (a *TestApp) AssertNoLogWarns(t *testing.T) {
 	t.Helper()
 	assert.NotContains(t, a.Logs(), `"level":"warn"`)
+}
+
+func (a *TestApp) DB() *TestDB {
+	return a.db
 }

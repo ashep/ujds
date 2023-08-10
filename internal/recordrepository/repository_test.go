@@ -1,4 +1,4 @@
-package api_test
+package recordrepository_test
 
 import (
 	"context"
@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/api"
-	"github.com/ashep/ujds/internal/errs"
+	"github.com/ashep/ujds/internal/recordrepository"
 )
 
-func TestAPI_GetRecord(tt *testing.T) {
+func TestRepository_Get(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("ErrRowScan", func(t *testing.T) {
@@ -29,9 +29,9 @@ func TestAPI_GetRecord(tt *testing.T) {
 			WithArgs("theIndex", "theID").
 			WillReturnError(errors.New("theSQLError"))
 
-		a := api.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, zerolog.Nop())
 
-		_, err = a.GetRecord(context.Background(), "theIndex", "theID")
+		_, err = repo.Get(context.Background(), "theIndex", "theID")
 		require.EqualError(t, err, "db scan failed: theSQLError")
 	})
 
@@ -46,10 +46,10 @@ func TestAPI_GetRecord(tt *testing.T) {
 			WithArgs("theIndex", "theID").
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		a := api.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, zerolog.Nop())
 
-		_, err = a.GetRecord(context.Background(), "theIndex", "theID")
-		require.ErrorIs(t, err, errs.NotFoundError{Subj: "record"})
+		_, err = repo.Get(context.Background(), "theIndex", "theID")
+		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "record"})
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
@@ -65,9 +65,9 @@ func TestAPI_GetRecord(tt *testing.T) {
 			WithArgs("theIndex", "theID").
 			WillReturnRows(rows)
 
-		a := api.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, zerolog.Nop())
 
-		rec, err := a.GetRecord(context.Background(), "theIndex", "theID")
+		rec, err := repo.Get(context.Background(), "theIndex", "theID")
 		require.NoError(t, err)
 
 		assert.Equal(t, "theID", rec.ID)

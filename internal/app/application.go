@@ -1,4 +1,4 @@
-package application
+package app
 
 import (
 	"context"
@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/internal/api"
+	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/recordrepository"
 	"github.com/ashep/ujds/internal/server"
+	"github.com/ashep/ujds/internal/server/handler"
 )
 
 type App struct {
@@ -28,11 +31,8 @@ func (a *App) Run(ctx context.Context) error {
 		return fmt.Errorf("database connection failed: %w", err)
 	}
 
-	s := server.New(
-		a.cfg.Server,
-		api.New(db, a.l.With().Str("pkg", "api").Logger()),
-		a.l.With().Str("pkg", "server").Logger(),
-	)
+	h := handler.New(indexrepository.New(db, a.l), recordrepository.New(db, a.l), time.Now, a.l)
+	s := server.New(a.cfg.Server, h, h, a.l.With().Str("pkg", "server").Logger())
 
 	if err := s.Run(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("server run failed: %w", err)

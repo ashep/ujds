@@ -1,5 +1,7 @@
 # UJDS
 
+[![ci](https://github.com/ashep/ujds/actions/workflows/ci.yaml/badge.svg)](https://github.com/ashep/ujds/actions/workflows/ci.yaml)
+
 **Universal JSON Data Storage** is a service which gets JSON data called **records**, validates with JSON 
 **schema** and stores into the database, keeping track of changes history.
 
