@@ -10,7 +10,7 @@ import (
 	"github.com/ashep/go-cfgloader"
 	"github.com/spf13/cobra"
 
-	"github.com/ashep/ujds/internal/application"
+	"github.com/ashep/ujds/internal/app"
 	"github.com/ashep/ujds/internal/logger"
 	"github.com/ashep/ujds/internal/migration"
 )
@@ -71,7 +71,7 @@ func New() *cobra.Command {
 				return
 			}
 
-			err = application.New(cfg, l).Run(cmd.Context())
+			err = app.New(cfg, l).Run(cmd.Context())
 			if err != nil {
 				l.Fatal().Err(err).Msg("app run failed")
 			}
@@ -86,8 +86,8 @@ func New() *cobra.Command {
 	return cmd
 }
 
-func loadConfig(appName, cfgPath string) (application.Config, error) {
-	cfg := application.Config{}
+func loadConfig(appName, cfgPath string) (app.Config, error) {
+	cfg := app.Config{}
 
 	fi, err := os.Stat(cfgPath)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -95,7 +95,7 @@ func loadConfig(appName, cfgPath string) (application.Config, error) {
 	}
 
 	if fi != nil {
-		if err := cfgloader.LoadFromPath(cfgPath, &cfg, application.Schema); err != nil {
+		if err := cfgloader.LoadFromPath(cfgPath, &cfg, app.Schema); err != nil {
 			return cfg, fmt.Errorf("failed to load from path: %w", err)
 		}
 	}

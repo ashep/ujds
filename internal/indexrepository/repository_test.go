@@ -14,7 +14,7 @@ import (
 	"github.com/ashep/ujds/internal/indexrepository"
 )
 
-func TestAPI_UpsertIndex(tt *testing.T) {
+func TestRepository_Upsert(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("EmptyName", func(t *testing.T) {
@@ -77,6 +77,24 @@ DO UPDATE SET schema=$2, updated_at=now()`).
 
 		repo := indexrepository.New(db, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "{}")
+
+		require.NoError(t, err)
+	})
+
+	tt.Run("OkEmptySchema", func(t *testing.T) {
+		t.Parallel()
+
+		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		require.NoError(t, err)
+
+		dbm.
+			ExpectExec(`INSERT INTO index (name, schema) VALUES ($1, $2) ON CONFLICT (name)
+DO UPDATE SET schema=$2, updated_at=now()`).
+			WithArgs("theIndex", "{}").
+			WillReturnResult(sqlmock.NewResult(123, 234))
+
+		repo := indexrepository.New(db, zerolog.Nop())
+		err = repo.Upsert(context.Background(), "theIndex", "")
 
 		require.NoError(t, err)
 	})

@@ -65,4 +65,28 @@ func TestHandler_PushIndex(tt *testing.T) {
 		require.EqualError(t, err, "internal: err_code: 123456789")
 		assert.Equal(t, `{"level":"error","error":"theRepoError","proc":"","err_code":123456789,"message":"index repo upsert failed"}`+"\n", lb.String())
 	})
+
+	tt.Run("Ok", func(t *testing.T) {
+		t.Parallel()
+
+		ir := &indexRepoMock{}
+		rr := &recordRepoMock{}
+		now := func() time.Time { return time.Unix(123456789, 0) }
+		lb := &strings.Builder{}
+		l := zerolog.New(lb)
+
+		ir.UpsertFunc = func(ctx context.Context, name string, schema string) error {
+			assert.Equal(t, "theIndexName", name)
+			assert.Equal(t, `{"foo":"bar"}`, schema)
+			return nil
+		}
+
+		h := handler.New(ir, rr, now, l)
+		_, err := h.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+			Name:   "theIndexName",
+			Schema: `{"foo":"bar"}`,
+		}))
+
+		assert.NoError(t, err)
+	})
 }
