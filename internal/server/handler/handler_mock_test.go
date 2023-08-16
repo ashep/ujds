@@ -5,10 +5,10 @@ package handler_test
 
 import (
 	"context"
-	"github.com/ashep/ujds/internal/indexrepository"
-	"github.com/ashep/ujds/internal/recordrepository"
 	"sync"
 	"time"
+
+	"github.com/ashep/ujds/internal/model"
 )
 
 // indexRepoMock is a mock implementation of handler.indexRepo.
@@ -31,7 +31,7 @@ import (
 //	}
 type indexRepoMock struct {
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, name string) (indexrepository.Index, error)
+	GetFunc func(ctx context.Context, name string) (model.Index, error)
 
 	// UpsertFunc mocks the Upsert method.
 	UpsertFunc func(ctx context.Context, name string, schema string) error
@@ -60,7 +60,7 @@ type indexRepoMock struct {
 }
 
 // Get calls GetFunc.
-func (mock *indexRepoMock) Get(ctx context.Context, name string) (indexrepository.Index, error) {
+func (mock *indexRepoMock) Get(ctx context.Context, name string) (model.Index, error) {
 	if mock.GetFunc == nil {
 		panic("indexRepoMock.GetFunc: method is nil but indexRepo.Get was just called")
 	}
@@ -164,13 +164,13 @@ type recordRepoMock struct {
 	ClearFunc func(ctx context.Context, indexName string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, indexName string, id string) (recordrepository.Record, error)
+	GetFunc func(ctx context.Context, indexName string, id string) (model.Record, error)
 
 	// GetAllFunc mocks the GetAll method.
-	GetAllFunc func(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]recordrepository.Record, uint64, error)
+	GetAllFunc func(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// PushFunc mocks the Push method.
-	PushFunc func(ctx context.Context, index indexrepository.Index, records []recordrepository.Record) error
+	PushFunc func(ctx context.Context, index model.Index, records []model.Record) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -208,9 +208,9 @@ type recordRepoMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// Index is the index argument value.
-			Index indexrepository.Index
+			Index model.Index
 			// Records is the records argument value.
-			Records []recordrepository.Record
+			Records []model.Record
 		}
 	}
 	lockClear  sync.RWMutex
@@ -256,7 +256,7 @@ func (mock *recordRepoMock) ClearCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *recordRepoMock) Get(ctx context.Context, indexName string, id string) (recordrepository.Record, error) {
+func (mock *recordRepoMock) Get(ctx context.Context, indexName string, id string) (model.Record, error) {
 	if mock.GetFunc == nil {
 		panic("recordRepoMock.GetFunc: method is nil but recordRepo.Get was just called")
 	}
@@ -296,7 +296,7 @@ func (mock *recordRepoMock) GetCalls() []struct {
 }
 
 // GetAll calls GetAllFunc.
-func (mock *recordRepoMock) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]recordrepository.Record, uint64, error) {
+func (mock *recordRepoMock) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 	if mock.GetAllFunc == nil {
 		panic("recordRepoMock.GetAllFunc: method is nil but recordRepo.GetAll was just called")
 	}
@@ -344,14 +344,14 @@ func (mock *recordRepoMock) GetAllCalls() []struct {
 }
 
 // Push calls PushFunc.
-func (mock *recordRepoMock) Push(ctx context.Context, index indexrepository.Index, records []recordrepository.Record) error {
+func (mock *recordRepoMock) Push(ctx context.Context, index model.Index, records []model.Record) error {
 	if mock.PushFunc == nil {
 		panic("recordRepoMock.PushFunc: method is nil but recordRepo.Push was just called")
 	}
 	callInfo := struct {
 		Ctx     context.Context
-		Index   indexrepository.Index
-		Records []recordrepository.Record
+		Index   model.Index
+		Records []model.Record
 	}{
 		Ctx:     ctx,
 		Index:   index,
@@ -369,13 +369,13 @@ func (mock *recordRepoMock) Push(ctx context.Context, index indexrepository.Inde
 //	len(mockedrecordRepo.PushCalls())
 func (mock *recordRepoMock) PushCalls() []struct {
 	Ctx     context.Context
-	Index   indexrepository.Index
-	Records []recordrepository.Record
+	Index   model.Index
+	Records []model.Record
 } {
 	var calls []struct {
 		Ctx     context.Context
-		Index   indexrepository.Index
-		Records []recordrepository.Record
+		Index   model.Index
+		Records []model.Record
 	}
 	mock.lockPush.RLock()
 	calls = mock.calls.Push

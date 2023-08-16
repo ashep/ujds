@@ -1,10 +1,10 @@
 module github.com/ashep/ujds
 
-go 1.19
+go 1.21
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/ashep/go-apperrors v0.0.0-20230730194032-8aa277dfb36c
+	github.com/ashep/go-apperrors v0.0.0-20230816161553-60f80ce2bcb4
 	github.com/ashep/go-cfgloader v0.0.0-20230619185109-520db9a7c8a8
 	github.com/bufbuild/connect-go v1.5.2
 	github.com/golang-migrate/migrate/v4 v4.15.2

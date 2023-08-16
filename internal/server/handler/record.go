@@ -7,18 +7,14 @@ import (
 
 	"github.com/bufbuild/connect-go"
 
-	"github.com/ashep/ujds/internal/recordrepository"
-	v1 "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	"github.com/ashep/ujds/internal/model"
+	ujdsproto "github.com/ashep/ujds/sdk/proto/ujds/v1"
 )
 
 func (h *Handler) PushRecords(
 	ctx context.Context,
-	req *connect.Request[v1.PushRecordsRequest],
-) (*connect.Response[v1.PushRecordsResponse], error) {
-	if req.Msg.Index == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
-	}
-
+	req *connect.Request[ujdsproto.PushRecordsRequest],
+) (*connect.Response[ujdsproto.PushRecordsResponse], error) {
 	index, err := h.ir.Get(ctx, req.Msg.Index)
 	if err != nil {
 		return nil, h.errAsConnect(err, req.Spec().Procedure, "index get failed")
@@ -28,9 +24,9 @@ func (h *Handler) PushRecords(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty records"))
 	}
 
-	apiRecords := make([]recordrepository.Record, 0)
+	apiRecords := make([]model.Record, 0)
 	for _, rec := range req.Msg.Records {
-		apiRecords = append(apiRecords, recordrepository.Record{
+		apiRecords = append(apiRecords, model.Record{
 			ID:   rec.Id,
 			Data: rec.Data,
 		})
@@ -40,13 +36,13 @@ func (h *Handler) PushRecords(
 		return nil, h.errAsConnect(err, req.Spec().Procedure, "ir.PushRecords failed")
 	}
 
-	return connect.NewResponse(&v1.PushRecordsResponse{}), nil
+	return connect.NewResponse(&ujdsproto.PushRecordsResponse{}), nil
 }
 
 func (h *Handler) GetRecord(
 	ctx context.Context,
-	req *connect.Request[v1.GetRecordRequest],
-) (*connect.Response[v1.GetRecordResponse], error) {
+	req *connect.Request[ujdsproto.GetRecordRequest],
+) (*connect.Response[ujdsproto.GetRecordResponse], error) {
 	if req.Msg.Index == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
 	}
@@ -56,7 +52,7 @@ func (h *Handler) GetRecord(
 		return nil, h.errAsConnect(err, req.Spec().Procedure, "ir.ClearRecords failed")
 	}
 
-	return connect.NewResponse(&v1.GetRecordResponse{Record: &v1.Record{
+	return connect.NewResponse(&ujdsproto.GetRecordResponse{Record: &ujdsproto.Record{
 		Id:        rec.ID,
 		Rev:       rec.Rev,
 		Index:     rec.Index,
@@ -68,8 +64,8 @@ func (h *Handler) GetRecord(
 
 func (h *Handler) GetRecords(
 	ctx context.Context,
-	req *connect.Request[v1.GetRecordsRequest],
-) (*connect.Response[v1.GetRecordsResponse], error) {
+	req *connect.Request[ujdsproto.GetRecordsRequest],
+) (*connect.Response[ujdsproto.GetRecordsResponse], error) {
 	if req.Msg.Index == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
 	}
@@ -85,9 +81,9 @@ func (h *Handler) GetRecords(
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("no records found"))
 	}
 
-	itemsR := make([]*v1.Record, len(records))
+	itemsR := make([]*ujdsproto.Record, len(records))
 	for i, rec := range records {
-		itemsR[i] = &v1.Record{
+		itemsR[i] = &ujdsproto.Record{
 			Id:        rec.ID,
 			Rev:       rec.Rev,
 			Index:     rec.Index,
@@ -97,16 +93,16 @@ func (h *Handler) GetRecords(
 		}
 	}
 
-	return connect.NewResponse(&v1.GetRecordsResponse{Cursor: cur, Records: itemsR}), nil
+	return connect.NewResponse(&ujdsproto.GetRecordsResponse{Cursor: cur, Records: itemsR}), nil
 }
 
 func (h *Handler) ClearRecords(
 	ctx context.Context,
-	req *connect.Request[v1.ClearRecordsRequest],
-) (*connect.Response[v1.ClearRecordsResponse], error) {
+	req *connect.Request[ujdsproto.ClearRecordsRequest],
+) (*connect.Response[ujdsproto.ClearRecordsResponse], error) {
 	if err := h.rr.Clear(ctx, req.Msg.Index); err != nil {
 		return nil, h.errAsConnect(err, req.Spec().Procedure, "ir.ClearRecords failed")
 	}
 
-	return connect.NewResponse(&v1.ClearRecordsResponse{}), nil
+	return connect.NewResponse(&ujdsproto.ClearRecordsResponse{}), nil
 }

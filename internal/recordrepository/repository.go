@@ -11,7 +11,7 @@ import (
 	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/model"
 )
 
 type Repository struct {
@@ -24,7 +24,7 @@ func New(db *sql.DB, l zerolog.Logger) *Repository {
 }
 
 //nolint:cyclop // TODO
-func (r *Repository) Push(ctx context.Context, index indexrepository.Index, records []Record) error {
+func (r *Repository) Push(ctx context.Context, index model.Index, records []model.Record) error {
 	var err error
 
 	tx, err := r.db.Begin()
@@ -73,12 +73,12 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	for i, rec := range records {
 		if rec.ID == "" {
 			_ = tx.Rollback()
-			return apperrors.EmptyArgError{Subj: fmt.Sprintf("record %d: id", i)}
+			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record %d: id", i), Reason: "must not be empty"}
 		}
 
 		if rec.Data == "" {
 			_ = tx.Rollback()
-			return apperrors.EmptyArgError{Subj: fmt.Sprintf("record %d: data", i)}
+			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record %d: data", i), Reason: "must not be empty"}
 		}
 
 		// Validate data against schema
@@ -129,29 +129,29 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 }
 
 // Get returns last version of a record.
-func (r *Repository) Get(ctx context.Context, indexName string, id string) (Record, error) {
+func (r *Repository) Get(ctx context.Context, indexName string, id string) (model.Record, error) {
 	q := `SELECT r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`
 	row := r.db.QueryRowContext(ctx, q, indexName, id)
 
-	rec := Record{
+	rec := model.Record{
 		ID:    id,
 		Index: indexName,
 	}
 
 	err := row.Scan(&rec.Rev, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
-		return Record{}, apperrors.NotFoundError{Subj: "record"}
+		return model.Record{}, apperrors.NotFoundError{Subj: "record"}
 	} else if err != nil {
-		return Record{}, fmt.Errorf("db scan failed: %w", err)
+		return model.Record{}, fmt.Errorf("db scan failed: %w", err)
 	}
 
 	return rec, nil
 }
 
-func (r *Repository) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]Record, uint64, error) {
+func (r *Repository) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 	if limit == 0 || limit > 500 {
 		limit = 500
 	}
@@ -170,7 +170,7 @@ func (r *Repository) GetAll(ctx context.Context, indexName string, since time.Ti
 		_ = rows.Close()
 	}()
 
-	rcs := make([]Record, 0)
+	rcs := make([]model.Record, 0)
 	recID, logID, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
 
 	for rows.Next() {
@@ -178,7 +178,7 @@ func (r *Repository) GetAll(ctx context.Context, indexName string, since time.Ti
 			return nil, 0, fmt.Errorf("db scan failed: %w", err)
 		}
 
-		rcs = append(rcs, Record{
+		rcs = append(rcs, model.Record{
 			ID:        recID,
 			Index:     indexName,
 			Rev:       logID,

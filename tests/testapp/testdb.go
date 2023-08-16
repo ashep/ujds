@@ -56,3 +56,8 @@ func (d *TestDB) GetIndices(t *testing.T) []Index {
 
 	return res
 }
+
+func (d *TestDB) InsertIndex(t *testing.T, name, schema string) {
+	_, err := d.db.Exec("INSERT INTO index (name, schema) VALUES ($1, $2)", name, schema)
+	require.NoError(t, err)
+}

@@ -1,4 +1,4 @@
-package recordrepository
+package model
 
 import (
 	"time"

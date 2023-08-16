@@ -1,4 +1,4 @@
-package indexrepository
+package model
 
 import (
 	"bytes"
