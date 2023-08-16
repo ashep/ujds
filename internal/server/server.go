@@ -9,19 +9,19 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
+	ujdsconnect "github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
 )
 
 const readTimeout = time.Second * 5
 
 type Server struct {
 	cfg Config
-	ih  v1connect.IndexServiceHandler
-	rh  v1connect.RecordServiceHandler
+	ih  ujdsconnect.IndexServiceHandler
+	rh  ujdsconnect.RecordServiceHandler
 	l   zerolog.Logger
 }
 
-func New(cfg Config, ih v1connect.IndexServiceHandler, rh v1connect.RecordServiceHandler, l zerolog.Logger) *Server {
+func New(cfg Config, ih ujdsconnect.IndexServiceHandler, rh ujdsconnect.RecordServiceHandler, l zerolog.Logger) *Server {
 	if cfg.Address == "" {
 		cfg.Address = ":9000"
 	}
@@ -33,8 +33,8 @@ func (s *Server) Run(ctx context.Context) error {
 	interceptors := connect.WithInterceptors(NewAuthInterceptor(s.cfg.AuthToken))
 	mux := http.NewServeMux()
 
-	mux.Handle(v1connect.NewIndexServiceHandler(s.ih, interceptors))
-	mux.Handle(v1connect.NewRecordServiceHandler(s.rh, interceptors))
+	mux.Handle(ujdsconnect.NewIndexServiceHandler(s.ih, interceptors))
+	mux.Handle(ujdsconnect.NewRecordServiceHandler(s.rh, interceptors))
 
 	srv := &http.Server{
 		Addr:        s.cfg.Address,

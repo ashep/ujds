@@ -10,21 +10,20 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
-	"github.com/ashep/ujds/internal/indexrepository"
-	"github.com/ashep/ujds/internal/recordrepository"
+	"github.com/ashep/ujds/internal/model"
 )
 
 //go:generate moq -out handler_mock_test.go -pkg handler_test -skip-ensure . indexRepo recordRepo
 
 type indexRepo interface {
 	Upsert(ctx context.Context, name, schema string) error
-	Get(ctx context.Context, name string) (indexrepository.Index, error)
+	Get(ctx context.Context, name string) (model.Index, error)
 }
 
 type recordRepo interface {
-	Push(ctx context.Context, index indexrepository.Index, records []recordrepository.Record) error
-	Get(ctx context.Context, indexName string, id string) (recordrepository.Record, error)
-	GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]recordrepository.Record, uint64, error)
+	Push(ctx context.Context, index model.Index, records []model.Record) error
+	Get(ctx context.Context, indexName string, id string) (model.Record, error)
+	GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 	Clear(ctx context.Context, indexName string) error
 }
 
@@ -43,7 +42,7 @@ func (h *Handler) errAsConnect(err error, proc, msg string) error {
 	switch {
 	case errors.As(err, &apperrors.NotFoundError{}):
 		return connect.NewError(connect.CodeNotFound, err)
-	case errors.As(err, &apperrors.InvalidArgError{}), errors.As(err, &apperrors.EmptyArgError{}):
+	case errors.As(err, &apperrors.InvalidArgError{}):
 		return connect.NewError(connect.CodeInvalidArgument, err)
 	case errors.As(err, &apperrors.AlreadyExistsError{}):
 		return connect.NewError(connect.CodeAlreadyExists, err)

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ashep/ujds/sdk/client"
-	v1 "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	ujdsproto "github.com/ashep/ujds/sdk/proto/ujds/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
 
@@ -23,7 +23,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{}))
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
@@ -35,12 +35,27 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "",
 			Schema: "",
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: name is empty")
+		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_-]{1,64}$")
+	})
+
+	tt.Run("InvalidIndexName", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+			Name:   "the n@me",
+			Schema: "",
+		}))
+
+		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_-]{1,64}$")
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {
@@ -50,7 +65,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: "{]",
 		}))
@@ -65,7 +80,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
@@ -87,7 +102,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: "",
 		}))
@@ -109,13 +124,13 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
 		assert.NoError(t, err)
 
-		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
@@ -137,13 +152,13 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo1":"bar1"}`,
 		}))
 		assert.NoError(t, err)
 
-		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo2":"bar2"}`,
 		}))
