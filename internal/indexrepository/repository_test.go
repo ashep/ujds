@@ -117,6 +117,8 @@ func TestRepository_Get(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("EmptyName", func(t *testing.T) {
+		t.Parallel()
+
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -127,6 +129,8 @@ func TestRepository_Get(tt *testing.T) {
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
+		t.Parallel()
+
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 

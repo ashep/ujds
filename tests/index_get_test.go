@@ -1,3 +1,5 @@
+//go:build functest
+
 package tests
 
 import (

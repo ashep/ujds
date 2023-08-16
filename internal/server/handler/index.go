@@ -21,6 +21,7 @@ func (h *Handler) PushIndex(
 	} else if err != nil {
 		c := h.now().Unix()
 		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("index repo upsert failed")
+
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 
@@ -41,6 +42,7 @@ func (h *Handler) GetIndex(
 	case err != nil:
 		c := h.now().Unix()
 		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("index repo get failed")
+
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 

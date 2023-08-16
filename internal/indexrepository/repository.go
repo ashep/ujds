@@ -60,7 +60,8 @@ func (a *Repository) Get(ctx context.Context, name string) (model.Index, error) 
 
 	if !a.nameRegexp.MatchString(name) {
 		return model.Index{}, apperrors.InvalidArgError{
-			Subj: "name", Reason: "must match the regexp " + a.nameRegexp.String()}
+			Subj: "name", Reason: "must match the regexp " + a.nameRegexp.String(),
+		}
 	}
 
 	q := `SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`
