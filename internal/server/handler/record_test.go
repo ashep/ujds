@@ -40,7 +40,7 @@ func TestHandler_PushRecords(tt *testing.T) {
 		h := handler.New(ir, rr, now, l)
 		_, err := h.PushRecords(context.Background(), connect.NewRequest(&ujdsproto.PushRecordsRequest{}))
 
-		require.EqualError(t, err, "invalid_argument: invalid theIndexRepoSubj: theIndexRepoReason")
+		require.EqualError(t, err, "invalid_argument: index get failed: invalid theIndexRepoSubj: theIndexRepoReason")
 		assert.Empty(t, lb.String())
 	})
 
