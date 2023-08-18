@@ -5,10 +5,9 @@ package handler_test
 
 import (
 	"context"
+	"github.com/ashep/ujds/internal/model"
 	"sync"
 	"time"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 // indexRepoMock is a mock implementation of handler.indexRepo.
@@ -17,7 +16,7 @@ import (
 //
 //		// make and configure a mocked handler.indexRepo
 //		mockedindexRepo := &indexRepoMock{
-//			GetFunc: func(ctx context.Context, name string) (indexrepository.Index, error) {
+//			GetFunc: func(ctx context.Context, name string) (model.Index, error) {
 //				panic("mock out the Get method")
 //			},
 //			UpsertFunc: func(ctx context.Context, name string, schema string) error {
@@ -141,16 +140,16 @@ func (mock *indexRepoMock) UpsertCalls() []struct {
 //
 //		// make and configure a mocked handler.recordRepo
 //		mockedrecordRepo := &recordRepoMock{
-//			ClearFunc: func(ctx context.Context, indexName string) error {
+//			ClearFunc: func(ctx context.Context, index string) error {
 //				panic("mock out the Clear method")
 //			},
-//			GetFunc: func(ctx context.Context, indexName string, id string) (recordrepository.Record, error) {
+//			GetFunc: func(ctx context.Context, index string, id string) (model.Record, error) {
 //				panic("mock out the Get method")
 //			},
-//			GetAllFunc: func(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]recordrepository.Record, uint64, error) {
+//			GetAllFunc: func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 //				panic("mock out the GetAll method")
 //			},
-//			PushFunc: func(ctx context.Context, index indexrepository.Index, records []recordrepository.Record) error {
+//			PushFunc: func(ctx context.Context, index model.Index, records []model.Record) error {
 //				panic("mock out the Push method")
 //			},
 //		}
@@ -161,13 +160,13 @@ func (mock *indexRepoMock) UpsertCalls() []struct {
 //	}
 type recordRepoMock struct {
 	// ClearFunc mocks the Clear method.
-	ClearFunc func(ctx context.Context, indexName string) error
+	ClearFunc func(ctx context.Context, index string) error
 
 	// GetFunc mocks the Get method.
-	GetFunc func(ctx context.Context, indexName string, id string) (model.Record, error)
+	GetFunc func(ctx context.Context, index string, id string) (model.Record, error)
 
 	// GetAllFunc mocks the GetAll method.
-	GetAllFunc func(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+	GetAllFunc func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// PushFunc mocks the Push method.
 	PushFunc func(ctx context.Context, index model.Index, records []model.Record) error
@@ -178,15 +177,15 @@ type recordRepoMock struct {
 		Clear []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// IndexName is the indexName argument value.
-			IndexName string
+			// Index is the index argument value.
+			Index string
 		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// IndexName is the indexName argument value.
-			IndexName string
+			// Index is the index argument value.
+			Index string
 			// ID is the id argument value.
 			ID string
 		}
@@ -194,8 +193,8 @@ type recordRepoMock struct {
 		GetAll []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
-			// IndexName is the indexName argument value.
-			IndexName string
+			// Index is the index argument value.
+			Index string
 			// Since is the since argument value.
 			Since time.Time
 			// Cursor is the cursor argument value.
@@ -220,21 +219,21 @@ type recordRepoMock struct {
 }
 
 // Clear calls ClearFunc.
-func (mock *recordRepoMock) Clear(ctx context.Context, indexName string) error {
+func (mock *recordRepoMock) Clear(ctx context.Context, index string) error {
 	if mock.ClearFunc == nil {
 		panic("recordRepoMock.ClearFunc: method is nil but recordRepo.Clear was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		IndexName string
+		Ctx   context.Context
+		Index string
 	}{
-		Ctx:       ctx,
-		IndexName: indexName,
+		Ctx:   ctx,
+		Index: index,
 	}
 	mock.lockClear.Lock()
 	mock.calls.Clear = append(mock.calls.Clear, callInfo)
 	mock.lockClear.Unlock()
-	return mock.ClearFunc(ctx, indexName)
+	return mock.ClearFunc(ctx, index)
 }
 
 // ClearCalls gets all the calls that were made to Clear.
@@ -242,12 +241,12 @@ func (mock *recordRepoMock) Clear(ctx context.Context, indexName string) error {
 //
 //	len(mockedrecordRepo.ClearCalls())
 func (mock *recordRepoMock) ClearCalls() []struct {
-	Ctx       context.Context
-	IndexName string
+	Ctx   context.Context
+	Index string
 } {
 	var calls []struct {
-		Ctx       context.Context
-		IndexName string
+		Ctx   context.Context
+		Index string
 	}
 	mock.lockClear.RLock()
 	calls = mock.calls.Clear
@@ -256,23 +255,23 @@ func (mock *recordRepoMock) ClearCalls() []struct {
 }
 
 // Get calls GetFunc.
-func (mock *recordRepoMock) Get(ctx context.Context, indexName string, id string) (model.Record, error) {
+func (mock *recordRepoMock) Get(ctx context.Context, index string, id string) (model.Record, error) {
 	if mock.GetFunc == nil {
 		panic("recordRepoMock.GetFunc: method is nil but recordRepo.Get was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		IndexName string
-		ID        string
+		Ctx   context.Context
+		Index string
+		ID    string
 	}{
-		Ctx:       ctx,
-		IndexName: indexName,
-		ID:        id,
+		Ctx:   ctx,
+		Index: index,
+		ID:    id,
 	}
 	mock.lockGet.Lock()
 	mock.calls.Get = append(mock.calls.Get, callInfo)
 	mock.lockGet.Unlock()
-	return mock.GetFunc(ctx, indexName, id)
+	return mock.GetFunc(ctx, index, id)
 }
 
 // GetCalls gets all the calls that were made to Get.
@@ -280,14 +279,14 @@ func (mock *recordRepoMock) Get(ctx context.Context, indexName string, id string
 //
 //	len(mockedrecordRepo.GetCalls())
 func (mock *recordRepoMock) GetCalls() []struct {
-	Ctx       context.Context
-	IndexName string
-	ID        string
+	Ctx   context.Context
+	Index string
+	ID    string
 } {
 	var calls []struct {
-		Ctx       context.Context
-		IndexName string
-		ID        string
+		Ctx   context.Context
+		Index string
+		ID    string
 	}
 	mock.lockGet.RLock()
 	calls = mock.calls.Get
@@ -296,27 +295,27 @@ func (mock *recordRepoMock) GetCalls() []struct {
 }
 
 // GetAll calls GetAllFunc.
-func (mock *recordRepoMock) GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+func (mock *recordRepoMock) GetAll(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 	if mock.GetAllFunc == nil {
 		panic("recordRepoMock.GetAllFunc: method is nil but recordRepo.GetAll was just called")
 	}
 	callInfo := struct {
-		Ctx       context.Context
-		IndexName string
-		Since     time.Time
-		Cursor    uint64
-		Limit     uint32
+		Ctx    context.Context
+		Index  string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
 	}{
-		Ctx:       ctx,
-		IndexName: indexName,
-		Since:     since,
-		Cursor:    cursor,
-		Limit:     limit,
+		Ctx:    ctx,
+		Index:  index,
+		Since:  since,
+		Cursor: cursor,
+		Limit:  limit,
 	}
 	mock.lockGetAll.Lock()
 	mock.calls.GetAll = append(mock.calls.GetAll, callInfo)
 	mock.lockGetAll.Unlock()
-	return mock.GetAllFunc(ctx, indexName, since, cursor, limit)
+	return mock.GetAllFunc(ctx, index, since, cursor, limit)
 }
 
 // GetAllCalls gets all the calls that were made to GetAll.
@@ -324,18 +323,18 @@ func (mock *recordRepoMock) GetAll(ctx context.Context, indexName string, since 
 //
 //	len(mockedrecordRepo.GetAllCalls())
 func (mock *recordRepoMock) GetAllCalls() []struct {
-	Ctx       context.Context
-	IndexName string
-	Since     time.Time
-	Cursor    uint64
-	Limit     uint32
+	Ctx    context.Context
+	Index  string
+	Since  time.Time
+	Cursor uint64
+	Limit  uint32
 } {
 	var calls []struct {
-		Ctx       context.Context
-		IndexName string
-		Since     time.Time
-		Cursor    uint64
-		Limit     uint32
+		Ctx    context.Context
+		Index  string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
 	}
 	mock.lockGetAll.RLock()
 	calls = mock.calls.GetAll

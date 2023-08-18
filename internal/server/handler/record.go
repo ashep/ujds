@@ -56,13 +56,18 @@ func (h *Handler) GetRecord(
 	ctx context.Context,
 	req *connect.Request[ujdsproto.GetRecordRequest],
 ) (*connect.Response[ujdsproto.GetRecordResponse], error) {
-	if req.Msg.Index == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("index is not specified"))
-	}
-
 	rec, err := h.rr.Get(ctx, req.Msg.Index, req.Msg.Id)
-	if err != nil {
-		return nil, h.errAsConnect(err, req.Spec().Procedure, "ir.ClearRecords failed")
+
+	switch {
+	case errors.As(err, &apperrors.InvalidArgError{}):
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	case errors.As(err, &apperrors.NotFoundError{}):
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	case err != nil:
+		c := h.now().Unix()
+		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("record repo push failed")
+
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 
 	return connect.NewResponse(&ujdsproto.GetRecordResponse{Record: &ujdsproto.Record{
