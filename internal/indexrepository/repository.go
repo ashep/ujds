@@ -52,7 +52,7 @@ func (a *Repository) Upsert(ctx context.Context, name, schema string) error {
 
 func (a *Repository) Get(ctx context.Context, name string) (model.Index, error) {
 	var (
-		id        int
+		id        uint
 		schema    []byte
 		createdAt time.Time
 		updatedAt time.Time

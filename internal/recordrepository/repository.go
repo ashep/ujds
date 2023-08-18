@@ -27,6 +27,14 @@ func New(db *sql.DB, l zerolog.Logger) *Repository {
 func (r *Repository) Push(ctx context.Context, index model.Index, records []model.Record) error {
 	var err error
 
+	if index.ID == 0 {
+		return apperrors.InvalidArgError{Subj: "index id", Reason: "must not be zero"}
+	}
+
+	if len(records) == 0 {
+		return apperrors.InvalidArgError{Subj: "records", Reason: "must not be empty"}
+	}
+
 	tx, err := r.db.Begin()
 	if err != nil {
 		return fmt.Errorf("db begin failed: %w", err)
@@ -71,53 +79,9 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	}()
 
 	for i, rec := range records {
-		if rec.ID == "" {
+		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, index, i, rec); err != nil {
 			_ = tx.Rollback()
-			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record %d: id", i), Reason: "must not be empty"}
-		}
-
-		if rec.Data == "" {
-			_ = tx.Rollback()
-			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record %d: data", i), Reason: "must not be empty"}
-		}
-
-		// Validate data against schema
-		recDataB := []byte(rec.Data)
-		if err = index.Validate(recDataB); err != nil {
-			_ = tx.Rollback()
-			return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
-		}
-
-		logID := uint64(0)
-
-		sumSrc := append(recDataB, []byte(rec.Index)...) //nolint:gocritic // it's ok
-		sumSrc = append(sumSrc, []byte(rec.ID)...)
-		sum := sha256.Sum256(sumSrc)
-
-		// Check if we already have such data recorded as latest version
-		row := qGetRecord.QueryRowContext(ctx, sum[:])
-		if err = row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentional empty block
-			// Ok, continue to insert
-		} else if err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("db scan failed: %w", err)
-		} else {
-			// A record with the same data found, skip it
-			continue
-		}
-
-		row = qInsertLog.QueryRowContext(ctx, index.ID, rec.ID, rec.Data)
-		if err = row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
-			_ = tx.Rollback()
-			return nil
-		} else if err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("db query failed: %w", err)
-		}
-
-		if _, err = qInsertRecord.ExecContext(ctx, rec.ID, index.ID, logID, sum[:]); err != nil {
-			_ = tx.Rollback()
-			return fmt.Errorf("db query failed: %w", err)
+			return err
 		}
 	}
 
@@ -220,6 +184,58 @@ func (r *Repository) Clear(ctx context.Context, indexName string) error {
 
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("db commit failed: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) insertRecord(
+	ctx context.Context,
+	qGetRecord, qInsertLog, qInsertRecord *sql.Stmt,
+	index model.Index,
+	i int,
+	rec model.Record,
+) error {
+	if rec.ID == "" {
+		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record (%d) id", i), Reason: "must not be empty"}
+	}
+
+	if rec.Data == "" {
+		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record (%d) data", i), Reason: "must not be empty"}
+	}
+
+	// Validate data against schema
+	recDataB := []byte(rec.Data)
+	if err := index.Validate(recDataB); err != nil {
+		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
+	}
+
+	logID := uint64(0)
+
+	sumSrc := append(recDataB, []byte(rec.Index)...) //nolint:gocritic // it's ok
+	sumSrc = append(sumSrc, []byte(rec.ID)...)
+	sum := sha256.Sum256(sumSrc)
+
+	// Check if we already have such data recorded as latest version
+	row := qGetRecord.QueryRowContext(ctx, sum[:])
+	if err := row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentionally empty block
+		// Ok, continue to insert
+	} else if err != nil {
+		return fmt.Errorf("db scan failed: %w", err)
+	} else {
+		// A record with the same data found, skip it
+		return nil
+	}
+
+	row = qInsertLog.QueryRowContext(ctx, index.ID, rec.ID, rec.Data)
+	if err := row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("db query failed: %w", err)
+	}
+
+	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, index.ID, logID, sum[:]); err != nil {
+		return fmt.Errorf("db query failed: %w", err)
 	}
 
 	return nil
