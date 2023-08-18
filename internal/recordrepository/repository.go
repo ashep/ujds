@@ -93,16 +93,20 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 }
 
 // Get returns last version of a record.
-func (r *Repository) Get(ctx context.Context, indexName string, id string) (model.Record, error) {
+func (r *Repository) Get(ctx context.Context, index string, id string) (model.Record, error) {
+	if index == "" {
+		return model.Record{}, apperrors.InvalidArgError{Subj: "index name", Reason: "must not be empty"}
+	}
+
 	q := `SELECT r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`
-	row := r.db.QueryRowContext(ctx, q, indexName, id)
+	row := r.db.QueryRowContext(ctx, q, index, id)
 
 	rec := model.Record{
 		ID:    id,
-		Index: indexName,
+		Index: index,
 	}
 
 	err := row.Scan(&rec.Rev, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt)

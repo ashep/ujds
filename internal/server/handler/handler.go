@@ -22,9 +22,9 @@ type indexRepo interface {
 
 type recordRepo interface {
 	Push(ctx context.Context, index model.Index, records []model.Record) error
-	Get(ctx context.Context, indexName string, id string) (model.Record, error)
-	GetAll(ctx context.Context, indexName string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
-	Clear(ctx context.Context, indexName string) error
+	Get(ctx context.Context, index string, id string) (model.Record, error)
+	GetAll(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+	Clear(ctx context.Context, index string) error
 }
 
 type Handler struct {
