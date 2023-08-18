@@ -3,8 +3,10 @@ package handler
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/ashep/go-apperrors"
 	"github.com/bufbuild/connect-go"
 
 	"github.com/ashep/ujds/internal/model"
@@ -16,12 +18,17 @@ func (h *Handler) PushRecords(
 	req *connect.Request[ujdsproto.PushRecordsRequest],
 ) (*connect.Response[ujdsproto.PushRecordsResponse], error) {
 	index, err := h.ir.Get(ctx, req.Msg.Index)
-	if err != nil {
-		return nil, h.errAsConnect(err, req.Spec().Procedure, "index get failed")
-	}
 
-	if len(req.Msg.Records) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty records"))
+	switch {
+	case errors.As(err, &apperrors.InvalidArgError{}):
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("index get failed: %w", err))
+	case errors.As(err, &apperrors.NotFoundError{}):
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	case err != nil:
+		c := h.now().Unix()
+		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("index repo get failed")
+
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 
 	apiRecords := make([]model.Record, 0)
@@ -32,8 +39,14 @@ func (h *Handler) PushRecords(
 		})
 	}
 
-	if err := h.rr.Push(ctx, index, apiRecords); err != nil {
-		return nil, h.errAsConnect(err, req.Spec().Procedure, "ir.PushRecords failed")
+	err = h.rr.Push(ctx, index, apiRecords)
+	if errors.As(err, &apperrors.InvalidArgError{}) {
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	} else if err != nil {
+		c := h.now().Unix()
+		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("record repo push failed")
+
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 
 	return connect.NewResponse(&ujdsproto.PushRecordsResponse{}), nil

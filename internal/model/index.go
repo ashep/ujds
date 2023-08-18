@@ -2,6 +2,7 @@ package model
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -10,7 +11,7 @@ import (
 )
 
 type Index struct {
-	ID        int
+	ID        uint
 	Name      string
 	Schema    []byte
 	CreatedAt time.Time
@@ -18,6 +19,10 @@ type Index struct {
 }
 
 func (s *Index) Validate(data []byte) error {
+	if len(data) != 0 && !json.Valid(data) {
+		return errors.New("invalid json")
+	}
+
 	if len(s.Schema) == 0 || bytes.Equal(s.Schema, []byte("{}")) {
 		return nil
 	}
