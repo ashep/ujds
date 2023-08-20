@@ -1,4 +1,4 @@
-package handler_test
+package indexhandler_test
 
 import (
 	"context"
@@ -13,19 +13,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ashep/ujds/internal/server/indexhandler"
+
 	"github.com/ashep/ujds/internal/model"
-	"github.com/ashep/ujds/internal/server/handler"
-	v1 "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
-func TestHandler_PushIndex(tt *testing.T) {
+func TestHandler_Push(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -34,8 +34,8 @@ func TestHandler_PushIndex(tt *testing.T) {
 			return apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"}
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
 		}))
@@ -48,7 +48,6 @@ func TestHandler_PushIndex(tt *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -57,8 +56,8 @@ func TestHandler_PushIndex(tt *testing.T) {
 			return errors.New("theRepoError")
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
 		}))
@@ -71,7 +70,6 @@ func TestHandler_PushIndex(tt *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -82,8 +80,8 @@ func TestHandler_PushIndex(tt *testing.T) {
 			return nil
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.PushIndex(context.Background(), connect.NewRequest(&v1.PushIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
@@ -92,14 +90,13 @@ func TestHandler_PushIndex(tt *testing.T) {
 	})
 }
 
-func TestHandler_GetIndex(tt *testing.T) {
+func TestHandler_Get(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -108,8 +105,8 @@ func TestHandler_GetIndex(tt *testing.T) {
 			return model.Index{}, apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"}
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.GetIndex(context.Background(), connect.NewRequest(&v1.GetIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
 
@@ -121,7 +118,6 @@ func TestHandler_GetIndex(tt *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -130,8 +126,8 @@ func TestHandler_GetIndex(tt *testing.T) {
 			return model.Index{}, apperrors.NotFoundError{Subj: "theSubj"}
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.GetIndex(context.Background(), connect.NewRequest(&v1.GetIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
 
@@ -143,7 +139,6 @@ func TestHandler_GetIndex(tt *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -152,8 +147,8 @@ func TestHandler_GetIndex(tt *testing.T) {
 			return model.Index{}, errors.New("theRepoError")
 		}
 
-		h := handler.New(ir, rr, now, l)
-		_, err := h.GetIndex(context.Background(), connect.NewRequest(&v1.GetIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
 
@@ -165,7 +160,6 @@ func TestHandler_GetIndex(tt *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -180,8 +174,8 @@ func TestHandler_GetIndex(tt *testing.T) {
 			}, nil
 		}
 
-		h := handler.New(ir, rr, now, l)
-		res, err := h.GetIndex(context.Background(), connect.NewRequest(&v1.GetIndexRequest{
+		h := indexhandler.New(ir, now, l)
+		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
 

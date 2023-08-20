@@ -1,0 +1,27 @@
+syntax = "proto3";
+package ujds.index.v1;
+option go_package = "github.com/ashep/ujds/sdk/proto/ujds/index/v1";
+
+message PushRequest {
+  string name = 1;
+  string schema = 2;
+}
+
+message PushResponse {
+}
+
+message GetRequest {
+  string name = 1;
+}
+
+message GetResponse {
+  string name = 1;
+  uint64 created_at = 2;
+  uint64 updated_at = 3;
+  string schema = 4;
+}
+
+service IndexService {
+  rpc Push(PushRequest) returns (PushResponse) {}
+  rpc Get(GetRequest) returns (GetResponse) {}
+}
