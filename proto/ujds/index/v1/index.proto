@@ -21,7 +21,15 @@ message GetResponse {
   string schema = 4;
 }
 
+message ClearRequest {
+  string index = 1;
+}
+
+message ClearResponse {
+}
+
 service IndexService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
+  rpc Clear(ClearRequest) returns (ClearResponse) {}
 }

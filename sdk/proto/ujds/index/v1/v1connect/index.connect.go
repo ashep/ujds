@@ -29,6 +29,7 @@ const (
 type IndexServiceClient interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
+	Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error)
 }
 
 // NewIndexServiceClient constructs a client for the ujds.index.v1.IndexService service. By default,
@@ -51,13 +52,19 @@ func NewIndexServiceClient(httpClient connect_go.HTTPClient, baseURL string, opt
 			baseURL+"/ujds.index.v1.IndexService/Get",
 			opts...,
 		),
+		clear: connect_go.NewClient[v1.ClearRequest, v1.ClearResponse](
+			httpClient,
+			baseURL+"/ujds.index.v1.IndexService/Clear",
+			opts...,
+		),
 	}
 }
 
 // indexServiceClient implements IndexServiceClient.
 type indexServiceClient struct {
-	push *connect_go.Client[v1.PushRequest, v1.PushResponse]
-	get  *connect_go.Client[v1.GetRequest, v1.GetResponse]
+	push  *connect_go.Client[v1.PushRequest, v1.PushResponse]
+	get   *connect_go.Client[v1.GetRequest, v1.GetResponse]
+	clear *connect_go.Client[v1.ClearRequest, v1.ClearResponse]
 }
 
 // Push calls ujds.index.v1.IndexService.Push.
@@ -70,10 +77,16 @@ func (c *indexServiceClient) Get(ctx context.Context, req *connect_go.Request[v1
 	return c.get.CallUnary(ctx, req)
 }
 
+// Clear calls ujds.index.v1.IndexService.Clear.
+func (c *indexServiceClient) Clear(ctx context.Context, req *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error) {
+	return c.clear.CallUnary(ctx, req)
+}
+
 // IndexServiceHandler is an implementation of the ujds.index.v1.IndexService service.
 type IndexServiceHandler interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
+	Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error)
 }
 
 // NewIndexServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -93,6 +106,11 @@ func NewIndexServiceHandler(svc IndexServiceHandler, opts ...connect_go.HandlerO
 		svc.Get,
 		opts...,
 	))
+	mux.Handle("/ujds.index.v1.IndexService/Clear", connect_go.NewUnaryHandler(
+		"/ujds.index.v1.IndexService/Clear",
+		svc.Clear,
+		opts...,
+	))
 	return "/ujds.index.v1.IndexService/", mux
 }
 
@@ -105,4 +123,8 @@ func (UnimplementedIndexServiceHandler) Push(context.Context, *connect_go.Reques
 
 func (UnimplementedIndexServiceHandler) Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.Get is not implemented"))
+}
+
+func (UnimplementedIndexServiceHandler) Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.Clear is not implemented"))
 }

@@ -84,9 +84,6 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //		// make and configure a mocked recordhandler.recordRepo
 //		mockedrecordRepo := &recordRepoMock{
-//			ClearFunc: func(ctx context.Context, index string) error {
-//				panic("mock out the Clear method")
-//			},
 //			GetFunc: func(ctx context.Context, index string, id string) (model.Record, error) {
 //				panic("mock out the Get method")
 //			},
@@ -103,9 +100,6 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //	}
 type recordRepoMock struct {
-	// ClearFunc mocks the Clear method.
-	ClearFunc func(ctx context.Context, index string) error
-
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, index string, id string) (model.Record, error)
 
@@ -117,13 +111,6 @@ type recordRepoMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Clear holds details about calls to the Clear method.
-		Clear []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Index is the index argument value.
-			Index string
-		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
@@ -158,46 +145,9 @@ type recordRepoMock struct {
 			Records []model.Record
 		}
 	}
-	lockClear  sync.RWMutex
 	lockGet    sync.RWMutex
 	lockGetAll sync.RWMutex
 	lockPush   sync.RWMutex
-}
-
-// Clear calls ClearFunc.
-func (mock *recordRepoMock) Clear(ctx context.Context, index string) error {
-	if mock.ClearFunc == nil {
-		panic("recordRepoMock.ClearFunc: method is nil but recordRepo.Clear was just called")
-	}
-	callInfo := struct {
-		Ctx   context.Context
-		Index string
-	}{
-		Ctx:   ctx,
-		Index: index,
-	}
-	mock.lockClear.Lock()
-	mock.calls.Clear = append(mock.calls.Clear, callInfo)
-	mock.lockClear.Unlock()
-	return mock.ClearFunc(ctx, index)
-}
-
-// ClearCalls gets all the calls that were made to Clear.
-// Check the length with:
-//
-//	len(mockedrecordRepo.ClearCalls())
-func (mock *recordRepoMock) ClearCalls() []struct {
-	Ctx   context.Context
-	Index string
-} {
-	var calls []struct {
-		Ctx   context.Context
-		Index string
-	}
-	mock.lockClear.RLock()
-	calls = mock.calls.Clear
-	mock.lockClear.RUnlock()
-	return calls
 }
 
 // Get calls GetFunc.

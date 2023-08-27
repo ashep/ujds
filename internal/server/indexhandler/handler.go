@@ -14,6 +14,7 @@ import (
 type indexRepo interface {
 	Upsert(ctx context.Context, name, schema string) error
 	Get(ctx context.Context, name string) (model.Index, error)
+	Clear(ctx context.Context, name string) error
 }
 
 type Handler struct {
