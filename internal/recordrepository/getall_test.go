@@ -35,7 +35,7 @@ func TestRepository_GetAll(tt *testing.T) {
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4").
+		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4").
 			WithArgs("theIndex", time.Unix(123, 0), 234, 345).
 			WillReturnError(errors.New("theDbError"))
 
@@ -55,7 +55,7 @@ func TestRepository_GetAll(tt *testing.T) {
 			RowError(0, errors.New("theRowError"))
 		rows.AddRow("", 0, "", time.Time{}, time.Time{})
 
-		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4").
+		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4").
 			WithArgs("theIndex", time.Unix(123, 0), 234, 345).
 			WillReturnRows(rows)
 
@@ -71,7 +71,7 @@ func TestRepository_GetAll(tt *testing.T) {
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4").
+		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4").
 			WithArgs("theIndex", time.Unix(123, 0), 234, 345).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
@@ -93,7 +93,7 @@ func TestRepository_GetAll(tt *testing.T) {
 		rows.AddRow("theID1", 1, "theData1", time.Unix(111, 0), time.Unix(222, 0))
 		rows.AddRow("theID2", 2, "theData2", time.Unix(333, 0), time.Unix(444, 0))
 
-		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4").
+		dbm.ExpectQuery("SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4").
 			WithArgs("theIndex", time.Unix(123, 0), 234, 345).
 			WillReturnRows(rows)
 

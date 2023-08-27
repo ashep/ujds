@@ -43,6 +43,10 @@ func (a *App) Run(ctx context.Context) error {
 		return fmt.Errorf("server run failed: %w", err)
 	}
 
+	if err := db.Close(); err != nil {
+		return fmt.Errorf("db close failed: %w", err)
+	}
+
 	return nil
 }
 

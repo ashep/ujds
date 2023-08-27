@@ -12,11 +12,11 @@ import (
 	"github.com/ashep/ujds/internal/model"
 )
 
-//nolint:cyclop // TODO
-func (r *Repository) Push(ctx context.Context, index model.Index, records []model.Record) error {
+//nolint:cyclop // that's ok
+func (r *Repository) Push(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
 	var err error
 
-	if index.ID == 0 {
+	if indexID == 0 {
 		return apperrors.InvalidArgError{Subj: "index id", Reason: "must not be zero"}
 	}
 
@@ -68,7 +68,7 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 	}()
 
 	for i, rec := range records {
-		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, index, i, rec); err != nil {
+		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, indexID, schema, i, rec); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -84,7 +84,8 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 func (r *Repository) insertRecord(
 	ctx context.Context,
 	qGetRecord, qInsertLog, qInsertRecord *sql.Stmt,
-	index model.Index,
+	indexID uint,
+	schema []byte,
 	i int,
 	rec model.Record,
 ) error {
@@ -98,7 +99,7 @@ func (r *Repository) insertRecord(
 
 	// Validate data against schema
 	recDataB := []byte(rec.Data)
-	if err := index.Validate(recDataB); err != nil {
+	if err := model.ValidateJSON(schema, recDataB); err != nil {
 		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
 	}
 
@@ -119,14 +120,14 @@ func (r *Repository) insertRecord(
 		return nil
 	}
 
-	row = qInsertLog.QueryRowContext(ctx, index.ID, rec.ID, rec.Data)
+	row = qInsertLog.QueryRowContext(ctx, indexID, rec.ID, rec.Data)
 	if err := row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil
 	} else if err != nil {
 		return fmt.Errorf("db query failed: %w", err)
 	}
 
-	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, index.ID, logID, sum[:]); err != nil {
+	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, indexID, logID, sum[:]); err != nil {
 		return fmt.Errorf("db query failed: %w", err)
 	}
 

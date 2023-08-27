@@ -27,7 +27,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{}, []model.Record{})
+		err = repo.Push(context.Background(), 0, nil, []model.Record{})
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "index id",
 			Reason: "must not be zero",
@@ -42,7 +42,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{})
+		err = repo.Push(context.Background(), 123, nil, []model.Record{})
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "records",
 			Reason: "must not be empty",
@@ -59,7 +59,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{{}})
+		err = repo.Push(context.Background(), 123, nil, []model.Record{{}})
 		require.EqualError(t, err, "db begin failed: theBeginError")
 	})
 
@@ -75,7 +75,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{{}})
+		err = repo.Push(context.Background(), 123, nil, []model.Record{{}})
 		require.EqualError(t, err, "db prepare failed: thePrepareSelectError")
 	})
 
@@ -92,7 +92,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{{}})
+		err = repo.Push(context.Background(), 123, nil, []model.Record{{}})
 		require.EqualError(t, err, "db prepare failed: thePrepareInsertRecordLogError")
 	})
 
@@ -110,7 +110,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{{}})
+		err = repo.Push(context.Background(), 123, nil, []model.Record{{}})
 		require.EqualError(t, err, "db prepare failed: thePrepareInsertRecordError")
 	})
 
@@ -127,7 +127,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{
+		err = repo.Push(context.Background(), 123, nil, []model.Record{
 			{ID: ""},
 		})
 		require.EqualError(t, err, "invalid record (0) id: must not be empty")
@@ -146,7 +146,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{
+		err = repo.Push(context.Background(), 123, nil, []model.Record{
 			{ID: "theRecordID", Data: ""},
 		})
 		require.EqualError(t, err, "invalid record (0) data: must not be empty")
@@ -165,7 +165,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		err = repo.Push(context.Background(), model.Index{ID: 123}, []model.Record{
+		err = repo.Push(context.Background(), 123, nil, []model.Record{
 			{ID: "theRecordID", Data: "{]"},
 		})
 		require.EqualError(t, err, "invalid record data (0): invalid json")
@@ -184,8 +184,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: "{}"},
 		})
 
@@ -208,8 +207,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
@@ -235,8 +233,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
@@ -268,8 +265,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
@@ -302,8 +298,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
@@ -336,8 +331,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
@@ -364,8 +358,7 @@ func TestRepository_Push(tt *testing.T) {
 
 		repo := recordrepository.New(db, zerolog.Nop())
 
-		idx := model.Index{ID: 123, Schema: []byte(`{"required":["foo"]}`)}
-		err = repo.Push(context.Background(), idx, []model.Record{
+		err = repo.Push(context.Background(), 123, []byte(`{"required":["foo"]}`), []model.Record{
 			{ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 

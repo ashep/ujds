@@ -41,7 +41,7 @@ func TestHandler_Get(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
-		require.EqualError(t, err, "invalid_argument: invalid theRecordRepoSubj: theRecordRepoReason")
+		assert.EqualError(t, err, "invalid_argument: invalid theRecordRepoSubj: theRecordRepoReason")
 		assert.Empty(t, lb.String())
 	})
 
@@ -63,11 +63,11 @@ func TestHandler_Get(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
-		require.EqualError(t, err, "not_found: theRecordRepoSubj is not found")
+		assert.EqualError(t, err, "not_found: theRecordRepoSubj is not found")
 		assert.Empty(t, lb.String())
 	})
 
-	tt.Run("RecordRepoOtherError", func(t *testing.T) {
+	tt.Run("RecordRepoInternalError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
@@ -83,7 +83,7 @@ func TestHandler_Get(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
-		require.EqualError(t, err, "internal: err_code: 123456789")
+		assert.EqualError(t, err, "internal: err_code: 123456789")
 		assert.Equal(t, `{"level":"error","error":"theRecordRepoError","proc":"","err_code":123456789,"message":"record repo push failed"}`+"\n", lb.String())
 	})
 

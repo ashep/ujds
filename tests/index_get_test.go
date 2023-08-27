@@ -80,6 +80,7 @@ func TestIndex_Get(tt *testing.T) {
 		ta.DB().InsertIndex(t, "theIndexName", `{"foo":"bar"}`)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+
 		res, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
 			Name: "theIndexName",
 		}))

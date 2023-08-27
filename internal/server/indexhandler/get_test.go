@@ -19,77 +19,6 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
-func TestHandler_Push(tt *testing.T) {
-	tt.Parallel()
-
-	tt.Run("RepoInvalidArgError", func(t *testing.T) {
-		t.Parallel()
-
-		ir := &indexRepoMock{}
-		now := func() time.Time { return time.Unix(123456789, 0) }
-		lb := &strings.Builder{}
-		l := zerolog.New(lb)
-
-		ir.UpsertFunc = func(ctx context.Context, name string, schema string) error {
-			return apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"}
-		}
-
-		h := indexhandler.New(ir, now, l)
-		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
-		}))
-
-		require.EqualError(t, err, "invalid_argument: invalid theSubj: theReason")
-		assert.Empty(t, lb.String())
-	})
-
-	tt.Run("RepoOtherError", func(t *testing.T) {
-		t.Parallel()
-
-		ir := &indexRepoMock{}
-		now := func() time.Time { return time.Unix(123456789, 0) }
-		lb := &strings.Builder{}
-		l := zerolog.New(lb)
-
-		ir.UpsertFunc = func(ctx context.Context, name string, schema string) error {
-			return errors.New("theRepoError")
-		}
-
-		h := indexhandler.New(ir, now, l)
-		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
-		}))
-
-		require.EqualError(t, err, "internal: err_code: 123456789")
-		assert.Equal(t, `{"level":"error","error":"theRepoError","proc":"","err_code":123456789,"message":"index repo upsert failed"}`+"\n", lb.String())
-	})
-
-	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
-		ir := &indexRepoMock{}
-		now := func() time.Time { return time.Unix(123456789, 0) }
-		lb := &strings.Builder{}
-		l := zerolog.New(lb)
-
-		ir.UpsertFunc = func(ctx context.Context, name string, schema string) error {
-			assert.Equal(t, "theIndexName", name)
-			assert.Equal(t, `{"foo":"bar"}`, schema)
-			return nil
-		}
-
-		h := indexhandler.New(ir, now, l)
-		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: `{"foo":"bar"}`,
-		}))
-
-		assert.NoError(t, err)
-	})
-}
-
 func TestHandler_Get(tt *testing.T) {
 	tt.Parallel()
 
@@ -110,7 +39,7 @@ func TestHandler_Get(tt *testing.T) {
 			Name: "theIndexName",
 		}))
 
-		require.EqualError(t, err, "invalid_argument: invalid theSubj: theReason")
+		assert.EqualError(t, err, "invalid_argument: invalid theSubj: theReason")
 		assert.Empty(t, lb.String())
 	})
 
@@ -131,11 +60,11 @@ func TestHandler_Get(tt *testing.T) {
 			Name: "theIndexName",
 		}))
 
-		require.EqualError(t, err, "not_found: theSubj is not found")
+		assert.EqualError(t, err, "not_found: theSubj is not found")
 		assert.Empty(t, lb.String())
 	})
 
-	tt.Run("RepoOtherError", func(t *testing.T) {
+	tt.Run("RepoInternalError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
@@ -152,7 +81,7 @@ func TestHandler_Get(tt *testing.T) {
 			Name: "theIndexName",
 		}))
 
-		require.EqualError(t, err, "internal: err_code: 123456789")
+		assert.EqualError(t, err, "internal: err_code: 123456789")
 		assert.Equal(t, `{"level":"error","error":"theRepoError","proc":"","err_code":123456789,"message":"index repo get failed"}`+"\n", lb.String())
 	})
 

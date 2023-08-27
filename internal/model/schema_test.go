@@ -8,36 +8,34 @@ import (
 	"github.com/ashep/ujds/internal/model"
 )
 
-func TestIndex_Validate(tt *testing.T) {
+func Test_ValidateJSON(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("NilSchema", func(t *testing.T) {
 		t.Parallel()
-		require.NoError(t, (&model.Index{}).Validate([]byte(`{"foo":"bar"}`)))
+		require.NoError(t, model.ValidateJSON(nil, []byte(`{"foo":"bar"}`)))
 	})
 
 	tt.Run("EmptySchema", func(t *testing.T) {
 		t.Parallel()
-		require.NoError(t, (&model.Index{Schema: []byte("{}")}).Validate([]byte(`{"foo":"bar"}`)))
+		require.NoError(t, model.ValidateJSON([]byte(`{}`), []byte(`{"foo":"bar"}`)))
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {
 		t.Parallel()
-		err := (&model.Index{Schema: []byte("{]")}).Validate([]byte(`{"foo":"bar"}`))
+		err := model.ValidateJSON([]byte("{]"), []byte(`{"foo":"bar"}`))
 		require.EqualError(t, err, "schema validate failed: invalid character ']' looking for beginning of object key string")
 	})
 
 	tt.Run("ValidationError", func(t *testing.T) {
 		t.Parallel()
-		i := &model.Index{Schema: []byte(`{"properties":{"foo":{"type":"number"}}}`)}
-		err := i.Validate([]byte(`{"foo":"bar"}`))
+		err := model.ValidateJSON([]byte(`{"properties":{"foo":{"type":"number"}}}`), []byte(`{"foo":"bar"}`))
 		require.EqualError(t, err, "foo: Invalid type. Expected: number, given: string")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
 		t.Parallel()
-		i := &model.Index{Schema: []byte(`{"properties":{"foo":{"type":"string"}}}`)}
-		err := i.Validate([]byte(`{"foo":"bar"}`))
+		err := model.ValidateJSON([]byte(`{"properties":{"foo":{"type":"string"}}}`), []byte(`{"foo":"bar"}`))
 		require.NoError(t, err)
 	})
 }

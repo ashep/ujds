@@ -28,7 +28,7 @@ func (r *Repository) GetAll(
 	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
-		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id >= $3 ORDER BY l.id LIMIT $4`
+		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4`
 
 	rows, err := r.db.QueryContext(ctx, q, index, since, cursor, limit)
 	if err != nil {
@@ -61,10 +61,5 @@ func (r *Repository) GetAll(
 		return nil, 0, fmt.Errorf("db rows iteration failed: %w", err)
 	}
 
-	nextCursor := uint64(0)
-	if len(rcs) > 0 {
-		nextCursor = logID + 1
-	}
-
-	return rcs, nextCursor, nil
+	return rcs, logID, nil
 }

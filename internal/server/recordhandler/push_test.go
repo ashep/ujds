@@ -41,7 +41,7 @@ func TestHandler_Push(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		require.EqualError(t, err, "invalid_argument: index get failed: invalid theIndexRepoSubj: theIndexRepoReason")
+		assert.EqualError(t, err, "invalid_argument: index get failed: invalid theIndexRepoSubj: theIndexRepoReason")
 		assert.Empty(t, lb.String())
 	})
 
@@ -63,11 +63,11 @@ func TestHandler_Push(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		require.EqualError(t, err, "not_found: theIndexRepoSubj is not found")
+		assert.EqualError(t, err, "not_found: theIndexRepoSubj is not found")
 		assert.Empty(t, lb.String())
 	})
 
-	tt.Run("IndexRepoOtherError", func(t *testing.T) {
+	tt.Run("IndexRepoInternalError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
@@ -83,7 +83,7 @@ func TestHandler_Push(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		require.EqualError(t, err, "internal: err_code: 123456789")
+		assert.EqualError(t, err, "internal: err_code: 123456789")
 		assert.Equal(t, `{"level":"error","error":"theIndexRepoError","proc":"","err_code":123456789,"message":"index repo get failed"}`+"\n", lb.String())
 	})
 
@@ -100,7 +100,7 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, index model.Index, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
 			return apperrors.InvalidArgError{
 				Subj:   "theErrorSubj",
 				Reason: "theErrorReason",
@@ -110,11 +110,11 @@ func TestHandler_Push(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		require.EqualError(t, err, "invalid_argument: invalid theErrorSubj: theErrorReason")
+		assert.EqualError(t, err, "invalid_argument: invalid theErrorSubj: theErrorReason")
 		assert.Empty(t, lb.String())
 	})
 
-	tt.Run("RecordRepoOtherError", func(t *testing.T) {
+	tt.Run("RecordRepoInternalError", func(t *testing.T) {
 		t.Parallel()
 
 		ir := &indexRepoMock{}
@@ -127,14 +127,14 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, index model.Index, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
 			return errors.New("theRecordRepoError")
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		require.EqualError(t, err, "internal: err_code: 123456789")
+		assert.EqualError(t, err, "internal: err_code: 123456789")
 		assert.Equal(t, `{"level":"error","error":"theRecordRepoError","proc":"","err_code":123456789,"message":"record repo push failed"}`+"\n", lb.String())
 	})
 
@@ -151,7 +151,7 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, index model.Index, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
 			return nil
 		}
 

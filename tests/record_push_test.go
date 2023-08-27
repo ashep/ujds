@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/sdk/client"
+	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
@@ -55,26 +56,32 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("EmptyRecords", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", "{}")
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{Index: "theIndex"}))
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{Index: "theIndex"}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid records: must not be empty")
 	})
 
 	tt.Run("EmptyRecordID", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", "{}")
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -88,13 +95,16 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("EmptyRecordData", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", "{}")
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -109,13 +119,16 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("InvalidDataJSON", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", "{}")
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -130,13 +143,19 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("DataValidationFailed", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", `{"required": ["foo"]}`)
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
+			Name:   "theIndex",
+			Schema: `{"required": ["foo"]}`,
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -151,13 +170,19 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", `{"required": ["foo"]}`)
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
+			Name:   "theIndex",
+			Schema: `{"required": ["foo"]}`,
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -189,14 +214,19 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("OkUpdate", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", `{"required": ["foo"]}`)
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
+			Name:   "theIndex",
+			Schema: `{"required": ["foo"]}`,
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -243,14 +273,19 @@ func TestRecord_Push(tt *testing.T) {
 
 	tt.Run("OkUpdateWithSameData", func(t *testing.T) {
 		ta := testapp.New(t)
-		ta.DB().InsertIndex(t, "theIndex", `{"required": ["foo"]}`)
 
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
+			Name:   "theIndex",
+			Schema: `{"required": ["foo"]}`,
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
