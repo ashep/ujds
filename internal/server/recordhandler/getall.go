@@ -17,8 +17,8 @@ func (h *Handler) GetAll(
 	req *connect.Request[proto.GetAllRequest],
 ) (*connect.Response[proto.GetAllResponse], error) {
 	since := time.Unix(req.Msg.Since, 0)
-
 	records, cur, err := h.rr.GetAll(ctx, req.Msg.Index, since, req.Msg.Cursor, req.Msg.Limit)
+
 	switch {
 	case errors.As(err, &apperrors.InvalidArgError{}):
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)

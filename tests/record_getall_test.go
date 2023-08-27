@@ -162,6 +162,6 @@ func TestRecord_GetAll(tt *testing.T) {
 	})
 
 	tt.Run("OkSince", func(t *testing.T) {
-		
+
 	})
 }
