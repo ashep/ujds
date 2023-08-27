@@ -110,6 +110,8 @@ func (a *TestApp) Start(t *testing.T) func() {
 			}
 		}
 
+		a.db.db.Close()
+
 		t.Fatalf("app has not stopped within %s", checkPeriod*checkCount)
 	}
 }

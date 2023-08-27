@@ -9,50 +9,51 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
-	ujdsconnect "github.com/ashep/ujds/sdk/proto/ujds/v1/v1connect"
+	indexconnect "github.com/ashep/ujds/sdk/proto/ujds/index/v1/v1connect"
+	recordconnect "github.com/ashep/ujds/sdk/proto/ujds/record/v1/v1connect"
 )
 
 const readTimeout = time.Second * 5
 
 type Server struct {
 	cfg Config
-	ih  ujdsconnect.IndexServiceHandler
-	rh  ujdsconnect.RecordServiceHandler
+	srv *http.Server
 	l   zerolog.Logger
 }
 
-func New(cfg Config, ih ujdsconnect.IndexServiceHandler, rh ujdsconnect.RecordServiceHandler, l zerolog.Logger) *Server {
+func New(
+	cfg Config,
+	ih indexconnect.IndexServiceHandler,
+	rh recordconnect.RecordServiceHandler,
+	l zerolog.Logger,
+) *Server {
 	if cfg.Address == "" {
 		cfg.Address = ":9000"
 	}
 
-	return &Server{cfg: cfg, ih: ih, rh: rh, l: l}
+	interceptors := connect.WithInterceptors(NewAuthInterceptor(cfg.AuthToken))
+
+	mux := http.NewServeMux()
+	mux.Handle(indexconnect.NewIndexServiceHandler(ih, interceptors))
+	mux.Handle(recordconnect.NewRecordServiceHandler(rh, interceptors))
+
+	srv := &http.Server{Addr: cfg.Address, Handler: mux, ReadTimeout: readTimeout}
+
+	return &Server{cfg: cfg, srv: srv, l: l}
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	interceptors := connect.WithInterceptors(NewAuthInterceptor(s.cfg.AuthToken))
-	mux := http.NewServeMux()
-
-	mux.Handle(ujdsconnect.NewIndexServiceHandler(s.ih, interceptors))
-	mux.Handle(ujdsconnect.NewRecordServiceHandler(s.rh, interceptors))
-
-	srv := &http.Server{
-		Addr:        s.cfg.Address,
-		Handler:     mux,
-		ReadTimeout: readTimeout,
-	}
-
 	go func() {
 		<-ctx.Done()
 
-		if errF := srv.Close(); errF != nil {
+		if errF := s.srv.Close(); errF != nil {
 			s.l.Error().Err(errF).Msg("failed to close server")
 		}
 	}()
 
 	s.l.Info().Str("addr", s.cfg.Address).Msg("starting server")
 
-	if err := srv.ListenAndServe(); err != nil {
+	if err := s.srv.ListenAndServe(); err != nil {
 		return fmt.Errorf("ListenAndServe failed: %w", err)
 	}
 

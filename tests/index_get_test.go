@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/sdk/client"
-	ujdsproto "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
 
@@ -24,7 +24,7 @@ func TestIndex_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
-		_, err := cli.I.GetIndex(context.Background(), connect.NewRequest(&ujdsproto.GetIndexRequest{}))
+		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
@@ -36,7 +36,7 @@ func TestIndex_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.GetIndex(context.Background(), connect.NewRequest(&ujdsproto.GetIndexRequest{
+		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
 			Name: "",
 		}))
 
@@ -50,7 +50,7 @@ func TestIndex_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.GetIndex(context.Background(), connect.NewRequest(&ujdsproto.GetIndexRequest{
+		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
 			Name: "the n@me",
 		}))
 
@@ -64,7 +64,7 @@ func TestIndex_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.GetIndex(context.Background(), connect.NewRequest(&ujdsproto.GetIndexRequest{
+		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
 			Name: "theIndexName",
 		}))
 
@@ -80,7 +80,8 @@ func TestIndex_Get(tt *testing.T) {
 		ta.DB().InsertIndex(t, "theIndexName", `{"foo":"bar"}`)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		res, err := cli.I.GetIndex(context.Background(), connect.NewRequest(&ujdsproto.GetIndexRequest{
+
+		res, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
 			Name: "theIndexName",
 		}))
 

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/ashep/ujds/sdk/client"
-	ujdsproto "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
 
@@ -23,7 +23,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{}))
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
@@ -35,7 +35,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "",
 			Schema: "",
 		}))
@@ -50,7 +50,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "the n@me",
 			Schema: "",
 		}))
@@ -65,7 +65,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{]",
 		}))
@@ -80,7 +80,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
@@ -102,7 +102,7 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "",
 		}))
@@ -124,13 +124,13 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
 		assert.NoError(t, err)
 
-		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo":"bar"}`,
 		}))
@@ -152,13 +152,13 @@ func TestIndex_Push(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo1":"bar1"}`,
 		}))
 		assert.NoError(t, err)
 
-		_, err = cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{
+		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: `{"foo2":"bar2"}`,
 		}))

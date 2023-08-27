@@ -13,7 +13,8 @@ import (
 	"github.com/ashep/ujds/internal/indexrepository"
 	"github.com/ashep/ujds/internal/recordrepository"
 	"github.com/ashep/ujds/internal/server"
-	"github.com/ashep/ujds/internal/server/handler"
+	"github.com/ashep/ujds/internal/server/indexhandler"
+	"github.com/ashep/ujds/internal/server/recordhandler"
 )
 
 type App struct {
@@ -31,11 +32,19 @@ func (a *App) Run(ctx context.Context) error {
 		return fmt.Errorf("database connection failed: %w", err)
 	}
 
-	h := handler.New(indexrepository.New(db, a.l), recordrepository.New(db, a.l), time.Now, a.l)
-	s := server.New(a.cfg.Server, h, h, a.l.With().Str("pkg", "server").Logger())
+	ir := indexrepository.New(db, a.l)
+	rr := recordrepository.New(db, a.l)
+
+	ih := indexhandler.New(ir, time.Now, a.l)
+	rh := recordhandler.New(ir, rr, time.Now, a.l)
+	s := server.New(a.cfg.Server, ih, rh, a.l.With().Str("pkg", "server").Logger())
 
 	if err := s.Run(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("server run failed: %w", err)
+	}
+
+	if err := db.Close(); err != nil {
+		return fmt.Errorf("db close failed: %w", err)
 	}
 
 	return nil

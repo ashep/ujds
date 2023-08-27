@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/sdk/client"
-	ujdsproto "github.com/ashep/ujds/sdk/proto/ujds/v1"
+	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
+	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
 
@@ -24,7 +25,7 @@ func TestRecord_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
-		_, err := cli.R.GetRecord(context.Background(), connect.NewRequest(&ujdsproto.GetRecordRequest{}))
+		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
@@ -36,7 +37,7 @@ func TestRecord_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.GetRecord(context.Background(), connect.NewRequest(&ujdsproto.GetRecordRequest{
+		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "",
 		}))
 
@@ -50,7 +51,7 @@ func TestRecord_Get(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.GetRecord(context.Background(), connect.NewRequest(&ujdsproto.GetRecordRequest{
+		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 		}))
 
@@ -65,10 +66,10 @@ func TestRecord_Get(tt *testing.T) {
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{Name: "theIndex"}))
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
 
-		_, err = cli.R.GetRecord(context.Background(), connect.NewRequest(&ujdsproto.GetRecordRequest{
+		_, err = cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "theRecord",
 		}))
@@ -84,18 +85,18 @@ func TestRecord_Get(tt *testing.T) {
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
-		_, err := cli.I.PushIndex(context.Background(), connect.NewRequest(&ujdsproto.PushIndexRequest{Name: "theIndex"}))
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
 
-		_, err = cli.R.PushRecords(context.Background(), connect.NewRequest(&ujdsproto.PushRecordsRequest{
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Index: "theIndex",
-			Records: []*ujdsproto.PushRecordsRequest_NewRecord{
+			Records: []*recordproto.PushRequest_Record{
 				{Id: "theRecord", Data: `{"foo":"bar"}`},
 			},
 		}))
 		require.NoError(t, err)
 
-		res, err := cli.R.GetRecord(context.Background(), connect.NewRequest(&ujdsproto.GetRecordRequest{
+		res, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "theRecord",
 		}))
