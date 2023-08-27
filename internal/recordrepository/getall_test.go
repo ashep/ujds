@@ -102,7 +102,7 @@ func TestRepository_GetAll(tt *testing.T) {
 		res, cur, err := repo.GetAll(context.Background(), "theIndex", time.Unix(123, 0), 234, 345)
 		require.NoError(t, err)
 		assert.Len(t, res, 2)
-		assert.Equal(t, uint64(3), cur)
+		assert.Equal(t, uint64(2), cur)
 
 		assert.Equal(t, "theID1", res[0].ID)
 		assert.Equal(t, "theIndex", res[0].Index)

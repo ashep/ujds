@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/bufbuild/connect-go"
 	"github.com/stretchr/testify/assert"
@@ -162,6 +163,64 @@ func TestRecord_GetAll(tt *testing.T) {
 	})
 
 	tt.Run("OkSince", func(t *testing.T) {
+		ta := testapp.New(t)
 
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		for i := 0; i < 10; i++ {
+			_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+				Index: "theIndex",
+				Records: []*recordproto.PushRequest_Record{
+					{Id: fmt.Sprintf("theRecord%d", i), Data: fmt.Sprintf(`{"foo%d":"bar%d"}`, i, i)},
+				},
+			}))
+			require.NoError(t, err)
+		}
+
+		time.Sleep(time.Second * 2)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Index: "theIndex",
+			Records: []*recordproto.PushRequest_Record{
+				{Id: "theRecord0", Data: `{"foo00":"bar00"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Index: "theIndex",
+			Records: []*recordproto.PushRequest_Record{
+				{Id: "theRecord5", Data: `{"foo55":"bar55"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+			Index: "theIndex",
+			Since: time.Now().Add(-time.Second).Unix(),
+		}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Records, 2)
+
+		assert.Equal(t, "theRecord0", res.Msg.Records[0].Id)
+		assert.Equal(t, uint64(11), res.Msg.Records[0].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
+		assert.NotZero(t, res.Msg.Records[0].CreatedAt)
+		assert.Greater(t, res.Msg.Records[0].UpdatedAt, res.Msg.Records[0].CreatedAt)
+		assert.Equal(t, `{"foo00": "bar00"}`, res.Msg.Records[0].Data)
+
+		assert.Equal(t, "theRecord5", res.Msg.Records[1].Id)
+		assert.Equal(t, uint64(12), res.Msg.Records[1].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[1].Index)
+		assert.NotZero(t, res.Msg.Records[1].CreatedAt)
+		assert.Greater(t, res.Msg.Records[1].UpdatedAt, res.Msg.Records[1].CreatedAt)
+		assert.Equal(t, `{"foo55": "bar55"}`, res.Msg.Records[1].Data)
 	})
 }
