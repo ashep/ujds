@@ -15,7 +15,7 @@ func (h *Handler) Clear(
 	ctx context.Context,
 	req *connect.Request[proto.ClearRequest],
 ) (*connect.Response[proto.ClearResponse], error) {
-	err := h.repo.Clear(ctx, req.Msg.Index)
+	err := h.repo.Clear(ctx, req.Msg.Name)
 
 	switch {
 	case errors.As(err, &apperrors.InvalidArgError{}):

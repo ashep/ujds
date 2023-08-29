@@ -17,13 +17,15 @@ func (r *Repository) Clear(ctx context.Context, name string) error {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, `DELETE FROM record WHERE index_id=$1`, name)
+	_, err = tx.ExecContext(ctx,
+		`DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, name)
 	if err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("failed to delete records: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, `DELETE FROM record_log WHERE index_id=$1`, name)
+	_, err = tx.ExecContext(ctx,
+		`DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, name)
 	if err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("failed to delete record logs: %w", err)

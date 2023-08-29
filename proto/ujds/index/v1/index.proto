@@ -22,7 +22,7 @@ message GetResponse {
 }
 
 message ClearRequest {
-  string index = 1;
+  string name = 1;
 }
 
 message ClearResponse {
