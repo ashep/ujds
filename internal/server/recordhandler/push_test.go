@@ -19,7 +19,7 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
-func TestHandler_Push(tt *testing.T) {
+func TestRecordHandler_Push(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("IndexRepoInvalidArgumentError", func(t *testing.T) {
@@ -100,7 +100,7 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 			return apperrors.InvalidArgError{
 				Subj:   "theErrorSubj",
 				Reason: "theErrorReason",
@@ -127,7 +127,7 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 			return errors.New("theRecordRepoError")
 		}
 
@@ -151,7 +151,7 @@ func TestHandler_Push(tt *testing.T) {
 			return model.Index{}, nil
 		}
 
-		rr.PushFunc = func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+		rr.PushFunc = func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 			return nil
 		}
 

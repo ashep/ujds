@@ -32,7 +32,7 @@ func (h *Handler) Get(
 	return connect.NewResponse(&proto.GetResponse{Record: &proto.Record{
 		Id:        rec.ID,
 		Rev:       rec.Rev,
-		Index:     rec.Index,
+		Index:     req.Msg.Index,
 		CreatedAt: rec.CreatedAt.Unix(),
 		UpdatedAt: rec.UpdatedAt.Unix(),
 		Data:      rec.Data,

@@ -84,16 +84,13 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //		// make and configure a mocked recordhandler.recordRepo
 //		mockedrecordRepo := &recordRepoMock{
-//			ClearFunc: func(ctx context.Context, index string) error {
-//				panic("mock out the Clear method")
-//			},
 //			GetFunc: func(ctx context.Context, index string, id string) (model.Record, error) {
 //				panic("mock out the Get method")
 //			},
 //			GetAllFunc: func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 //				panic("mock out the GetAll method")
 //			},
-//			PushFunc: func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+//			PushFunc: func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 //				panic("mock out the Push method")
 //			},
 //		}
@@ -103,9 +100,6 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //	}
 type recordRepoMock struct {
-	// ClearFunc mocks the Clear method.
-	ClearFunc func(ctx context.Context, index string) error
-
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, index string, id string) (model.Record, error)
 
@@ -113,17 +107,10 @@ type recordRepoMock struct {
 	GetAllFunc func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// PushFunc mocks the Push method.
-	PushFunc func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error
+	PushFunc func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error
 
 	// calls tracks calls to the methods.
 	calls struct {
-		// Clear holds details about calls to the Clear method.
-		Clear []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Index is the index argument value.
-			Index string
-		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
@@ -151,53 +138,16 @@ type recordRepoMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// IndexID is the indexID argument value.
-			IndexID uint
+			IndexID uint64
 			// Schema is the schema argument value.
 			Schema []byte
 			// Records is the records argument value.
-			Records []model.Record
+			Records []model.RecordUpdate
 		}
 	}
-	lockClear  sync.RWMutex
 	lockGet    sync.RWMutex
 	lockGetAll sync.RWMutex
 	lockPush   sync.RWMutex
-}
-
-// Clear calls ClearFunc.
-func (mock *recordRepoMock) Clear(ctx context.Context, index string) error {
-	if mock.ClearFunc == nil {
-		panic("recordRepoMock.ClearFunc: method is nil but recordRepo.Clear was just called")
-	}
-	callInfo := struct {
-		Ctx   context.Context
-		Index string
-	}{
-		Ctx:   ctx,
-		Index: index,
-	}
-	mock.lockClear.Lock()
-	mock.calls.Clear = append(mock.calls.Clear, callInfo)
-	mock.lockClear.Unlock()
-	return mock.ClearFunc(ctx, index)
-}
-
-// ClearCalls gets all the calls that were made to Clear.
-// Check the length with:
-//
-//	len(mockedrecordRepo.ClearCalls())
-func (mock *recordRepoMock) ClearCalls() []struct {
-	Ctx   context.Context
-	Index string
-} {
-	var calls []struct {
-		Ctx   context.Context
-		Index string
-	}
-	mock.lockClear.RLock()
-	calls = mock.calls.Clear
-	mock.lockClear.RUnlock()
-	return calls
 }
 
 // Get calls GetFunc.
@@ -289,15 +239,15 @@ func (mock *recordRepoMock) GetAllCalls() []struct {
 }
 
 // Push calls PushFunc.
-func (mock *recordRepoMock) Push(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+func (mock *recordRepoMock) Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 	if mock.PushFunc == nil {
 		panic("recordRepoMock.PushFunc: method is nil but recordRepo.Push was just called")
 	}
 	callInfo := struct {
 		Ctx     context.Context
-		IndexID uint
+		IndexID uint64
 		Schema  []byte
-		Records []model.Record
+		Records []model.RecordUpdate
 	}{
 		Ctx:     ctx,
 		IndexID: indexID,
@@ -316,15 +266,15 @@ func (mock *recordRepoMock) Push(ctx context.Context, indexID uint, schema []byt
 //	len(mockedrecordRepo.PushCalls())
 func (mock *recordRepoMock) PushCalls() []struct {
 	Ctx     context.Context
-	IndexID uint
+	IndexID uint64
 	Schema  []byte
-	Records []model.Record
+	Records []model.RecordUpdate
 } {
 	var calls []struct {
 		Ctx     context.Context
-		IndexID uint
+		IndexID uint64
 		Schema  []byte
-		Records []model.Record
+		Records []model.RecordUpdate
 	}
 	mock.lockPush.RLock()
 	calls = mock.calls.Push

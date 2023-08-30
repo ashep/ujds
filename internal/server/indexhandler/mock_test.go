@@ -15,6 +15,9 @@ import (
 //
 //		// make and configure a mocked indexhandler.indexRepo
 //		mockedindexRepo := &indexRepoMock{
+//			ClearFunc: func(ctx context.Context, name string) error {
+//				panic("mock out the Clear method")
+//			},
 //			GetFunc: func(ctx context.Context, name string) (model.Index, error) {
 //				panic("mock out the Get method")
 //			},
@@ -28,6 +31,9 @@ import (
 //
 //	}
 type indexRepoMock struct {
+	// ClearFunc mocks the Clear method.
+	ClearFunc func(ctx context.Context, name string) error
+
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, name string) (model.Index, error)
 
@@ -36,6 +42,13 @@ type indexRepoMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Clear holds details about calls to the Clear method.
+		Clear []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Name is the name argument value.
+			Name string
+		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
@@ -53,8 +66,45 @@ type indexRepoMock struct {
 			Schema string
 		}
 	}
+	lockClear  sync.RWMutex
 	lockGet    sync.RWMutex
 	lockUpsert sync.RWMutex
+}
+
+// Clear calls ClearFunc.
+func (mock *indexRepoMock) Clear(ctx context.Context, name string) error {
+	if mock.ClearFunc == nil {
+		panic("indexRepoMock.ClearFunc: method is nil but indexRepo.Clear was just called")
+	}
+	callInfo := struct {
+		Ctx  context.Context
+		Name string
+	}{
+		Ctx:  ctx,
+		Name: name,
+	}
+	mock.lockClear.Lock()
+	mock.calls.Clear = append(mock.calls.Clear, callInfo)
+	mock.lockClear.Unlock()
+	return mock.ClearFunc(ctx, name)
+}
+
+// ClearCalls gets all the calls that were made to Clear.
+// Check the length with:
+//
+//	len(mockedindexRepo.ClearCalls())
+func (mock *indexRepoMock) ClearCalls() []struct {
+	Ctx  context.Context
+	Name string
+} {
+	var calls []struct {
+		Ctx  context.Context
+		Name string
+	}
+	mock.lockClear.RLock()
+	calls = mock.calls.Clear
+	mock.lockClear.RUnlock()
+	return calls
 }
 
 // Get calls GetFunc.

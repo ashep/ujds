@@ -19,7 +19,7 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
-func TestHandler_Get(tt *testing.T) {
+func TestIndexHandler_Get(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {

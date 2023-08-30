@@ -44,16 +44,8 @@ message GetAllResponse {
   repeated Record records = 2;
 }
 
-message ClearRequest {
-  string index = 1;
-}
-
-message ClearResponse {
-}
-
 service RecordService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc GetAll(GetAllRequest) returns (GetAllResponse) {}
-  rpc Clear(ClearRequest) returns (ClearResponse) {}
 }

@@ -16,10 +16,9 @@ type indexRepo interface {
 }
 
 type recordRepo interface {
-	Push(ctx context.Context, indexID uint, schema []byte, records []model.Record) error
+	Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error
 	Get(ctx context.Context, index string, id string) (model.Record, error)
 	GetAll(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
-	Clear(ctx context.Context, index string) error
 }
 
 type Handler struct {

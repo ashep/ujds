@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"encoding/binary"
 	"errors"
 	"fmt"
 
@@ -13,7 +14,7 @@ import (
 )
 
 //nolint:cyclop // that's ok
-func (r *Repository) Push(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 	var err error
 
 	if indexID == 0 {
@@ -84,10 +85,10 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 func (r *Repository) insertRecord(
 	ctx context.Context,
 	qGetRecord, qInsertLog, qInsertRecord *sql.Stmt,
-	indexID uint,
+	indexID uint64,
 	schema []byte,
 	i int,
-	rec model.Record,
+	rec model.RecordUpdate,
 ) error {
 	if rec.ID == "" {
 		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record (%d) id", i), Reason: "must not be empty"}
@@ -105,7 +106,10 @@ func (r *Repository) insertRecord(
 
 	logID := uint64(0)
 
-	sumSrc := append(recDataB, []byte(rec.Index)...) //nolint:gocritic // it's ok
+	indexIDBytes := make([]byte, 8) //nolint:gomnd // it's ok
+	binary.LittleEndian.PutUint64(indexIDBytes, rec.IndexID)
+
+	sumSrc := append(recDataB, indexIDBytes...) //nolint:gocritic // it's ok
 	sumSrc = append(sumSrc, []byte(rec.ID)...)
 	sum := sha256.Sum256(sumSrc)
 
