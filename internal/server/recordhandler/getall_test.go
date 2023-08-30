@@ -18,7 +18,7 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
-func TestHandler_GetAll(tt *testing.T) {
+func TestRecordHandler_GetAll(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
@@ -97,7 +97,7 @@ func TestHandler_GetAll(tt *testing.T) {
 			return []model.Record{
 				{
 					ID:        "theRecordID1",
-					Index:     "theIndex1",
+					IndexID:   11,
 					Rev:       123,
 					Data:      `{"foo1":"bar1"}`,
 					CreatedAt: time.Unix(111, 0),
@@ -105,7 +105,7 @@ func TestHandler_GetAll(tt *testing.T) {
 				},
 				{
 					ID:        "theRecordID2",
-					Index:     "theIndex2",
+					IndexID:   22,
 					Rev:       234,
 					Data:      `{"foo2":"bar2"}`,
 					CreatedAt: time.Unix(333, 0),
@@ -115,7 +115,9 @@ func TestHandler_GetAll(tt *testing.T) {
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
-		res, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{}))
+		res, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{
+			Index: "theIndex1",
+		}))
 
 		require.NoError(t, err)
 		assert.Empty(t, lb.String())
@@ -131,7 +133,7 @@ func TestHandler_GetAll(tt *testing.T) {
 		assert.Equal(t, time.Unix(222, 0).Unix(), res.Msg.Records[0].UpdatedAt)
 
 		assert.Equal(t, "theRecordID2", res.Msg.Records[1].Id)
-		assert.Equal(t, "theIndex2", res.Msg.Records[1].Index)
+		assert.Equal(t, "theIndex1", res.Msg.Records[1].Index)
 		assert.Equal(t, uint64(234), res.Msg.Records[1].Rev)
 		assert.Equal(t, `{"foo2":"bar2"}`, res.Msg.Records[1].Data)
 		assert.Equal(t, time.Unix(333, 0).Unix(), res.Msg.Records[1].CreatedAt)

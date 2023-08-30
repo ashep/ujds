@@ -90,7 +90,7 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //			GetAllFunc: func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 //				panic("mock out the GetAll method")
 //			},
-//			PushFunc: func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+//			PushFunc: func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 //				panic("mock out the Push method")
 //			},
 //		}
@@ -107,7 +107,7 @@ type recordRepoMock struct {
 	GetAllFunc func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// PushFunc mocks the Push method.
-	PushFunc func(ctx context.Context, indexID uint, schema []byte, records []model.Record) error
+	PushFunc func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -138,11 +138,11 @@ type recordRepoMock struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
 			// IndexID is the indexID argument value.
-			IndexID uint
+			IndexID uint64
 			// Schema is the schema argument value.
 			Schema []byte
 			// Records is the records argument value.
-			Records []model.Record
+			Records []model.RecordUpdate
 		}
 	}
 	lockGet    sync.RWMutex
@@ -239,15 +239,15 @@ func (mock *recordRepoMock) GetAllCalls() []struct {
 }
 
 // Push calls PushFunc.
-func (mock *recordRepoMock) Push(ctx context.Context, indexID uint, schema []byte, records []model.Record) error {
+func (mock *recordRepoMock) Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 	if mock.PushFunc == nil {
 		panic("recordRepoMock.PushFunc: method is nil but recordRepo.Push was just called")
 	}
 	callInfo := struct {
 		Ctx     context.Context
-		IndexID uint
+		IndexID uint64
 		Schema  []byte
-		Records []model.Record
+		Records []model.RecordUpdate
 	}{
 		Ctx:     ctx,
 		IndexID: indexID,
@@ -266,15 +266,15 @@ func (mock *recordRepoMock) Push(ctx context.Context, indexID uint, schema []byt
 //	len(mockedrecordRepo.PushCalls())
 func (mock *recordRepoMock) PushCalls() []struct {
 	Ctx     context.Context
-	IndexID uint
+	IndexID uint64
 	Schema  []byte
-	Records []model.Record
+	Records []model.RecordUpdate
 } {
 	var calls []struct {
 		Ctx     context.Context
-		IndexID uint
+		IndexID uint64
 		Schema  []byte
-		Records []model.Record
+		Records []model.RecordUpdate
 	}
 	mock.lockPush.RLock()
 	calls = mock.calls.Push

@@ -38,7 +38,7 @@ func (h *Handler) GetAll(
 		itemsR[i] = &proto.Record{
 			Id:        rec.ID,
 			Rev:       rec.Rev,
-			Index:     rec.Index,
+			Index:     req.Msg.Index,
 			Data:      rec.Data,
 			CreatedAt: rec.CreatedAt.Unix(),
 			UpdatedAt: rec.UpdatedAt.Unix(),

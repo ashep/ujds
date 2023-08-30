@@ -25,7 +25,7 @@ func (r *Repository) GetAll(
 		limit = 500
 	}
 
-	q := `SELECT r.id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
+	q := `SELECT r.id, r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4`
@@ -40,16 +40,16 @@ func (r *Repository) GetAll(
 	}()
 
 	rcs := make([]model.Record, 0)
-	recID, logID, data, crAt, upAt := "", uint64(0), "", time.Time{}, time.Time{}
+	recID, indexID, logID, data, crAt, upAt := "", uint64(0), uint64(0), "", time.Time{}, time.Time{}
 
 	for rows.Next() {
-		if err := rows.Scan(&recID, &logID, &data, &crAt, &upAt); err != nil {
+		if err := rows.Scan(&recID, &indexID, &logID, &data, &crAt, &upAt); err != nil {
 			return nil, 0, fmt.Errorf("db scan failed: %w", err)
 		}
 
 		rcs = append(rcs, model.Record{
 			ID:        recID,
-			Index:     index,
+			IndexID:   indexID,
 			Rev:       logID,
 			Data:      data,
 			CreatedAt: crAt,

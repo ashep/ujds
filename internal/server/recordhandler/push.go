@@ -30,11 +30,12 @@ func (h *Handler) Push(
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 
-	apiRecords := make([]model.Record, 0)
+	apiRecords := make([]model.RecordUpdate, 0)
 	for _, rec := range req.Msg.Records {
-		apiRecords = append(apiRecords, model.Record{
-			ID:   rec.Id,
-			Data: rec.Data,
+		apiRecords = append(apiRecords, model.RecordUpdate{
+			ID:      rec.Id,
+			IndexID: index.ID,
+			Data:    rec.Data,
 		})
 	}
 

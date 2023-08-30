@@ -14,7 +14,7 @@ import (
 
 func (r *Repository) Get(ctx context.Context, name string) (model.Index, error) {
 	var (
-		id        uint
+		id        uint64
 		schema    []byte
 		createdAt time.Time
 		updatedAt time.Time

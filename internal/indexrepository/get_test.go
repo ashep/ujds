@@ -95,7 +95,7 @@ func TestRepository_Get(tt *testing.T) {
 		res, err := repo.Get(context.Background(), "theIndex")
 
 		require.NoError(t, err)
-		assert.Equal(t, uint(123), res.ID)
+		assert.Equal(t, uint64(123), res.ID)
 		assert.Equal(t, "theIndex", res.Name)
 		assert.Equal(t, []byte(`{"foo":"bar"}`), res.Schema)
 		assert.Equal(t, time.Unix(234, 0), res.CreatedAt)

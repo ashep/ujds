@@ -102,9 +102,10 @@ func TestIndex_Clear(tt *testing.T) {
 		rcs = ta.DB().GetRecords(t, "theIndex2")
 		assert.Len(t, rcs, 3)
 
-		// _, err = cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
-		// 	Name: "theIndex1",
-		// }))
+		_, err = cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
+			Name: "theIndex1",
+		}))
+		assert.NoError(t, err)
 
 		rcs = ta.DB().GetRecords(t, "theIndex1")
 		assert.Len(t, rcs, 0)

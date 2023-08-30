@@ -5,7 +5,7 @@ import (
 )
 
 type Index struct {
-	ID        uint
+	ID        uint64
 	Name      string
 	Schema    []byte
 	CreatedAt time.Time

@@ -19,7 +19,7 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
-func TestHandler_Get(tt *testing.T) {
+func TestRecordHandler_Get(tt *testing.T) {
 	tt.Parallel()
 
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
@@ -98,25 +98,28 @@ func TestHandler_Get(tt *testing.T) {
 
 		rr.GetFunc = func(ctx context.Context, index, id string) (model.Record, error) {
 			return model.Record{
-				ID:        "theRecordID",
-				Index:     "theIndexName",
-				Rev:       123,
+				ID:        id,
+				IndexID:   123,
+				Rev:       234,
 				Data:      "theData",
-				CreatedAt: time.Unix(234, 0),
-				UpdatedAt: time.Unix(345, 0),
+				CreatedAt: time.Unix(345, 0),
+				UpdatedAt: time.Unix(456, 0),
 			}, nil
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
-		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
+		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
+			Index: "theIndexName",
+			Id:    "theRecordID",
+		}))
 
 		require.NoError(t, err)
 		assert.Equal(t, "theRecordID", res.Msg.Record.Id)
 		assert.Equal(t, "theIndexName", res.Msg.Record.Index)
-		assert.Equal(t, uint64(123), res.Msg.Record.Rev)
+		assert.Equal(t, uint64(234), res.Msg.Record.Rev)
 		assert.Equal(t, "theData", res.Msg.Record.Data)
-		assert.Equal(t, time.Unix(234, 0).Unix(), res.Msg.Record.CreatedAt)
-		assert.Equal(t, time.Unix(345, 0).Unix(), res.Msg.Record.UpdatedAt)
+		assert.Equal(t, time.Unix(345, 0).Unix(), res.Msg.Record.CreatedAt)
+		assert.Equal(t, time.Unix(456, 0).Unix(), res.Msg.Record.UpdatedAt)
 		assert.Empty(t, lb.String())
 	})
 }
