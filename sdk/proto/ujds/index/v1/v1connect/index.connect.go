@@ -29,6 +29,7 @@ const (
 type IndexServiceClient interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
+	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
 	Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error)
 }
 
@@ -52,6 +53,11 @@ func NewIndexServiceClient(httpClient connect_go.HTTPClient, baseURL string, opt
 			baseURL+"/ujds.index.v1.IndexService/Get",
 			opts...,
 		),
+		list: connect_go.NewClient[v1.ListRequest, v1.ListResponse](
+			httpClient,
+			baseURL+"/ujds.index.v1.IndexService/List",
+			opts...,
+		),
 		clear: connect_go.NewClient[v1.ClearRequest, v1.ClearResponse](
 			httpClient,
 			baseURL+"/ujds.index.v1.IndexService/Clear",
@@ -64,6 +70,7 @@ func NewIndexServiceClient(httpClient connect_go.HTTPClient, baseURL string, opt
 type indexServiceClient struct {
 	push  *connect_go.Client[v1.PushRequest, v1.PushResponse]
 	get   *connect_go.Client[v1.GetRequest, v1.GetResponse]
+	list  *connect_go.Client[v1.ListRequest, v1.ListResponse]
 	clear *connect_go.Client[v1.ClearRequest, v1.ClearResponse]
 }
 
@@ -77,6 +84,11 @@ func (c *indexServiceClient) Get(ctx context.Context, req *connect_go.Request[v1
 	return c.get.CallUnary(ctx, req)
 }
 
+// List calls ujds.index.v1.IndexService.List.
+func (c *indexServiceClient) List(ctx context.Context, req *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error) {
+	return c.list.CallUnary(ctx, req)
+}
+
 // Clear calls ujds.index.v1.IndexService.Clear.
 func (c *indexServiceClient) Clear(ctx context.Context, req *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error) {
 	return c.clear.CallUnary(ctx, req)
@@ -86,6 +98,7 @@ func (c *indexServiceClient) Clear(ctx context.Context, req *connect_go.Request[
 type IndexServiceHandler interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
+	List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error)
 	Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error)
 }
 
@@ -106,6 +119,11 @@ func NewIndexServiceHandler(svc IndexServiceHandler, opts ...connect_go.HandlerO
 		svc.Get,
 		opts...,
 	))
+	mux.Handle("/ujds.index.v1.IndexService/List", connect_go.NewUnaryHandler(
+		"/ujds.index.v1.IndexService/List",
+		svc.List,
+		opts...,
+	))
 	mux.Handle("/ujds.index.v1.IndexService/Clear", connect_go.NewUnaryHandler(
 		"/ujds.index.v1.IndexService/Clear",
 		svc.Clear,
@@ -123,6 +141,10 @@ func (UnimplementedIndexServiceHandler) Push(context.Context, *connect_go.Reques
 
 func (UnimplementedIndexServiceHandler) Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error) {
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.Get is not implemented"))
+}
+
+func (UnimplementedIndexServiceHandler) List(context.Context, *connect_go.Request[v1.ListRequest]) (*connect_go.Response[v1.ListResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.List is not implemented"))
 }
 
 func (UnimplementedIndexServiceHandler) Clear(context.Context, *connect_go.Request[v1.ClearRequest]) (*connect_go.Response[v1.ClearResponse], error) {

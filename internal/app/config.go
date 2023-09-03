@@ -1,19 +1,14 @@
 package app
 
 import (
-	_ "embed"
-
 	"github.com/ashep/ujds/internal/server"
 )
 
-//go:embed schema.json
-var Schema []byte
-
 type Database struct {
-	DSN string `json:"dsn,omitempty" yaml:"dsn,omitempty"`
+	DSN string `json:"dsn" yaml:"dsn"`
 }
 
 type Config struct {
-	DB     Database      `json:"db,omitempty" yaml:"db,omitempty"`
-	Server server.Config `json:"server,omitempty" yaml:"server,omitempty"`
+	DB     Database      `json:"db" yaml:"db"`
+	Server server.Config `json:"server" yaml:"server"`
 }

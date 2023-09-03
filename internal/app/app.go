@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/migration"
 	"github.com/ashep/ujds/internal/recordrepository"
 	"github.com/ashep/ujds/internal/server"
 	"github.com/ashep/ujds/internal/server/indexhandler"
@@ -23,13 +25,44 @@ type App struct {
 }
 
 func New(cfg Config, l zerolog.Logger) *App {
-	return &App{cfg: cfg, l: l}
+	return &App{
+		cfg: cfg,
+		l:   l,
+	}
 }
 
-func (a *App) Run(ctx context.Context) error {
+func (a *App) Run(ctx context.Context, args []string) error {
+	flagSet := flag.NewFlagSet(args[0], flag.ContinueOnError)
+	migUp := flagSet.Bool("migrate-up", false, "apply database migrations")
+	migDown := flagSet.Bool("migrate-down", false, "revert database migrations")
+
+	if err := flagSet.Parse(args[1:]); err != nil {
+		return fmt.Errorf("command line arguments parse failed: %w", err)
+	}
+
 	db, err := dbConn(ctx, a.cfg.DB.DSN)
 	if err != nil {
 		return fmt.Errorf("database connection failed: %w", err)
+	}
+
+	if *migUp {
+		if err := migration.Up(db); err != nil {
+			return fmt.Errorf("migrration apply failed: %w", err)
+		}
+
+		a.l.Info().Msg("migrations applied")
+
+		return nil
+	}
+
+	if *migDown {
+		if err := migration.Down(db); err != nil {
+			return fmt.Errorf("migrration applreverty failed: %w", err)
+		}
+
+		a.l.Info().Msg("migrations reverted")
+
+		return nil
 	}
 
 	ir := indexrepository.New(db, a.l)

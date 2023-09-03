@@ -21,6 +21,9 @@ import (
 //			GetFunc: func(ctx context.Context, name string) (model.Index, error) {
 //				panic("mock out the Get method")
 //			},
+//			ListFunc: func(ctx context.Context) ([]model.Index, error) {
+//				panic("mock out the List method")
+//			},
 //			UpsertFunc: func(ctx context.Context, name string, schema string) error {
 //				panic("mock out the Upsert method")
 //			},
@@ -36,6 +39,9 @@ type indexRepoMock struct {
 
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, name string) (model.Index, error)
+
+	// ListFunc mocks the List method.
+	ListFunc func(ctx context.Context) ([]model.Index, error)
 
 	// UpsertFunc mocks the Upsert method.
 	UpsertFunc func(ctx context.Context, name string, schema string) error
@@ -56,6 +62,11 @@ type indexRepoMock struct {
 			// Name is the name argument value.
 			Name string
 		}
+		// List holds details about calls to the List method.
+		List []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+		}
 		// Upsert holds details about calls to the Upsert method.
 		Upsert []struct {
 			// Ctx is the ctx argument value.
@@ -68,6 +79,7 @@ type indexRepoMock struct {
 	}
 	lockClear  sync.RWMutex
 	lockGet    sync.RWMutex
+	lockList   sync.RWMutex
 	lockUpsert sync.RWMutex
 }
 
@@ -140,6 +152,38 @@ func (mock *indexRepoMock) GetCalls() []struct {
 	mock.lockGet.RLock()
 	calls = mock.calls.Get
 	mock.lockGet.RUnlock()
+	return calls
+}
+
+// List calls ListFunc.
+func (mock *indexRepoMock) List(ctx context.Context) ([]model.Index, error) {
+	if mock.ListFunc == nil {
+		panic("indexRepoMock.ListFunc: method is nil but indexRepo.List was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+	}{
+		Ctx: ctx,
+	}
+	mock.lockList.Lock()
+	mock.calls.List = append(mock.calls.List, callInfo)
+	mock.lockList.Unlock()
+	return mock.ListFunc(ctx)
+}
+
+// ListCalls gets all the calls that were made to List.
+// Check the length with:
+//
+//	len(mockedindexRepo.ListCalls())
+func (mock *indexRepoMock) ListCalls() []struct {
+	Ctx context.Context
+} {
+	var calls []struct {
+		Ctx context.Context
+	}
+	mock.lockList.RLock()
+	calls = mock.calls.List
+	mock.lockList.RUnlock()
 	return calls
 }
 
