@@ -2,6 +2,17 @@ syntax = "proto3";
 package ujds.index.v1;
 option go_package = "github.com/ashep/ujds/sdk/proto/ujds/index/v1";
 
+message ListRequest {
+}
+
+message ListResponse {
+  message Index {
+    string name = 1 ;
+  }
+
+  repeated Index indices = 1;
+}
+
 message PushRequest {
   string name = 1;
   string schema = 2;
@@ -31,5 +42,6 @@ message ClearResponse {
 service IndexService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
+  rpc List(ListRequest) returns(ListResponse) {}
   rpc Clear(ClearRequest) returns (ClearResponse) {}
 }

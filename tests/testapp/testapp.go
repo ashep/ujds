@@ -3,6 +3,7 @@ package testapp
 import (
 	"context"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -64,7 +65,15 @@ func (a *TestApp) Start(t *testing.T) func() {
 
 	done := make(chan struct{})
 	go func() {
-		require.NoError(t, a.app.Run(ctx))
+		args := []string{os.Args[0]}
+
+		for _, v := range os.Args[1:] {
+			if !strings.HasPrefix(v, "-test.") {
+				args = append(args, v)
+			}
+		}
+
+		require.NoError(t, a.app.Run(ctx, args))
 		close(done)
 	}()
 

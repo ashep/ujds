@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -16,9 +17,9 @@ import (
 const readTimeout = time.Second * 5
 
 type Server struct {
-	cfg Config
-	srv *http.Server
-	l   zerolog.Logger
+	c Config
+	s *http.Server
+	l zerolog.Logger
 }
 
 func New(
@@ -37,25 +38,33 @@ func New(
 	mux.Handle(indexconnect.NewIndexServiceHandler(ih, interceptors))
 	mux.Handle(recordconnect.NewRecordServiceHandler(rh, interceptors))
 
-	srv := &http.Server{Addr: cfg.Address, Handler: mux, ReadTimeout: readTimeout}
-
-	return &Server{cfg: cfg, srv: srv, l: l}
+	return &Server{
+		c: cfg,
+		s: &http.Server{Addr: cfg.Address, Handler: mux, ReadTimeout: readTimeout},
+		l: l,
+	}
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 
-		if errF := s.srv.Close(); errF != nil {
-			s.l.Error().Err(errF).Msg("failed to close server")
+		if errF := s.s.Close(); errF != nil {
+			s.l.Error().Err(errF).Msg("server close failed")
 		}
 	}()
 
-	s.l.Info().Str("addr", s.cfg.Address).Msg("starting server")
+	s.l.Info().Str("addr", s.c.Address).Msg("server is starting")
 
-	if err := s.srv.ListenAndServe(); err != nil {
-		return fmt.Errorf("ListenAndServe failed: %w", err)
+	if s.c.AuthToken == "" {
+		s.l.Warn().Msg("empty auth token, should be used only for development purposes")
 	}
+
+	if err := s.s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return fmt.Errorf("serve failed: %w", err)
+	}
+
+	s.l.Info().Str("addr", s.c.Address).Msg("server stopped")
 
 	return nil
 }
