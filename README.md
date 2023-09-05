@@ -164,6 +164,39 @@ curl --request POST \
   --data '{}'
 ```
 
+## Push records
+
+Create records in the index or update existing ones. 
+
+- Path: `/ujds.record.v1.RecordService/Push`
+- Request fields:
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+  - *required* **object** `records`: array of records data:
+    - *required* **string** `id`: record ID:
+    - *required* **string** `data`: record JSON data.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.record.v1.RecordService/Push \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"index": "books",
+	"records": [
+		{
+			"id": "castaneda-001",
+			"data": "{\"author\":\"Carlos Kastaneda\", \"title\":\"Tales of Power\"}"
+		},
+		{
+			"id": "tanenbaum-001",
+			"data": "{\"author\":\"M. van Steen and A.S. Tanenbaum\", \"title\":\"Distributed Systems, 4th ed.\"}"
+		}
+	]
+}'
+```
+
 ## Changelog
 
 ## Authors
