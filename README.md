@@ -2,22 +2,314 @@
 
 [![ci](https://github.com/ashep/ujds/actions/workflows/ci.yaml/badge.svg)](https://github.com/ashep/ujds/actions/workflows/ci.yaml)
 
-**Universal JSON Data Storage** is a service which gets JSON data called **records**, validates with JSON 
-**schema** and stores into the database, keeping track of changes history.
+The **Universal JSON Data Storage** is a service aimed to store arbitrary JSON data keeping changes history. Data are
+being stored in **indices** as **records**. Indices may be supplied with JSON **schemas** to check incoming data upon 
+updates.
 
-Stored records can be queried by others, given them only data which have been changed since last query.  
+## Configuration
+
+The service can be configured in three ways: via YAML file, via env variables or using both. Env variables takes
+precedence over config file.
+
+If the `config.yaml` file is found in the current directory, it will be loaded before env variables. It is possible to
+change default config file location using `APP_CONFIG_PATH` env variable.
+
+### File
+
+- *required* **object** `db`: database configuration:
+    - *required* **string** `dsn`: database source name.
+- *optional* **object** `server`: server configuration:
+    - *optional* **string** `address`: network address, default is `:9000`;
+    - *optional* **string** `auth_token`: authorization token.
+
+### Env variables
+
+- *required* **string** `UJDS_DB_DSN`: database source name.
+- *optional* **string** `UJDS_SERVER_ADDRESS`: server network address.
+- *optional* **string** `UJDS_SERVER_AUTHTOKEN`: server authorization token.
 
 ## HTTP API
 
-### Create/update index
+### Methods
 
-### Get index
+All the requests must be performed use `POST` method.
 
-### Push a record to an index
+### Response JSON types
 
-### Get records from index
+Please note, that **numerical data in responses are encoded as strings**.
+
+### Authorization
+
+If the `server.auth_token` is specified, the server will expect an `Authorization: Bearer XXX` HTTP header, where `XXX`
+must match the configured token value, otherwise the `403` HTTP status will be returned.
+
+### Error handling
+
+If a request is not successful, the service responds with an HTTP status code other than 200, providing a JSON object 
+with the `code` and `message` fields. Use that information to understand what went wrong. Example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.index.v1.IndexService/Push \
+  --header 'Authorization: Bearer WrongAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{}'
+```
+
+```text
+< HTTP/2 401
+< content-type: application/json
+<
+{"code":"unauthenticated","message":"not authorized"}
+```
+
+### IndexService/Push
+
+Creates a new index or updates an existing one.
+
+- Request fields:
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+    - *optional* **string** `schema`: JSON validation schema.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.index.v1.IndexService/Push \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"name": "books",
+	"schema": "{\"required\":[\"author\",\"title\"]}"
+}'
+```
+
+### IndexService/Get
+
+Returns an index metadata.
+
+- Request fields:
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+- Response fields:
+  - **string** `name`: index name;
+  - **int** `createdAt`: creation UNIX timestamp;
+  - **int** `updatedAt`: update UNIX timestamp;
+  - **string** `schema`: JSON validation schema.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.index.v1.IndexService/Get \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{"name": "books"}'
+```
+
+Response example:
+
+```json
+{
+  "name": "books",
+  "createdAt": "1693768684",
+  "updatedAt": "1693769057",
+  "schema": "{\"required\": [\"author\", \"title\"]}"
+}
+```
+
+### IndexService/List
+
+Returns existing indices list
+
+- Response fields:
+  - **[]string** `indices`: index names.
+
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.index.v1.IndexService/List \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{}'
+```
+
+Response example:
+
+```json
+{
+  "indices": [
+    {
+      "name": "books"
+    },
+    {
+      "name": "recipes"
+    },
+    {
+      "name": "cartoons"
+    }
+  ]
+}
+```
+
+### IndexService/Clear
+
+Clears all index records.
+
+- Request fields:
+  - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.index.v1.IndexService/Clear \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{}'
+```
+
+### RecordService/Push
+
+Creates records in the index or updates existing ones.
+
+- Request fields:
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+  - *required* **[]object** `records`: records:
+    - *required* **string** `id`: record ID:
+    - *required* **string** `data`: record JSON data.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.record.v1.RecordService/Push \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"index": "books",
+	"records": [
+		{
+			"id": "castaneda-001",
+			"data": "{\"author\":\"Carlos Kastaneda\", \"title\":\"Tales of Power\"}"
+		},
+		{
+			"id": "tanenbaum-001",
+			"data": "{\"author\":\"M. van Steen and A.S. Tanenbaum\", \"title\":\"Distributed Systems, 4th ed.\"}"
+		}
+	]
+}'
+```
+
+### RecordService/Get
+
+Returns a single record.
+
+- Request fields:
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+- Response field:
+  - **object** `record`: the record.
+    - **string** `id`: ID;
+    - **string** `index`: index name;
+    - **string** `rev`: revision number;
+    - **string** `createdAt`: creation time as UNIX timestamp;
+    - **string** `updatedAt`: update time as UNIX timestamp;
+    - **string** `data`: data.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.record.v1.RecordService/Get \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"index": "books",
+	"id": "castaneda-001"
+}'
+```
+
+Response example:
+
+```json
+{
+	"record": {
+		"id": "castaneda-001",
+		"rev": "227",
+		"index": "books",
+		"createdAt": "1694109017",
+		"updatedAt": "1694237265",
+		"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+	}
+}
+```
+
+### RecordService/GetAll
+
+Returns all records from the index.
+
+- Request fields:
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`;
+  - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp;
+  - *optional* **int** `cursor`: pagination: return records starting from provided position;
+  - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
+- Response fields:
+  - **string** `cursor`: the pagination cursor position, which should be used to retrieve the next result set.
+  - **[]object** `records`: result set;
+    - **string** `id`: ID;
+    - **string** `index`: index name;
+    - **string** `rev`: revision number;
+    - **string** `createdAt`: creation time as UNIX timestamp;
+    - **string** `updatedAt`: update time as UNIX timestamp;
+    - **string** `data`: data.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://test.com/ujds.record.v1.RecordService/GetAll \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"index": "books",
+	"since": 1694109017,
+	"cursor": 226,
+	"limit": 2
+}'
+```
+
+Response example:
+
+```json
+{
+	"cursor": "228",
+	"records": [
+		{
+			"id": "castaneda-001",
+			"rev": "227",
+			"index": "books",
+			"createdAt": "1694109017",
+			"updatedAt": "1694109017",
+			"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+		},
+		{
+			"id": "tanenbaum-001",
+			"rev": "228",
+			"index": "books",
+			"createdAt": "1694109017",
+			"updatedAt": "1694109017",
+			"data": "{\"title\": \"Distributed Systems, 4th ed.\", \"author\": \"M. van Steen and A.S. Tanenbaum\"}"
+		}
+	]
+}
+```
 
 ## Changelog
+
+### 0.1 (2023-09-07)
+
+Initial release.
 
 ## Authors
 
