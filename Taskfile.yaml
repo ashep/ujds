@@ -10,7 +10,7 @@ vars:
 
 includes:
   app:
-    taskfile: .ci/Taskfile.app.yaml
+    taskfile: .ci/Taskfile.go.yaml
     optional: true
   gen:
     taskfile: .ci/Taskfile.gen.yaml

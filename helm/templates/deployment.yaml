@@ -42,7 +42,7 @@ spec:
           command:
             - /app/app
           args:
-            - --migrate-up
+            - -migrate-up
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
