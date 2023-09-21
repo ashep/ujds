@@ -68,7 +68,7 @@ curl --request POST \
 Creates a new index or updates an existing one.
 
 - Request fields:
-    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
     - *optional* **string** `schema`: JSON validation schema.
 
 Request example:
@@ -89,7 +89,7 @@ curl --request POST \
 Returns an index metadata.
 
 - Request fields:
-    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 - Response fields:
   - **string** `name`: index name;
   - **int** `createdAt`: creation UNIX timestamp;
@@ -158,7 +158,7 @@ Response example:
 Clears all index records.
 
 - Request fields:
-  - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+  - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 
 Request example:
 
@@ -175,7 +175,7 @@ curl --request POST \
 Creates records in the index or updates existing ones.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
   - *required* **[]object** `records`: records:
     - *required* **string** `id`: record ID:
     - *required* **string** `data`: record JSON data.
@@ -207,7 +207,7 @@ curl --request POST \
 Returns a single record.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`.
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 - Response field:
   - **object** `record`: the record.
     - **string** `id`: ID;
@@ -250,7 +250,7 @@ Response example:
 Returns all records from the index.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_-]{1,64}$`;
+  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`;
   - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp;
   - *optional* **int** `cursor`: pagination: return records starting from provided position;
   - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
@@ -303,6 +303,15 @@ Response example:
 		}
 	]
 }
+```
+
+## Developers notes
+
+Create migration:
+
+```shell
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog

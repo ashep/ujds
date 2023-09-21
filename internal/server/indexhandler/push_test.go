@@ -63,6 +63,28 @@ func TestIndexHandler_Push(tt *testing.T) {
 		assert.Equal(t, `{"level":"error","error":"theRepoError","proc":"","err_code":123456789,"message":"index repo upsert failed"}`+"\n", lb.String())
 	})
 
+	tt.Run("IndexNotFound", func(t *testing.T) {
+		t.Parallel()
+
+		ir := &indexRepoMock{}
+		now := func() time.Time { return time.Unix(123456789, 0) }
+		lb := &strings.Builder{}
+		l := zerolog.New(lb)
+
+		ir.UpsertFunc = func(ctx context.Context, name string, schema string) error {
+			return apperrors.NotFoundError{Subj: "theNotFoundSubj"}
+		}
+
+		h := indexhandler.New(ir, now, l)
+		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
+			Name:   "theIndexName",
+			Schema: "{}",
+		}))
+
+		assert.EqualError(t, err, "not_found: theNotFoundSubj is not found")
+		assert.Empty(t, lb.String())
+	})
+
 	tt.Run("Ok", func(t *testing.T) {
 		t.Parallel()
 
@@ -84,5 +106,6 @@ func TestIndexHandler_Push(tt *testing.T) {
 		}))
 
 		assert.NoError(t, err)
+		assert.Empty(t, lb.String())
 	})
 }
