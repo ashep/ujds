@@ -16,7 +16,7 @@ type Repository struct {
 func New(db *sql.DB, l zerolog.Logger) *Repository {
 	return &Repository{
 		db:     db,
-		nameRe: regexp.MustCompile("^[a-zA-Z0-9_-]{1,64}$"),
+		nameRe: regexp.MustCompile("^[a-zA-Z0-9_/-]{1,255}$"),
 		l:      l,
 	}
 }

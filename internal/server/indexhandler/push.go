@@ -16,12 +16,15 @@ func (h *Handler) Push(
 	req *connect.Request[proto.PushRequest],
 ) (*connect.Response[proto.PushResponse], error) {
 	err := h.repo.Upsert(ctx, req.Msg.Name, req.Msg.Schema)
-	if errors.As(err, &apperrors.InvalidArgError{}) {
+
+	switch {
+	case errors.As(err, &apperrors.InvalidArgError{}):
 		return nil, connect.NewError(connect.CodeInvalidArgument, err)
-	} else if err != nil {
+	case errors.As(err, &apperrors.NotFoundError{}):
+		return nil, connect.NewError(connect.CodeNotFound, err)
+	case err != nil:
 		c := h.now().Unix()
 		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("index repo upsert failed")
-
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 	}
 

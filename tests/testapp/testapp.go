@@ -110,6 +110,8 @@ func (a *TestApp) Start(t *testing.T) func() {
 		tk2 := time.NewTicker(checkPeriod)
 		defer tk2.Stop()
 
+		defer a.db.db.Close()
+
 		for i := 0; i < checkCount; i++ {
 			select {
 			case <-done:
@@ -118,8 +120,6 @@ func (a *TestApp) Start(t *testing.T) func() {
 				continue
 			}
 		}
-
-		a.db.db.Close()
 
 		t.Fatalf("app has not stopped within %s", checkPeriod*checkCount)
 	}

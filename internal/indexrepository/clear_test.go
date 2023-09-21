@@ -26,7 +26,7 @@ func TestRepository_Clear(tt *testing.T) {
 		repo := indexrepository.New(db, zerolog.Nop())
 		err = repo.Clear(context.Background(), "")
 
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_-]{1,64}$"})
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestRepository_Clear(tt *testing.T) {
 		repo := indexrepository.New(db, zerolog.Nop())
 		err = repo.Clear(context.Background(), "the n@me")
 
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_-]{1,64}$"})
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
 	})
 
 	tt.Run("BeginTxError", func(t *testing.T) {

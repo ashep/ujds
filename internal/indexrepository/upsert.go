@@ -3,7 +3,9 @@ package indexrepository
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/ashep/go-apperrors"
 )
@@ -11,6 +13,16 @@ import (
 func (r *Repository) Upsert(ctx context.Context, name, schema string) error {
 	if !r.nameRe.MatchString(name) {
 		return apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp " + r.nameRe.String()}
+	}
+
+	nameParts := strings.Split(name, "/")
+	for _, parentName := range nameParts[:len(nameParts)-1] {
+		_, err := r.Get(ctx, parentName)
+		if errors.As(err, &apperrors.NotFoundError{}) {
+			return apperrors.NotFoundError{Subj: "parent index " + parentName}
+		} else if err != nil {
+			return err
+		}
 	}
 
 	if schema == "" {

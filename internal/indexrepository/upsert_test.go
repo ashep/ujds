@@ -25,7 +25,7 @@ func TestRepository_Upsert(tt *testing.T) {
 		repo := indexrepository.New(db, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "", "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_-]{1,64}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestRepository_Upsert(tt *testing.T) {
 		repo := indexrepository.New(db, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "the n@me", "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_-]{1,64}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {

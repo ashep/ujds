@@ -40,7 +40,7 @@ func TestIndex_Get(tt *testing.T) {
 			Name: "",
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_-]{1,64}$")
+		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_/-]{1,255}$")
 	})
 
 	tt.Run("InvalidIndexName", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestIndex_Get(tt *testing.T) {
 			Name: "the n@me",
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_-]{1,64}$")
+		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_/-]{1,255}$")
 	})
 
 	tt.Run("IndexNotExists", func(t *testing.T) {

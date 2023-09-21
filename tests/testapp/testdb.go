@@ -58,6 +58,18 @@ func (d *TestDB) Reset(t *testing.T) {
 	require.NoError(t, migration.Up(d.db))
 }
 
+func (d *TestDB) GetIndex(t *testing.T, name string) Index {
+	t.Helper()
+
+	row := d.db.QueryRow(`SELECT id, name, schema, created_at, updated_at FROM index WHERE name=$1`, name)
+	require.NoError(t, row.Err())
+
+	idx := Index{}
+	require.NoError(t, row.Scan(&idx.ID, &idx.Name, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
+
+	return idx
+}
+
 func (d *TestDB) GetIndices(t *testing.T) []Index {
 	t.Helper()
 
