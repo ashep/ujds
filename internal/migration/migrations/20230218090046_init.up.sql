@@ -1,14 +1,12 @@
 CREATE TABLE index
 (
     id         BIGSERIAL   NOT NULL,
-    parent_id  BIGINT      NULL,
     name       VARCHAR(64) NOT NULL UNIQUE,
     schema     JSONB       NOT NULL DEFAULT '{}',
     created_at TIMESTAMP   NOT NULL DEFAULT now(),
     updated_at TIMESTAMP   NOT NULL DEFAULT now(),
 
-    PRIMARY KEY (id),
-    FOREIGN KEY (parent_id) REFERENCES index (id)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE record_log

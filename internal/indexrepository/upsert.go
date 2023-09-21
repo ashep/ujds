@@ -16,7 +16,9 @@ func (r *Repository) Upsert(ctx context.Context, name, schema string) error {
 	}
 
 	nameParts := strings.Split(name, "/")
-	for _, parentName := range nameParts[:len(nameParts)-1] {
+	for i := 1; i < len(nameParts); i++ {
+		parentName := strings.Join(nameParts[:i], "/")
+
 		_, err := r.Get(ctx, parentName)
 		if errors.As(err, &apperrors.NotFoundError{}) {
 			return apperrors.NotFoundError{Subj: "parent index " + parentName}

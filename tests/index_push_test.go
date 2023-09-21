@@ -197,18 +197,23 @@ func TestIndex_Push(tt *testing.T) {
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParentIndexName",
+			Name: "theParent1",
 		}))
 		assert.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParentIndexName/theIndexName",
+			Name: "theParent1/theParent2",
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndex(t, "theParentIndexName/theIndexName")
-		assert.Equal(t, 2, idx.ID)
-		assert.Equal(t, "theParentIndexName/theIndexName", idx.Name)
+		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
+			Name: "theParent1/theParent2/theChild",
+		}))
+		assert.NoError(t, err)
+
+		idx := ta.DB().GetIndex(t, "theParent1/theParent2/theChild")
+		assert.Equal(t, 3, idx.ID)
+		assert.Equal(t, "theParent1/theParent2/theChild", idx.Name)
 		assert.Equal(t, `{}`, idx.Schema)
 		assert.NotZero(t, idx.CreatedAt)
 		assert.Equal(t, idx.UpdatedAt, idx.CreatedAt)
