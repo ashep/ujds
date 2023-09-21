@@ -32,7 +32,9 @@ func New(
 		cfg.Address = ":9000"
 	}
 
-	interceptors := connect.WithInterceptors(NewAuthInterceptor(cfg.AuthToken))
+	interceptors := connect.WithInterceptors(
+		NewAuthInterceptor(cfg.AuthToken),
+	)
 
 	mux := http.NewServeMux()
 	mux.Handle(indexconnect.NewIndexServiceHandler(ih, interceptors))
@@ -40,7 +42,7 @@ func New(
 
 	return &Server{
 		c: cfg,
-		s: &http.Server{Addr: cfg.Address, Handler: mux, ReadTimeout: readTimeout},
+		s: &http.Server{Addr: cfg.Address, Handler: cors(mux), ReadTimeout: readTimeout},
 		l: l,
 	}
 }

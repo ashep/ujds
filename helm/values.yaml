@@ -83,6 +83,6 @@ affinity: {}
 
 ujds:
   db:
-    dsn: postgres://postgres:postgres@localhost/ujds?sslmode=disable
+    dsn: ""
   server:
     auth_token: ""

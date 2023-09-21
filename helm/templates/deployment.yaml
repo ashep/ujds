@@ -39,10 +39,8 @@ spec:
                 secretKeyRef:
                   name: ujds
                   key: db_dsn
-          command:
-            - /app/app
           args:
-            - --migrate-up
+            - -migrate-up
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
