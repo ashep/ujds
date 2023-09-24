@@ -24,7 +24,7 @@ func TestRepository_List(tt *testing.T) {
 		require.NoError(t, err)
 
 		dbm.
-			ExpectQuery("SELECT id, name, schema, created_at, updated_at FROM index").
+			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnError(errors.New("theQueryError"))
 
 		repo := indexrepository.New(db, zerolog.Nop())
@@ -44,7 +44,7 @@ func TestRepository_List(tt *testing.T) {
 			RowError(0, errors.New("theRowError"))
 
 		dbm.
-			ExpectQuery("SELECT id, name, schema, created_at, updated_at FROM index").
+			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
 		repo := indexrepository.New(db, zerolog.Nop())
@@ -59,12 +59,12 @@ func TestRepository_List(tt *testing.T) {
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		rows := sqlmock.NewRows([]string{"id", "name", "schema", "created_at", "updated_at"}).
-			AddRow(123, "indexName1", "indexSchema1", time.Unix(234, 0), time.Unix(345, 0)).
-			AddRow(321, "indexName2", "indexSchema2", time.Unix(432, 0), time.Unix(543, 0))
+		rows := sqlmock.NewRows([]string{"id", "name", "title", "schema", "created_at", "updated_at"}).
+			AddRow(123, "indexName1", "indexTitle1", "indexSchema1", time.Unix(234, 0), time.Unix(345, 0)).
+			AddRow(321, "indexName2", "indexTitle2", "indexSchema2", time.Unix(432, 0), time.Unix(543, 0))
 
 		dbm.
-			ExpectQuery("SELECT id, name, schema, created_at, updated_at FROM index").
+			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
 		repo := indexrepository.New(db, zerolog.Nop())
@@ -75,12 +75,14 @@ func TestRepository_List(tt *testing.T) {
 
 		assert.Equal(t, uint64(123), res[0].ID)
 		assert.Equal(t, "indexName1", res[0].Name)
+		assert.Equal(t, "indexTitle1", res[0].Title.String)
 		assert.Equal(t, []byte("indexSchema1"), res[0].Schema)
 		assert.Equal(t, time.Unix(234, 0), res[0].CreatedAt)
 		assert.Equal(t, time.Unix(345, 0), res[0].UpdatedAt)
 
 		assert.Equal(t, uint64(321), res[1].ID)
 		assert.Equal(t, "indexName2", res[1].Name)
+		assert.Equal(t, "indexTitle2", res[1].Title.String)
 		assert.Equal(t, []byte("indexSchema2"), res[1].Schema)
 		assert.Equal(t, time.Unix(432, 0), res[1].CreatedAt)
 		assert.Equal(t, time.Unix(543, 0), res[1].UpdatedAt)

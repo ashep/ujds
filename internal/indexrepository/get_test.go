@@ -50,7 +50,7 @@ func TestRepository_Get(tt *testing.T) {
 		require.NoError(t, err)
 
 		dbm.
-			ExpectQuery(`SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`).
+			ExpectQuery(`SELECT id, title, schema, created_at, updated_at FROM index WHERE name=$1`).
 			WithArgs("theIndex").
 			WillReturnError(sql.ErrNoRows)
 
@@ -67,7 +67,7 @@ func TestRepository_Get(tt *testing.T) {
 		require.NoError(t, err)
 
 		dbm.
-			ExpectQuery(`SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`).
+			ExpectQuery(`SELECT id, title, schema, created_at, updated_at FROM index WHERE name=$1`).
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDBExecError"))
 
@@ -83,11 +83,11 @@ func TestRepository_Get(tt *testing.T) {
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		rows := sqlmock.NewRows([]string{"id", "schema", "created_at", "updated_at"})
-		rows.AddRow(123, `{"foo":"bar"}`, time.Unix(234, 0), time.Unix(345, 0))
+		rows := sqlmock.NewRows([]string{"id", "title", "schema", "created_at", "updated_at"})
+		rows.AddRow(123, "theTitle", `{"foo":"bar"}`, time.Unix(234, 0), time.Unix(345, 0))
 
 		dbm.
-			ExpectQuery(`SELECT id, schema, created_at, updated_at FROM index WHERE name=$1`).
+			ExpectQuery(`SELECT id, title, schema, created_at, updated_at FROM index WHERE name=$1`).
 			WithArgs("theIndex").
 			WillReturnRows(rows)
 
@@ -97,6 +97,7 @@ func TestRepository_Get(tt *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, uint64(123), res.ID)
 		assert.Equal(t, "theIndex", res.Name)
+		assert.Equal(t, "theTitle", res.Title.String)
 		assert.Equal(t, []byte(`{"foo":"bar"}`), res.Schema)
 		assert.Equal(t, time.Unix(234, 0), res.CreatedAt)
 		assert.Equal(t, time.Unix(345, 0), res.UpdatedAt)

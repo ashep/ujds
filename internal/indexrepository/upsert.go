@@ -2,6 +2,7 @@ package indexrepository
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +11,7 @@ import (
 	"github.com/ashep/go-apperrors"
 )
 
-func (r *Repository) Upsert(ctx context.Context, name, schema string) error {
+func (r *Repository) Upsert(ctx context.Context, name, title, schema string) error {
 	if !r.nameRe.MatchString(name) {
 		return apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp " + r.nameRe.String()}
 	}
@@ -35,8 +36,14 @@ func (r *Repository) Upsert(ctx context.Context, name, schema string) error {
 		return apperrors.InvalidArgError{Subj: "schema", Reason: err.Error()}
 	}
 
-	q := `INSERT INTO index (name, schema) VALUES ($1, $2) ON CONFLICT (name) DO UPDATE SET schema=$2, updated_at=now()`
-	if _, err := r.db.ExecContext(ctx, q, name, schema); err != nil {
+	sqlTitle := sql.NullString{
+		String: title,
+		Valid:  title != "",
+	}
+
+	q := `INSERT INTO index (name, title, schema) VALUES ($1, $2, $3) 
+ON CONFLICT (name) DO UPDATE SET title=$2, schema=$3, updated_at=now()`
+	if _, err := r.db.ExecContext(ctx, q, name, sqlTitle, schema); err != nil {
 		return fmt.Errorf("db query failed: %w", err)
 	}
 

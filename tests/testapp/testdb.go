@@ -14,6 +14,7 @@ import (
 type Index struct {
 	ID        int
 	Name      string
+	Title     sql.NullString
 	Schema    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -61,11 +62,11 @@ func (d *TestDB) Reset(t *testing.T) {
 func (d *TestDB) GetIndex(t *testing.T, name string) Index {
 	t.Helper()
 
-	row := d.db.QueryRow(`SELECT id, name, schema, created_at, updated_at FROM index WHERE name=$1`, name)
+	row := d.db.QueryRow(`SELECT id, name, title, schema, created_at, updated_at FROM index WHERE name=$1`, name)
 	require.NoError(t, row.Err())
 
 	idx := Index{}
-	require.NoError(t, row.Scan(&idx.ID, &idx.Name, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
+	require.NoError(t, row.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
 
 	return idx
 }
@@ -73,14 +74,14 @@ func (d *TestDB) GetIndex(t *testing.T, name string) Index {
 func (d *TestDB) GetIndices(t *testing.T) []Index {
 	t.Helper()
 
-	rows, err := d.db.Query(`SELECT id, name, schema, created_at, updated_at FROM index`)
+	rows, err := d.db.Query(`SELECT id, name, title, schema, created_at, updated_at FROM index`)
 	require.NoError(t, err)
 
 	res := make([]Index, 0)
 
 	for rows.Next() {
 		idx := Index{}
-		require.NoError(t, rows.Scan(&idx.ID, &idx.Name, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
+		require.NoError(t, rows.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
 		res = append(res, idx)
 	}
 
@@ -90,10 +91,15 @@ func (d *TestDB) GetIndices(t *testing.T) []Index {
 	return res
 }
 
-func (d *TestDB) InsertIndex(t *testing.T, name, schema string) {
+func (d *TestDB) InsertIndex(t *testing.T, name, title, schema string) {
 	t.Helper()
 
-	_, err := d.db.Exec("INSERT INTO index (name, schema) VALUES ($1, $2)", name, schema)
+	sqlTitle := sql.NullString{
+		String: title,
+		Valid:  title != "",
+	}
+
+	_, err := d.db.Exec("INSERT INTO index (name, title, schema) VALUES ($1, $2, $3)", name, sqlTitle, schema)
 	require.NoError(t, err)
 }
 

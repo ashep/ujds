@@ -24,7 +24,7 @@ import (
 //			ListFunc: func(ctx context.Context) ([]model.Index, error) {
 //				panic("mock out the List method")
 //			},
-//			UpsertFunc: func(ctx context.Context, name string, schema string) error {
+//			UpsertFunc: func(ctx context.Context, name string, title string, schema string) error {
 //				panic("mock out the Upsert method")
 //			},
 //		}
@@ -44,7 +44,7 @@ type indexRepoMock struct {
 	ListFunc func(ctx context.Context) ([]model.Index, error)
 
 	// UpsertFunc mocks the Upsert method.
-	UpsertFunc func(ctx context.Context, name string, schema string) error
+	UpsertFunc func(ctx context.Context, name string, title string, schema string) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -73,6 +73,8 @@ type indexRepoMock struct {
 			Ctx context.Context
 			// Name is the name argument value.
 			Name string
+			// Title is the title argument value.
+			Title string
 			// Schema is the schema argument value.
 			Schema string
 		}
@@ -188,23 +190,25 @@ func (mock *indexRepoMock) ListCalls() []struct {
 }
 
 // Upsert calls UpsertFunc.
-func (mock *indexRepoMock) Upsert(ctx context.Context, name string, schema string) error {
+func (mock *indexRepoMock) Upsert(ctx context.Context, name string, title string, schema string) error {
 	if mock.UpsertFunc == nil {
 		panic("indexRepoMock.UpsertFunc: method is nil but indexRepo.Upsert was just called")
 	}
 	callInfo := struct {
 		Ctx    context.Context
 		Name   string
+		Title  string
 		Schema string
 	}{
 		Ctx:    ctx,
 		Name:   name,
+		Title:  title,
 		Schema: schema,
 	}
 	mock.lockUpsert.Lock()
 	mock.calls.Upsert = append(mock.calls.Upsert, callInfo)
 	mock.lockUpsert.Unlock()
-	return mock.UpsertFunc(ctx, name, schema)
+	return mock.UpsertFunc(ctx, name, title, schema)
 }
 
 // UpsertCalls gets all the calls that were made to Upsert.
@@ -214,11 +218,13 @@ func (mock *indexRepoMock) Upsert(ctx context.Context, name string, schema strin
 func (mock *indexRepoMock) UpsertCalls() []struct {
 	Ctx    context.Context
 	Name   string
+	Title  string
 	Schema string
 } {
 	var calls []struct {
 		Ctx    context.Context
 		Name   string
+		Title  string
 		Schema string
 	}
 	mock.lockUpsert.RLock()

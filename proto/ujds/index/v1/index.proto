@@ -7,7 +7,8 @@ message ListRequest {
 
 message ListResponse {
   message Index {
-    string name = 1 ;
+    string name = 1;
+    string title = 2;
   }
 
   repeated Index indices = 1;
@@ -16,6 +17,7 @@ message ListResponse {
 message PushRequest {
   string name = 1;
   string schema = 2;
+  string title = 3;
 }
 
 message PushResponse {
@@ -30,6 +32,7 @@ message GetResponse {
   uint64 created_at = 2;
   uint64 updated_at = 3;
   string schema = 4;
+  string title = 5;
 }
 
 message ClearRequest {
