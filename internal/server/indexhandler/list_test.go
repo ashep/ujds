@@ -2,6 +2,7 @@ package indexhandler_test
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 	"testing"
@@ -52,6 +53,7 @@ func TestIndexHandler_List(tt *testing.T) {
 				{
 					ID:        123,
 					Name:      "theIndex1",
+					Title:     sql.NullString{String: "theTitle1", Valid: true},
 					Schema:    []byte("theSchema1"),
 					CreatedAt: time.Unix(234, 0),
 					UpdatedAt: time.Unix(345, 0),
@@ -59,6 +61,7 @@ func TestIndexHandler_List(tt *testing.T) {
 				{
 					ID:        321,
 					Name:      "theIndex2",
+					Title:     sql.NullString{String: "theTitle2", Valid: true},
 					Schema:    []byte("theSchema2"),
 					CreatedAt: time.Unix(432, 0),
 					UpdatedAt: time.Unix(543, 0),
@@ -74,6 +77,9 @@ func TestIndexHandler_List(tt *testing.T) {
 		assert.Empty(t, lb.String())
 
 		assert.Equal(t, "theIndex1", res.Msg.Indices[0].Name)
+		assert.Equal(t, "theTitle1", res.Msg.Indices[0].Title)
+
 		assert.Equal(t, "theIndex2", res.Msg.Indices[1].Name)
+		assert.Equal(t, "theTitle2", res.Msg.Indices[1].Title)
 	})
 }

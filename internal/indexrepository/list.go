@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Repository) List(ctx context.Context) ([]model.Index, error) {
-	q := "SELECT id, name, schema, created_at, updated_at FROM index"
+	q := "SELECT id, name, title, schema, created_at, updated_at FROM index"
 
 	rows, err := r.db.QueryContext(ctx, q)
 	if err != nil {
@@ -23,7 +23,7 @@ func (r *Repository) List(ctx context.Context) ([]model.Index, error) {
 
 	for rows.Next() {
 		idx := model.Index{}
-		if err := rows.Scan(&idx.ID, &idx.Name, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt); err != nil {
+		if err := rows.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("db scan failed: %w", err)
 		}
 

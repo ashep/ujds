@@ -35,8 +35,8 @@ func TestIndex_List(tt *testing.T) {
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
-		ta.DB().InsertIndex(t, "theIndexName1", `{}`)
-		ta.DB().InsertIndex(t, "theIndexName2", `{}`)
+		ta.DB().InsertIndex(t, "theIndexName1", "theIndexTitle1", `{}`)
+		ta.DB().InsertIndex(t, "theIndexName2", "theIndexTitle2", `{}`)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
@@ -45,6 +45,9 @@ func TestIndex_List(tt *testing.T) {
 		require.Len(t, res.Msg.Indices, 2)
 
 		assert.Equal(t, "theIndexName1", res.Msg.Indices[0].Name)
+		assert.Equal(t, "theIndexTitle1", res.Msg.Indices[0].Title)
+
 		assert.Equal(t, "theIndexName2", res.Msg.Indices[1].Name)
+		assert.Equal(t, "theIndexTitle2", res.Msg.Indices[1].Title)
 	})
 }

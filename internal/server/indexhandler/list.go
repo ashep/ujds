@@ -23,7 +23,7 @@ func (h *Handler) List(
 
 	respData := make([]*proto.ListResponse_Index, 0)
 	for _, idx := range indices {
-		respData = append(respData, &proto.ListResponse_Index{Name: idx.Name})
+		respData = append(respData, &proto.ListResponse_Index{Name: idx.Name, Title: idx.Title.String})
 	}
 
 	return connect.NewResponse(&proto.ListResponse{

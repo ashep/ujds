@@ -1,0 +1,1 @@
+ALTER TABLE index DROP COLUMN title;

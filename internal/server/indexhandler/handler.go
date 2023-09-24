@@ -12,7 +12,7 @@ import (
 //go:generate moq -out mock_test.go -pkg indexhandler_test -skip-ensure . indexRepo
 
 type indexRepo interface {
-	Upsert(ctx context.Context, name, schema string) error
+	Upsert(ctx context.Context, name, title, schema string) error
 	Get(ctx context.Context, name string) (model.Index, error)
 	List(ctx context.Context) ([]model.Index, error)
 	Clear(ctx context.Context, name string) error

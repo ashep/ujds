@@ -77,7 +77,7 @@ func TestIndex_Get(tt *testing.T) {
 		defer ta.Start(t)()
 		defer ta.AssertNoLogErrors(t)
 
-		ta.DB().InsertIndex(t, "theIndexName", `{"foo":"bar"}`)
+		ta.DB().InsertIndex(t, "theIndexName", "theIndexTitle", `{"foo":"bar"}`)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
@@ -87,6 +87,7 @@ func TestIndex_Get(tt *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, "theIndexName", res.Msg.Name)
+		assert.Equal(t, "theIndexTitle", res.Msg.Title)
 		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Schema)
 		assert.NotZero(t, res.Msg.CreatedAt)
 		assert.NotZero(t, res.Msg.UpdatedAt)
