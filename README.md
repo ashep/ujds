@@ -3,7 +3,7 @@
 [![ci](https://github.com/ashep/ujds/actions/workflows/ci.yaml/badge.svg)](https://github.com/ashep/ujds/actions/workflows/ci.yaml)
 
 The **Universal JSON Data Storage** is a service aimed to store arbitrary JSON data keeping changes history. Data are
-being stored in **indices** as **records**. Indices may be supplied with JSON **schemas** to check incoming data upon 
+being stored in **indices** as **records**. Indices may be supplied with JSON **schemas** to check incoming data upon
 updates.
 
 ## Configuration
@@ -16,10 +16,10 @@ change default config file location using `APP_CONFIG_PATH` env variable.
 
 ### File
 
-- *required* **object** `db`: database configuration:
+- *required* **object** `db`: database configuration.
     - *required* **string** `dsn`: database source name.
-- *optional* **object** `server`: server configuration:
-    - *optional* **string** `address`: network address, default is `:9000`;
+- *optional* **object** `server`: server configuration.
+    - *optional* **string** `address`: network address, default is `:9000`.
     - *optional* **string** `auth_token`: authorization token.
 
 ### Env variables
@@ -40,12 +40,12 @@ Please note, that **numerical data in responses are encoded as strings**.
 
 ### Authorization
 
-If the `server.auth_token` is specified, the server will expect an `Authorization: Bearer XXX` HTTP header, where `XXX`
-must match the configured token value, otherwise the `403` HTTP status will be returned.
+If the `server.auth_token` configuration parameter is specified, the server will expect an `Authorization: Bearer XXX`
+HTTP header, where `XXX` must match the configured token value, otherwise the `403` HTTP status will be returned.
 
 ### Error handling
 
-If a request is not successful, the service responds with an HTTP status code other than 200, providing a JSON object 
+If a request is not successful, the service responds with an HTTP status code other than 200, providing a JSON object
 with the `code` and `message` fields. Use that information to understand what went wrong. Example:
 
 ```shell
@@ -69,6 +69,7 @@ Creates a new index or updates an existing one.
 
 - Request fields:
     - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
+    - *optional* **string** `title`: Index title.
     - *optional* **string** `schema`: JSON validation schema.
 
 Request example:
@@ -80,6 +81,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{
 	"name": "books",
+	"title": "The books",
 	"schema": "{\"required\":[\"author\",\"title\"]}"
 }'
 ```
@@ -91,10 +93,11 @@ Returns an index metadata.
 - Request fields:
     - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 - Response fields:
-  - **string** `name`: index name;
-  - **int** `createdAt`: creation UNIX timestamp;
-  - **int** `updatedAt`: update UNIX timestamp;
-  - **string** `schema`: JSON validation schema.
+    - **string** `name`: index name.
+    - **string** `title`: index title.
+    - **string** `schema`: JSON validation schema.
+    - **int** `createdAt`: creation UNIX timestamp.
+    - **int** `updatedAt`: update UNIX timestamp.
 
 Request example:
 
@@ -111,19 +114,21 @@ Response example:
 ```json
 {
   "name": "books",
+  "title": "The books",
+  "schema": "{\"required\": [\"author\", \"title\"]}",
   "createdAt": "1693768684",
-  "updatedAt": "1693769057",
-  "schema": "{\"required\": [\"author\", \"title\"]}"
+  "updatedAt": "1693769057"
 }
 ```
 
 ### IndexService/List
 
-Returns existing indices list
+Returns existing indices list.
 
 - Response fields:
-  - **[]string** `indices`: index names.
-
+    - **[]object** `indices`
+        - **string** `name`: index name.
+        - **string** `title`: index title.
 
 Request example:
 
@@ -141,13 +146,16 @@ Response example:
 {
   "indices": [
     {
-      "name": "books"
+      "name": "books",
+      "title": "The books"
     },
     {
-      "name": "recipes"
+      "name": "recipes",
+      "title": "The recipes"
     },
     {
-      "name": "cartoons"
+      "name": "cartoons",
+      "title": "The cartoons"
     }
   ]
 }
@@ -158,7 +166,7 @@ Response example:
 Clears all index records.
 
 - Request fields:
-  - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 
 Request example:
 
@@ -175,10 +183,10 @@ curl --request POST \
 Creates records in the index or updates existing ones.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
-  - *required* **[]object** `records`: records:
-    - *required* **string** `id`: record ID:
-    - *required* **string** `data`: record JSON data.
+    - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
+    - *required* **[]object** `records`: records.
+        - *required* **string** `id`: record ID.
+        - *required* **string** `data`: record JSON data.
 
 Request example:
 
@@ -207,15 +215,15 @@ curl --request POST \
 Returns a single record.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
+    - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
 - Response field:
-  - **object** `record`: the record.
-    - **string** `id`: ID;
-    - **string** `index`: index name;
-    - **string** `rev`: revision number;
-    - **string** `createdAt`: creation time as UNIX timestamp;
-    - **string** `updatedAt`: update time as UNIX timestamp;
-    - **string** `data`: data.
+    - **object** `record`:
+        - **string** `id`: ID.
+        - **string** `index`: index name.
+        - **string** `rev`: revision number.
+        - **string** `createdAt`: creation time as UNIX timestamp.
+        - **string** `updatedAt`: update time as UNIX timestamp.
+        - **string** `data`: data.
 
 Request example:
 
@@ -234,14 +242,14 @@ Response example:
 
 ```json
 {
-	"record": {
-		"id": "castaneda-001",
-		"rev": "227",
-		"index": "books",
-		"createdAt": "1694109017",
-		"updatedAt": "1694237265",
-		"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
-	}
+  "record": {
+    "id": "castaneda-001",
+    "rev": "227",
+    "index": "books",
+    "createdAt": "1694109017",
+    "updatedAt": "1694237265",
+    "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+  }
 }
 ```
 
@@ -250,19 +258,19 @@ Response example:
 Returns all records from the index.
 
 - Request fields:
-  - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`;
-  - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp;
-  - *optional* **int** `cursor`: pagination: return records starting from provided position;
-  - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
+    - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9_/-]{1,255}$`.
+    - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp.
+    - *optional* **int** `cursor`: pagination: return records starting from provided position.
+    - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
 - Response fields:
-  - **string** `cursor`: the pagination cursor position, which should be used to retrieve the next result set.
-  - **[]object** `records`: result set;
-    - **string** `id`: ID;
-    - **string** `index`: index name;
-    - **string** `rev`: revision number;
-    - **string** `createdAt`: creation time as UNIX timestamp;
-    - **string** `updatedAt`: update time as UNIX timestamp;
-    - **string** `data`: data.
+    - **string** `cursor`: pagination cursor position, which should be used to retrieve the next result set.
+    - **[]object** `records`
+        - **string** `id`: ID.
+        - **string** `index`: index name.
+        - **string** `rev`: revision number.
+        - **string** `createdAt`: creation time as UNIX timestamp.
+        - **string** `updatedAt`: update time as UNIX timestamp.
+        - **string** `data`: data.
 
 Request example:
 
@@ -283,25 +291,25 @@ Response example:
 
 ```json
 {
-	"cursor": "228",
-	"records": [
-		{
-			"id": "castaneda-001",
-			"rev": "227",
-			"index": "books",
-			"createdAt": "1694109017",
-			"updatedAt": "1694109017",
-			"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
-		},
-		{
-			"id": "tanenbaum-001",
-			"rev": "228",
-			"index": "books",
-			"createdAt": "1694109017",
-			"updatedAt": "1694109017",
-			"data": "{\"title\": \"Distributed Systems, 4th ed.\", \"author\": \"M. van Steen and A.S. Tanenbaum\"}"
-		}
-	]
+  "cursor": "228",
+  "records": [
+    {
+      "id": "castaneda-001",
+      "rev": "227",
+      "index": "books",
+      "createdAt": "1694109017",
+      "updatedAt": "1694109017",
+      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+    },
+    {
+      "id": "tanenbaum-001",
+      "rev": "228",
+      "index": "books",
+      "createdAt": "1694109017",
+      "updatedAt": "1694109017",
+      "data": "{\"title\": \"Distributed Systems, 4th ed.\", \"author\": \"M. van Steen and A.S. Tanenbaum\"}"
+    }
+  ]
 }
 ```
 
