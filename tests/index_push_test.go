@@ -39,7 +39,7 @@ func TestIndex_Push(tt *testing.T) {
 			Name: "",
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_/-]{1,255}$")
+		assert.EqualError(t, err, "invalid_argument: invalid name: must not be empty")
 	})
 
 	tt.Run("InvalidIndexName", func(t *testing.T) {
@@ -53,7 +53,7 @@ func TestIndex_Push(tt *testing.T) {
 			Name: "the n@me",
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9_/-]{1,255}$")
+		assert.EqualError(t, err, "invalid_argument: invalid name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {
@@ -69,20 +69,6 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid schema: invalid character ']' looking for beginning of object key string")
-	})
-
-	tt.Run("ParentNotFound", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
-
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParentIndexName/theIndexName",
-		}))
-
-		assert.EqualError(t, err, "not_found: parent index theParentIndexName is not found")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
@@ -217,36 +203,5 @@ func TestIndex_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo2": "bar2"}`, idx[0].Schema)
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
-	})
-
-	tt.Run("OkChild", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
-
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-
-		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParent1",
-		}))
-		assert.NoError(t, err)
-
-		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParent1/theParent2",
-		}))
-		assert.NoError(t, err)
-
-		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name: "theParent1/theParent2/theChild",
-		}))
-		assert.NoError(t, err)
-
-		idx := ta.DB().GetIndex(t, "theParent1/theParent2/theChild")
-		assert.Equal(t, 3, idx.ID)
-		assert.Equal(t, "theParent1/theParent2/theChild", idx.Name)
-		assert.Equal(t, `{}`, idx.Schema)
-		assert.NotZero(t, idx.CreatedAt)
-		assert.Equal(t, idx.UpdatedAt, idx.CreatedAt)
 	})
 }

@@ -8,8 +8,8 @@ import (
 )
 
 func (r *Repository) Clear(ctx context.Context, name string) error {
-	if !r.nameRe.MatchString(name) {
-		return apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp " + r.nameRe.String()}
+	if err := r.nameValidator.Validate(name); err != nil {
+		return apperrors.InvalidArgError{Subj: "name", Reason: err.Error()}
 	}
 
 	tx, err := r.db.BeginTx(ctx, nil)

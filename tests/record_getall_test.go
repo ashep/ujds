@@ -102,7 +102,7 @@ func TestRecord_GetAll(tt *testing.T) {
 
 		require.NoError(t, err)
 		require.Len(t, res.Msg.Records, 2)
-		assert.Equal(t, uint64(3), res.Msg.Cursor)
+		assert.Equal(t, uint64(0), res.Msg.Cursor)
 
 		assert.Equal(t, "theRecord1", res.Msg.Records[0].Id)
 		assert.Equal(t, uint64(1), res.Msg.Records[0].Rev)

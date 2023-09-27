@@ -65,7 +65,7 @@ func (a *App) Run(ctx context.Context, args []string) error {
 		return nil
 	}
 
-	ir := indexrepository.New(db, a.l)
+	ir := indexrepository.New(db, indexrepository.NewNameValidator(), a.l)
 	rr := recordrepository.New(db, a.l)
 
 	ih := indexhandler.New(ir, time.Now, a.l)

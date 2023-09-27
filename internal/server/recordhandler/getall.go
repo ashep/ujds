@@ -12,10 +12,16 @@ import (
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
+const perPageMax = 500
+
 func (h *Handler) GetAll(
 	ctx context.Context,
 	req *connect.Request[proto.GetAllRequest],
 ) (*connect.Response[proto.GetAllResponse], error) {
+	if req.Msg.Limit == 0 || req.Msg.Limit > perPageMax {
+		req.Msg.Limit = perPageMax
+	}
+
 	since := time.Unix(req.Msg.Since, 0)
 	records, cur, err := h.rr.GetAll(ctx, req.Msg.Index, since, req.Msg.Cursor, req.Msg.Limit)
 
