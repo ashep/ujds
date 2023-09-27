@@ -23,10 +23,10 @@ func TestRepository_Clear(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "")
 
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must not be empty"})
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
@@ -35,10 +35,10 @@ func TestRepository_Clear(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "the n@me")
 
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9.-]{1,255}$"})
 	})
 
 	tt.Run("BeginTxError", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectBegin().WillReturnError(errors.New("theBeginTxError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "failed to begin transaction: theBeginTxError")
@@ -67,7 +67,7 @@ func TestRepository_Clear(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDeleteRecordsError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "failed to delete records: theDeleteRecordsError")
@@ -89,7 +89,7 @@ func TestRepository_Clear(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDeleteRecordLogsError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "failed to delete record logs: theDeleteRecordLogsError")
@@ -113,7 +113,7 @@ func TestRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectCommit().WillReturnError(errors.New("theCommitError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "db commit failed: theCommitError")
@@ -137,7 +137,7 @@ func TestRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectCommit()
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		require.NoError(t, err)

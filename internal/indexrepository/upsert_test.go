@@ -23,10 +23,10 @@ func TestRepository_Upsert(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "", "", "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must not be empty"})
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
@@ -35,10 +35,10 @@ func TestRepository_Upsert(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "the n@me", "", "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9.-]{1,255}$"})
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {
@@ -47,7 +47,7 @@ func TestRepository_Upsert(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "", "{]")
 
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
@@ -68,7 +68,7 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			WithArgs("theIndex", "theTitle", "{}").
 			WillReturnError(errors.New("theDBExecError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
 
 		require.EqualError(t, err, "db query failed: theDBExecError")
@@ -86,7 +86,7 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			WithArgs("theIndex", "theTitle", "{}").
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
 
 		require.NoError(t, err)
@@ -104,7 +104,7 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			WithArgs("theIndex", sql.NullString{String: "theTitle", Valid: true}, "{}").
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "")
 
 		require.NoError(t, err)
@@ -122,7 +122,7 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			WithArgs("theIndex", nil, "{}").
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "", "{}")
 
 		require.NoError(t, err)

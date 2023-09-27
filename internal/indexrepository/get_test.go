@@ -25,10 +25,10 @@ func TestRepository_Get(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.Get(context.Background(), "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must not be empty"})
 	})
 
 	tt.Run("InvalidName", func(t *testing.T) {
@@ -37,10 +37,10 @@ func TestRepository_Get(tt *testing.T) {
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.Get(context.Background(), "the n@me")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9_/-]{1,255}$"})
+		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9.-]{1,255}$"})
 	})
 
 	tt.Run("NotFound", func(t *testing.T) {
@@ -54,7 +54,7 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(sql.ErrNoRows)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "index"})
@@ -71,7 +71,7 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDBExecError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
 		require.EqualError(t, err, "db scan failed: theDBExecError")
@@ -91,7 +91,7 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		res, err := repo.Get(context.Background(), "theIndex")
 
 		require.NoError(t, err)

@@ -39,7 +39,7 @@ func TestRecord_Push(tt *testing.T) {
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
-		assert.EqualError(t, err, "invalid_argument: index get failed: invalid name: must match the regexp ^[a-zA-Z0-9_/-]{1,255}$")
+		assert.EqualError(t, err, "invalid_argument: index get failed: invalid name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
 	})
 
 	tt.Run("IndexNotFound", func(t *testing.T) {

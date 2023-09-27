@@ -2,21 +2,24 @@ package indexrepository
 
 import (
 	"database/sql"
-	"regexp"
 
 	"github.com/rs/zerolog"
 )
 
-type Repository struct {
-	db     *sql.DB
-	nameRe *regexp.Regexp
-	l      zerolog.Logger
+type stringValidator interface {
+	Validate(s string) error
 }
 
-func New(db *sql.DB, l zerolog.Logger) *Repository {
+type Repository struct {
+	db            *sql.DB
+	nameValidator stringValidator
+	l             zerolog.Logger
+}
+
+func New(db *sql.DB, nameValidator stringValidator, l zerolog.Logger) *Repository {
 	return &Repository{
-		db:     db,
-		nameRe: regexp.MustCompile("^[a-zA-Z0-9_/-]{1,255}$"),
-		l:      l,
+		db:            db,
+		nameValidator: nameValidator,
+		l:             l,
 	}
 }

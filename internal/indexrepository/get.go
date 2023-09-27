@@ -12,10 +12,8 @@ import (
 )
 
 func (r *Repository) Get(ctx context.Context, name string) (model.Index, error) {
-	if !r.nameRe.MatchString(name) {
-		return model.Index{}, apperrors.InvalidArgError{
-			Subj: "name", Reason: "must match the regexp " + r.nameRe.String(),
-		}
+	if err := r.nameValidator.Validate(name); err != nil {
+		return model.Index{}, apperrors.InvalidArgError{Subj: "name", Reason: err.Error()}
 	}
 
 	idx := model.Index{Name: name}

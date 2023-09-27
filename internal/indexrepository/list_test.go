@@ -27,7 +27,7 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnError(errors.New("theQueryError"))
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.List(context.Background())
 
 		assert.EqualError(t, err, "db query failed: theQueryError")
@@ -47,7 +47,7 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		_, err = repo.List(context.Background())
 
 		assert.EqualError(t, err, "db rows iteration failed: theRowError")
@@ -67,7 +67,7 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, zerolog.Nop())
+		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
 		res, err := repo.List(context.Background())
 
 		require.NoError(t, err)
