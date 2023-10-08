@@ -371,7 +371,6 @@ Response example:
 }
 ```
 
-
 ## Developers notes
 
 Create migration:
@@ -382,6 +381,12 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog
+
+### 0.2 (2023-10-08)
+
+- `RecordService/History` API method added.
+- Index name length extended to 255 chars.
+- Slash is not allowed in index name; replaced with dot.
 
 ### 0.1 (2023-09-07)
 

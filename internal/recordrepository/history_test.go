@@ -72,7 +72,7 @@ func TestRecordRepository_History(tt *testing.T) {
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery(`SELECT id, index_id, data, created_at FROM record_log 
+		dbm.ExpectQuery(`SELECT id, index_id, data, created_at FROM record_log
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC`).
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnError(errors.New("theDbQueryError"))
@@ -103,7 +103,7 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORD
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery(`SELECT id, index_id, data, created_at 
+		dbm.ExpectQuery(`SELECT id, index_id, data, created_at
 FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC`).
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(rows)
@@ -130,7 +130,7 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery(`SELECT id, index_id, data, created_at 
+		dbm.ExpectQuery(`SELECT id, index_id, data, created_at
 FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC`).
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(sqlmock.NewRows([]string{}))
@@ -162,7 +162,7 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery(`SELECT id, index_id, data, created_at 
+		dbm.ExpectQuery(`SELECT id, index_id, data, created_at
 FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC`).
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(rows)
@@ -235,7 +235,7 @@ WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC LIMIT $3`).
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		dbm.ExpectQuery(`SELECT id, index_id, data, created_at FROM record_log 
+		dbm.ExpectQuery(`SELECT id, index_id, data, created_at FROM record_log
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 AND id<$3 ORDER BY id DESC LIMIT $4`).
 			WithArgs("theIndexName", "theRecordID", uint64(123), int64(2)).
 			WillReturnRows(rows)

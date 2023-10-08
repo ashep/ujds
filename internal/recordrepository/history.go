@@ -24,7 +24,7 @@ func (r *Repository) History( //nolint:cyclop // TODO: calculated cyclomatic com
 		return nil, 0, err //nolint:wrapcheck // ok
 	}
 
-	q := `SELECT id, index_id, data, created_at FROM record_log 
+	q := `SELECT id, index_id, data, created_at FROM record_log
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2`
 	args := []interface{}{index, id}
 
