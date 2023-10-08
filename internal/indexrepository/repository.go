@@ -6,6 +6,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+//go:generate moq -out mock_test.go -pkg indexrepository_test -skip-ensure . stringValidator
+
 type stringValidator interface {
 	Validate(s string) error
 }

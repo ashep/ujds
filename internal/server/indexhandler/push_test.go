@@ -17,11 +17,7 @@ import (
 )
 
 func TestIndexHandler_Push(tt *testing.T) {
-	tt.Parallel()
-
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -42,8 +38,6 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("RepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -64,8 +58,6 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("IndexNotFound", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -86,8 +78,6 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -110,8 +100,6 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("OkWithTitle", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}

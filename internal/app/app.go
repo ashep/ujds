@@ -17,6 +17,7 @@ import (
 	"github.com/ashep/ujds/internal/server"
 	"github.com/ashep/ujds/internal/server/indexhandler"
 	"github.com/ashep/ujds/internal/server/recordhandler"
+	"github.com/ashep/ujds/internal/validation"
 )
 
 type App struct {
@@ -65,8 +66,8 @@ func (a *App) Run(ctx context.Context, args []string) error {
 		return nil
 	}
 
-	ir := indexrepository.New(db, indexrepository.NewNameValidator(), a.l)
-	rr := recordrepository.New(db, a.l)
+	ir := indexrepository.New(db, validation.NewIndexNameValidator(), a.l)
+	rr := recordrepository.New(db, validation.NewIndexNameValidator(), validation.NewRecordIDValidator(), a.l)
 
 	ih := indexhandler.New(ir, time.Now, a.l)
 	rh := recordhandler.New(ir, rr, time.Now, a.l)

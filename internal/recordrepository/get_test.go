@@ -3,6 +3,7 @@ package recordrepository_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -15,57 +16,113 @@ import (
 	"github.com/ashep/ujds/internal/recordrepository"
 )
 
-func TestRepository_Get(tt *testing.T) {
-	tt.Parallel()
+func TestRecordRepository_Get(tt *testing.T) {
+	tt.Run("IndexNameValidationError", func(t *testing.T) {
+		indexNameValidator := &stringValidatorMock{}
+		indexNameValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theIndexName", s)
+			return fmt.Errorf("theIndexNameValidationError")
+		}
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
-		t.Parallel()
+		recordIDValidator := &stringValidatorMock{}
 
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
-		_, err = repo.Get(context.Background(), "", "theID")
-		require.EqualError(t, err, "invalid index name: must not be empty")
+		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
+		require.EqualError(t, err, "theIndexNameValidationError")
+	})
+
+	tt.Run("RecordIDValidationError", func(t *testing.T) {
+		indexNameValidator := &stringValidatorMock{}
+		indexNameValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theIndexName", s)
+			return nil
+		}
+
+		recordIDValidator := &stringValidatorMock{}
+		recordIDValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theRecordID", s)
+			return fmt.Errorf("theRecordIDValidationError")
+		}
+
+		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		require.NoError(t, err)
+
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+
+		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
+		require.EqualError(t, err, "theRecordIDValidationError")
 	})
 
 	tt.Run("DbNoRows", func(t *testing.T) {
-		t.Parallel()
+		indexNameValidator := &stringValidatorMock{}
+		indexNameValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theIndexName", s)
+			return nil
+		}
+
+		recordIDValidator := &stringValidatorMock{}
+		recordIDValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theRecordID", s)
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
 		dbm.
 			ExpectQuery(`SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`).
-			WithArgs("theIndex", "theID").
+			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepository.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
-		_, err = repo.Get(context.Background(), "theIndex", "theID")
+		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "record"})
 	})
 
 	tt.Run("DbRowScanError", func(t *testing.T) {
-		t.Parallel()
+		indexNameValidator := &stringValidatorMock{}
+		indexNameValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theIndexName", s)
+			return nil
+		}
+
+		recordIDValidator := &stringValidatorMock{}
+		recordIDValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theRecordID", s)
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
 		dbm.
 			ExpectQuery(`SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`).
-			WithArgs("theIndex", "theID").
+			WithArgs("theIndexName", "theRecordID").
 			WillReturnError(errors.New("theSQLError"))
 
-		repo := recordrepository.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
-		_, err = repo.Get(context.Background(), "theIndex", "theID")
-		require.EqualError(t, err, "db scan failed: theSQLError")
+		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
+		require.EqualError(t, err, "db scan: theSQLError")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
+		indexNameValidator := &stringValidatorMock{}
+		indexNameValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theIndexName", s)
+			return nil
+		}
+
+		recordIDValidator := &stringValidatorMock{}
+		recordIDValidator.ValidateFunc = func(s string) error {
+			assert.Equal(t, "theRecordID", s)
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -74,15 +131,15 @@ func TestRepository_Get(tt *testing.T) {
 		rows.AddRow(uint64(123), uint64(234), "theData", time.Unix(345, 456), time.Unix(567, 678))
 		dbm.
 			ExpectQuery(`SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r LEFT JOIN record_log l ON r.log_id = l.id LEFT JOIN index i ON r.index_id = i.id WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`).
-			WithArgs("theIndex", "theID").
+			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
-		rec, err := repo.Get(context.Background(), "theIndex", "theID")
+		rec, err := repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.NoError(t, err)
 
-		assert.Equal(t, "theID", rec.ID)
+		assert.Equal(t, "theRecordID", rec.ID)
 		assert.Equal(t, uint64(123), rec.IndexID)
 		assert.Equal(t, uint64(234), rec.Rev)
 		assert.Equal(t, "theData", rec.Data)

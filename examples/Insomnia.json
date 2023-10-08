@@ -1,301 +1,251 @@
 {
-    "_type": "export",
-    "__export_format": 4,
-    "__export_date": "2023-09-07T18:44:52.900Z",
-    "__export_source": "insomnia.desktop.app:v2023.5.8",
-    "resources": [
-        {
-            "_id": "req_879badf00b6c4e03941b4ea36a9cbc0f",
-            "parentId": "fld_92383b6b73b94d1b932efcd45f9d6e22",
-            "modified": 1694112202300,
-            "created": 1678434692158,
-            "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Push",
-            "name": "index.push",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"books\",\n\t\"schema\": \"{\\\"required\\\":[\\\"author\\\",\\\"title\\\"]}\"\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693939964751,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "fld_92383b6b73b94d1b932efcd45f9d6e22",
-            "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
-            "modified": 1693940901135,
-            "created": 1693939958014,
-            "name": "Index",
-            "description": "",
-            "environment": {},
-            "environmentPropertyOrder": null,
-            "metaSortKey": -1693940898390,
-            "_type": "request_group"
-        },
-        {
-            "_id": "wrk_72f1df10d0ec420180e3241763fc09f4",
-            "parentId": null,
-            "modified": 1687891200581,
-            "created": 1678366664548,
-            "name": "UJDS",
-            "description": "",
-            "scope": "collection",
-            "_type": "workspace"
-        },
-        {
-            "_id": "req_fb122b64c5df4d89825361a6bf77e520",
-            "parentId": "fld_92383b6b73b94d1b932efcd45f9d6e22",
-            "modified": 1694112205174,
-            "created": 1687891948424,
-            "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Get",
-            "name": "index.get",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"books\"\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693939964726,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_77e529366a394b70a803ab1a410dee83",
-            "parentId": "fld_92383b6b73b94d1b932efcd45f9d6e22",
-            "modified": 1694112207629,
-            "created": 1693939599694,
-            "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/List",
-            "name": "index.list",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693939964701,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_2131f93cc8bc484caa8ac379d887c370",
-            "parentId": "fld_92383b6b73b94d1b932efcd45f9d6e22",
-            "modified": 1694112210436,
-            "created": 1693939951450,
-            "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Clear",
-            "name": "index.clear",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"name\": \"books\"\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693939964676,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_d0f6b7de4be749d8a6ac5cd588e9c11f",
-            "parentId": "fld_c5554839f1da4e3f805002631c129291",
-            "modified": 1694108991967,
-            "created": 1687892002174,
-            "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/Push",
-            "name": "record.push",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"index\": \"books\",\n\t\"records\": [\n\t\t{\n\t\t\t\"id\": \"castaneda-001\",\n\t\t\t\"data\": \"{\\\"author\\\":\\\"Carlos Kastaneda\\\", \\\"title\\\":\\\"Tales of Power\\\"}\"\n\t\t},\n\t\t{\n\t\t\t\"id\": \"tanenbaum-001\",\n\t\t\t\"data\": \"{\\\"author\\\":\\\"M. van Steen and A.S. Tanenbaum\\\", \\\"title\\\":\\\"Distributed Systems, 4th ed.\\\"}\"\n\t\t}\n\t]\n}\n"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693940908791,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "fld_c5554839f1da4e3f805002631c129291",
-            "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
-            "modified": 1693940898290,
-            "created": 1693940898290,
-            "name": "Record",
-            "description": "",
-            "environment": {},
-            "environmentPropertyOrder": null,
-            "metaSortKey": -1693940898290,
-            "_type": "request_group"
-        },
-        {
-            "_id": "req_65d33e24834f42e7a0e79e1d7d1d5da1",
-            "parentId": "fld_c5554839f1da4e3f805002631c129291",
-            "modified": 1694112215646,
-            "created": 1694109030699,
-            "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/Get",
-            "name": "record.get",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"index\": \"books\",\n\t\"id\": \"castaneda-001\"\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693940436771,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "req_2f0b4b3315ac44648d6891e2eb31f5f5",
-            "parentId": "fld_c5554839f1da4e3f805002631c129291",
-            "modified": 1694112218309,
-            "created": 1694109110391,
-            "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/GetAll",
-            "name": "record.getAll",
-            "description": "",
-            "method": "POST",
-            "body": {
-                "mimeType": "application/json",
-                "text": "{\n\t\"index\": \"books\",\n\t\"since\": 1694109017,\n\t\"cursor\": 226,\n\t\"limit\": 10\n}"
-            },
-            "parameters": [],
-            "headers": [
-                {
-                    "name": "Content-Type",
-                    "value": "application/json"
-                }
-            ],
-            "authentication": {
-                "type": "bearer",
-                "token": "{{ _.API_KEY }}"
-            },
-            "metaSortKey": -1693940200761,
-            "isPrivate": false,
-            "settingStoreCookies": true,
-            "settingSendCookies": true,
-            "settingDisableRenderRequestBody": false,
-            "settingEncodeUrl": true,
-            "settingRebuildPath": true,
-            "settingFollowRedirects": "global",
-            "_type": "request"
-        },
-        {
-            "_id": "env_b6c38edcd64a6990bbf23edc12d91051ef15eaeb",
-            "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
-            "modified": 1694108664058,
-            "created": 1678366664551,
-            "name": "Base Environment",
-            "data": {
-                "BASE_URL": "http://localhost:9000",
-                "API_KEY": ""
-            },
-            "dataPropertyOrder": {
-                "&": [
-                    "BASE_URL",
-                    "API_KEY"
-                ]
-            },
-            "color": null,
-            "isPrivate": false,
-            "metaSortKey": 1678366664551,
-            "_type": "environment"
-        }
-    ]
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2023-10-08T12:28:54.406Z",
+  "__export_source": "insomnia.desktop.app:v8.2.0",
+  "resources": [
+    {
+      "_id": "req_a81d78b1a9b741d2b8c49863d205082e",
+      "parentId": "fld_afe3acf5e9b14742b34dfbf2618b5c3b",
+      "modified": 1696767859452,
+      "created": 1678434692158,
+      "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Push",
+      "name": "index.push",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"name\": \"books\",\n\t\"title\": \"Books\",\n\t\"schema\": \"{\\\"required\\\":[\\\"author\\\",\\\"title\\\"]}\"\n}"
+      },
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693939964751,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_afe3acf5e9b14742b34dfbf2618b5c3b",
+      "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
+      "modified": 1693940901135,
+      "created": 1693939958014,
+      "name": "Index",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1693940898390,
+      "_type": "request_group"
+    },
+    {
+      "_id": "wrk_72f1df10d0ec420180e3241763fc09f4",
+      "parentId": null,
+      "modified": 1687891200581,
+      "created": 1678366664548,
+      "name": "UJDS",
+      "description": "",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "req_f5f7c39cd8854eef9cd6f77c39d08774",
+      "parentId": "fld_afe3acf5e9b14742b34dfbf2618b5c3b",
+      "modified": 1694112205174,
+      "created": 1687891948424,
+      "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Get",
+      "name": "index.get",
+      "description": "",
+      "method": "POST",
+      "body": {"mimeType": "application/json", "text": "{\n\t\"name\": \"books\"\n}"},
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693939964726,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_1268fa7afac847009d582cef35f8a11f",
+      "parentId": "fld_afe3acf5e9b14742b34dfbf2618b5c3b",
+      "modified": 1694112207629,
+      "created": 1693939599694,
+      "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/List",
+      "name": "index.list",
+      "description": "",
+      "method": "POST",
+      "body": {"mimeType": "application/json", "text": "{}"},
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693939964701,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_123fd7b4d503410b988d2ba94e02900a",
+      "parentId": "fld_afe3acf5e9b14742b34dfbf2618b5c3b",
+      "modified": 1694112210436,
+      "created": 1693939951450,
+      "url": "{{ _.BASE_URL }}/ujds.index.v1.IndexService/Clear",
+      "name": "index.clear",
+      "description": "",
+      "method": "POST",
+      "body": {"mimeType": "application/json", "text": "{\n\t\"name\": \"books\"\n}"},
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693939964676,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_0e126f56f9ce4bfa995a6bca69efde24",
+      "parentId": "fld_6404ba3895a148d298ac06a4c21c4fa2",
+      "modified": 1694108991967,
+      "created": 1687892002174,
+      "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/Push",
+      "name": "record.push",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"index\": \"books\",\n\t\"records\": [\n\t\t{\n\t\t\t\"id\": \"castaneda-001\",\n\t\t\t\"data\": \"{\\\"author\\\":\\\"Carlos Kastaneda\\\", \\\"title\\\":\\\"Tales of Power\\\"}\"\n\t\t},\n\t\t{\n\t\t\t\"id\": \"tanenbaum-001\",\n\t\t\t\"data\": \"{\\\"author\\\":\\\"M. van Steen and A.S. Tanenbaum\\\", \\\"title\\\":\\\"Distributed Systems, 4th ed.\\\"}\"\n\t\t}\n\t]\n}\n"
+      },
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693940908791,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_6404ba3895a148d298ac06a4c21c4fa2",
+      "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
+      "modified": 1693940898290,
+      "created": 1693940898290,
+      "name": "Record",
+      "description": "",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1693940898290,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_2ee4848954f74fc79ccbd75e1c8ffcce",
+      "parentId": "fld_6404ba3895a148d298ac06a4c21c4fa2",
+      "modified": 1694112215646,
+      "created": 1694109030699,
+      "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/Get",
+      "name": "record.get",
+      "description": "",
+      "method": "POST",
+      "body": {"mimeType": "application/json", "text": "{\n\t\"index\": \"books\",\n\t\"id\": \"castaneda-001\"\n}"},
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693940436771,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_b4d4874c5b6d46d89a1e747c506c7e5f",
+      "parentId": "fld_6404ba3895a148d298ac06a4c21c4fa2",
+      "modified": 1696767648016,
+      "created": 1694109110391,
+      "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/GetAll",
+      "name": "record.getAll",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"index\": \"books\",\n\t\"since\": 0,\n\t\"cursor\": 0,\n\t\"limit\": 10\n}"
+      },
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693940200761,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_2317a67a57da45b5b68a65a59ec584ee",
+      "parentId": "fld_6404ba3895a148d298ac06a4c21c4fa2",
+      "modified": 1696767655027,
+      "created": 1696344830592,
+      "url": "{{ _.BASE_URL }}/ujds.record.v1.RecordService/History",
+      "name": "record.history",
+      "description": "",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n\t\"index\": \"books\",\n\t\"id\": \"castaneda-001\",\n\t\"since\": 0,\n\t\"cursor\": 0,\n\t\"limit\": 10\n}\n"
+      },
+      "parameters": [],
+      "headers": [{"name": "Content-Type", "value": "application/json"}],
+      "authentication": {"type": "bearer", "token": "{{ _.API_KEY }}"},
+      "metaSortKey": -1693940200661,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "env_b6c38edcd64a6990bbf23edc12d91051ef15eaeb",
+      "parentId": "wrk_72f1df10d0ec420180e3241763fc09f4",
+      "modified": 1694449989317,
+      "created": 1678366664551,
+      "name": "Base Environment",
+      "data": {"BASE_URL": "http://localhost:9000", "API_KEY": "foo_bar"},
+      "dataPropertyOrder": {"&": ["BASE_URL", "API_KEY"]},
+      "color": null,
+      "isPrivate": false,
+      "metaSortKey": 1678366664551,
+      "_type": "environment"
+    }
+  ]
 }

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ashep/go-apperrors"
-
 	"github.com/ashep/ujds/internal/model"
 )
 
@@ -17,8 +15,8 @@ func (r *Repository) GetAll(
 	cursor uint64,
 	limit uint32,
 ) ([]model.Record, uint64, error) {
-	if index == "" {
-		return nil, 0, apperrors.InvalidArgError{Subj: "index name", Reason: "must not be empty"}
+	if err := r.indexNameValidator.Validate(index); err != nil {
+		return nil, 0, err //nolint:wrapcheck // ok
 	}
 
 	q := `SELECT r.id, r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
@@ -28,7 +26,7 @@ func (r *Repository) GetAll(
 
 	rows, err := r.db.QueryContext(ctx, q, index, since, cursor, limit+1)
 	if err != nil {
-		return nil, 0, fmt.Errorf("db query failed: %w", err)
+		return nil, 0, fmt.Errorf("db query: %w", err)
 	}
 
 	defer func() {
@@ -40,7 +38,7 @@ func (r *Repository) GetAll(
 
 	for rows.Next() {
 		if err := rows.Scan(&recID, &indexID, &logID, &data, &crAt, &upAt); err != nil {
-			return nil, 0, fmt.Errorf("db scan failed: %w", err)
+			return nil, 0, fmt.Errorf("db scan: %w", err)
 		}
 
 		records = append(records, model.Record{
@@ -54,7 +52,7 @@ func (r *Repository) GetAll(
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("db rows iteration failed: %w", err)
+		return nil, 0, fmt.Errorf("db rows iteration: %w", err)
 	}
 
 	newCursor := uint64(0)

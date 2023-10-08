@@ -13,7 +13,7 @@ import (
 
 func (r *Repository) Get(ctx context.Context, name string) (model.Index, error) {
 	if err := r.nameValidator.Validate(name); err != nil {
-		return model.Index{}, apperrors.InvalidArgError{Subj: "name", Reason: err.Error()}
+		return model.Index{}, err //nolint:wrapcheck // ok
 	}
 
 	idx := model.Index{Name: name}
@@ -23,7 +23,7 @@ func (r *Repository) Get(ctx context.Context, name string) (model.Index, error) 
 	if err := row.Scan(&idx.ID, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt); errors.Is(err, sql.ErrNoRows) {
 		return model.Index{}, apperrors.NotFoundError{Subj: "index"}
 	} else if err != nil {
-		return model.Index{}, fmt.Errorf("db scan failed: %w", err)
+		return model.Index{}, fmt.Errorf("db scan: %w", err)
 	}
 
 	return idx, nil

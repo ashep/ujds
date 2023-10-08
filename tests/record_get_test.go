@@ -44,6 +44,21 @@ func TestRecord_Get(tt *testing.T) {
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
 	})
 
+	tt.Run("EmptyRecordId", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
+			Index: "theIndex",
+			Id:    "",
+		}))
+
+		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
+	})
+
 	tt.Run("IndexNotExists", func(t *testing.T) {
 		ta := testapp.New(t)
 
@@ -53,6 +68,7 @@ func TestRecord_Get(tt *testing.T) {
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
+			Id:    "theRecord",
 		}))
 
 		assert.EqualError(t, err, "not_found: record is not found")

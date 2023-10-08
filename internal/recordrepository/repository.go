@@ -6,11 +6,29 @@ import (
 	"github.com/rs/zerolog"
 )
 
-type Repository struct {
-	db *sql.DB
-	l  zerolog.Logger
+//go:generate moq -out mock_test.go -pkg recordrepository_test -skip-ensure . stringValidator
+
+type stringValidator interface {
+	Validate(s string) error
 }
 
-func New(db *sql.DB, l zerolog.Logger) *Repository {
-	return &Repository{db: db, l: l}
+type Repository struct {
+	db                 *sql.DB
+	indexNameValidator stringValidator
+	recordIDValidator  stringValidator
+	l                  zerolog.Logger
+}
+
+func New(
+	db *sql.DB,
+	indexNameValidator stringValidator,
+	recordIDValidator stringValidator,
+	l zerolog.Logger,
+) *Repository {
+	return &Repository{
+		db:                 db,
+		indexNameValidator: indexNameValidator,
+		recordIDValidator:  recordIDValidator,
+		l:                  l,
+	}
 }

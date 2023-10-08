@@ -11,7 +11,7 @@ import (
 
 func (r *Repository) Upsert(ctx context.Context, name, title, schema string) error {
 	if err := r.nameValidator.Validate(name); err != nil {
-		return apperrors.InvalidArgError{Subj: "name", Reason: err.Error()}
+		return err //nolint:wrapcheck // ok
 	}
 
 	if schema == "" {

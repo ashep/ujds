@@ -16,35 +16,27 @@ import (
 	"github.com/ashep/ujds/internal/indexrepository"
 )
 
-func TestRepository_Get(tt *testing.T) {
-	tt.Parallel()
-
-	tt.Run("EmptyName", func(t *testing.T) {
-		t.Parallel()
+func TestIndexRepository_Get(tt *testing.T) {
+	tt.Run("NameValidatorError", func(t *testing.T) {
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return errors.New("theValidatorError")
+		}
 
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "")
 
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must not be empty"})
-	})
-
-	tt.Run("InvalidName", func(t *testing.T) {
-		t.Parallel()
-
-		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-		require.NoError(t, err)
-
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
-		_, err = repo.Get(context.Background(), "the n@me")
-
-		require.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9.-]{1,255}$"})
+		assert.EqualError(t, err, "theValidatorError")
 	})
 
 	tt.Run("NotFound", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -54,14 +46,17 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(sql.ErrNoRows)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "index"})
 	})
 
 	tt.Run("DBScanError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -71,14 +66,17 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDBExecError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
-		require.EqualError(t, err, "db scan failed: theDBExecError")
+		require.EqualError(t, err, "db scan: theDBExecError")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -91,7 +89,7 @@ func TestRepository_Get(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		res, err := repo.Get(context.Background(), "theIndex")
 
 		require.NoError(t, err)

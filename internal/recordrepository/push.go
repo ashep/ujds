@@ -27,13 +27,13 @@ func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, re
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return fmt.Errorf("db begin failed: %w", err)
+		return fmt.Errorf("db begin: %w", err)
 	}
 
 	qGetRecord, err := tx.PrepareContext(ctx, `SELECT log_id FROM record WHERE checksum=$1`)
 	if err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("db prepare failed: %w", err)
+		return fmt.Errorf("db prepare: %w", err)
 	}
 
 	defer func() {
@@ -46,7 +46,7 @@ func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, re
 		VALUES ($1, $2, $3) RETURNING id`)
 	if err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("db prepare failed: %w", err)
+		return fmt.Errorf("db prepare: %w", err)
 	}
 
 	defer func() {
@@ -59,7 +59,7 @@ func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, re
 VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
-		return fmt.Errorf("db prepare failed: %w", err)
+		return fmt.Errorf("db prepare: %w", err)
 	}
 
 	defer func() {
@@ -68,15 +68,15 @@ VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, chec
 		}
 	}()
 
-	for i, rec := range records {
-		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, indexID, schema, i, rec); err != nil {
+	for _, rec := range records {
+		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, indexID, schema, rec); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("db commit failed: %w", err)
+		return fmt.Errorf("db commit: %w", err)
 	}
 
 	return nil
@@ -87,21 +87,20 @@ func (r *Repository) insertRecord(
 	qGetRecord, qInsertLog, qInsertRecord *sql.Stmt,
 	indexID uint64,
 	schema []byte,
-	i int,
 	rec model.RecordUpdate,
 ) error {
-	if rec.ID == "" {
-		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record (%d) id", i), Reason: "must not be empty"}
+	if err := r.recordIDValidator.Validate(rec.ID); err != nil {
+		return err //nolint:wrapcheck // ok
 	}
 
 	if rec.Data == "" {
-		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record (%d) data", i), Reason: "must not be empty"}
+		return apperrors.InvalidArgError{Subj: "record data", Reason: "must not be empty"}
 	}
 
 	// Validate data against schema
 	recDataB := []byte(rec.Data)
 	if err := model.ValidateJSON(schema, recDataB); err != nil {
-		return apperrors.InvalidArgError{Subj: fmt.Sprintf("record data (%d)", i), Reason: err.Error()}
+		return apperrors.InvalidArgError{Subj: "record data", Reason: err.Error()}
 	}
 
 	logID := uint64(0)
@@ -118,7 +117,7 @@ func (r *Repository) insertRecord(
 	if err := row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentionally empty block
 		// Ok, continue to insert
 	} else if err != nil {
-		return fmt.Errorf("db scan failed: %w", err)
+		return fmt.Errorf("db scan: %w", err)
 	} else {
 		// A record with the same data found, skip it
 		return nil
@@ -128,11 +127,11 @@ func (r *Repository) insertRecord(
 	if err := row.Scan(&logID); err != nil && errors.Is(err, sql.ErrNoRows) {
 		return nil
 	} else if err != nil {
-		return fmt.Errorf("db query failed: %w", err)
+		return fmt.Errorf("db query: %w", err)
 	}
 
 	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, indexID, logID, sum[:]); err != nil {
-		return fmt.Errorf("db query failed: %w", err)
+		return fmt.Errorf("db query: %w", err)
 	}
 
 	return nil

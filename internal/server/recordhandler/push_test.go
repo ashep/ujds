@@ -20,11 +20,7 @@ import (
 )
 
 func TestRecordHandler_Push(tt *testing.T) {
-	tt.Parallel()
-
 	tt.Run("IndexRepoInvalidArgumentError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -41,13 +37,11 @@ func TestRecordHandler_Push(tt *testing.T) {
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
 
-		assert.EqualError(t, err, "invalid_argument: index get failed: invalid theIndexRepoSubj: theIndexRepoReason")
+		assert.EqualError(t, err, "invalid_argument: invalid theIndexRepoSubj: theIndexRepoReason")
 		assert.Empty(t, lb.String())
 	})
 
 	tt.Run("IndexRepoNotFoundError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -68,8 +62,6 @@ func TestRecordHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("IndexRepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -88,8 +80,6 @@ func TestRecordHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("RecordRepoInvalidArgError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -115,8 +105,6 @@ func TestRecordHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("RecordRepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -139,8 +127,6 @@ func TestRecordHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
