@@ -44,8 +44,22 @@ message GetAllResponse {
   repeated Record records = 2;
 }
 
+message HistoryRequest {
+  string index = 1;
+  string id = 2;
+  int64 since = 3;
+  uint32 limit = 4;
+  uint64 cursor = 5;
+}
+
+message HistoryResponse {
+  uint64 cursor = 1;
+  repeated Record records = 2;
+}
+
 service RecordService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc GetAll(GetAllRequest) returns (GetAllResponse) {}
+  rpc History(HistoryRequest) returns (HistoryResponse) {}
 }

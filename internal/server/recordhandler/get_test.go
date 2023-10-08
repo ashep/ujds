@@ -20,11 +20,7 @@ import (
 )
 
 func TestRecordHandler_Get(tt *testing.T) {
-	tt.Parallel()
-
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -46,8 +42,6 @@ func TestRecordHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("RecordRepoNotFoundError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -68,8 +62,6 @@ func TestRecordHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("RecordRepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -88,8 +80,6 @@ func TestRecordHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -97,6 +87,9 @@ func TestRecordHandler_Get(tt *testing.T) {
 		l := zerolog.New(lb)
 
 		rr.GetFunc = func(ctx context.Context, index, id string) (model.Record, error) {
+			assert.Equal(t, "theIndexName", index)
+			assert.Equal(t, "theRecordID", id)
+
 			return model.Record{
 				ID:        id,
 				IndexID:   123,

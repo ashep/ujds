@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,49 +13,44 @@ import (
 	"github.com/ashep/ujds/internal/indexrepository"
 )
 
-func TestRepository_Clear(tt *testing.T) {
-	tt.Parallel()
-
-	tt.Run("EmptyName", func(t *testing.T) {
-		t.Parallel()
+func TestIndexRepository_Clear(tt *testing.T) {
+	tt.Run("NameValidatorError", func(t *testing.T) {
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return errors.New("theValidatorError")
+		}
 
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "")
 
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must not be empty"})
-	})
-
-	tt.Run("InvalidName", func(t *testing.T) {
-		t.Parallel()
-
-		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
-		require.NoError(t, err)
-
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
-		err = repo.Clear(context.Background(), "the n@me")
-
-		assert.ErrorIs(t, err, apperrors.InvalidArgError{Subj: "name", Reason: "must match the regexp ^[a-zA-Z0-9.-]{1,255}$"})
+		assert.EqualError(t, err, "theValidatorError")
 	})
 
 	tt.Run("BeginTxError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
 		dbm.ExpectBegin().WillReturnError(errors.New("theBeginTxError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
-		assert.EqualError(t, err, "failed to begin transaction: theBeginTxError")
+		assert.EqualError(t, err, "begin transaction: theBeginTxError")
 	})
 
 	tt.Run("ExecDeleteRecordsError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -67,14 +61,17 @@ func TestRepository_Clear(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDeleteRecordsError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
-		assert.EqualError(t, err, "failed to delete records: theDeleteRecordsError")
+		assert.EqualError(t, err, "delete records: theDeleteRecordsError")
 	})
 
 	tt.Run("ExecDeleteRecordLogsError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -89,14 +86,17 @@ func TestRepository_Clear(tt *testing.T) {
 			WithArgs("theIndex").
 			WillReturnError(errors.New("theDeleteRecordLogsError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
-		assert.EqualError(t, err, "failed to delete record logs: theDeleteRecordLogsError")
+		assert.EqualError(t, err, "delete record log: theDeleteRecordLogsError")
 	})
 
 	tt.Run("CommitError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -113,14 +113,17 @@ func TestRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectCommit().WillReturnError(errors.New("theCommitError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
-		assert.EqualError(t, err, "db commit failed: theCommitError")
+		assert.EqualError(t, err, "db commit: theCommitError")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
+		nameValidator.ValidateFunc = func(s string) error {
+			return nil
+		}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -137,7 +140,7 @@ func TestRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectCommit()
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		require.NoError(t, err)

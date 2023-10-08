@@ -51,11 +51,13 @@ func TestRecord_GetAll(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+		res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
 			Index: "theIndex",
 		}))
 
-		assert.EqualError(t, err, "not_found: no records found")
+		assert.NoError(t, err)
+		assert.Empty(t, res.Msg.Records)
+		assert.Zero(t, res.Msg.Cursor)
 	})
 
 	tt.Run("Ok", func(t *testing.T) {

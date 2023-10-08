@@ -12,9 +12,13 @@ import (
 )
 
 // Get returns last version of a record.
-func (r *Repository) Get(ctx context.Context, index string, id string) (model.Record, error) {
-	if index == "" {
-		return model.Record{}, apperrors.InvalidArgError{Subj: "index name", Reason: "must not be empty"}
+func (r *Repository) Get(ctx context.Context, index, id string) (model.Record, error) {
+	if err := r.indexNameValidator.Validate(index); err != nil {
+		return model.Record{}, err //nolint:wrapcheck // ok
+	}
+
+	if err := r.recordIDValidator.Validate(id); err != nil {
+		return model.Record{}, err //nolint:wrapcheck // ok
 	}
 
 	q := `SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
@@ -31,7 +35,7 @@ func (r *Repository) Get(ctx context.Context, index string, id string) (model.Re
 	if errors.Is(err, sql.ErrNoRows) {
 		return model.Record{}, apperrors.NotFoundError{Subj: "record"}
 	} else if err != nil {
-		return model.Record{}, fmt.Errorf("db scan failed: %w", err)
+		return model.Record{}, fmt.Errorf("db scan: %w", err)
 	}
 
 	return rec, nil

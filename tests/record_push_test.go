@@ -39,7 +39,7 @@ func TestRecord_Push(tt *testing.T) {
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
-		assert.EqualError(t, err, "invalid_argument: index get failed: invalid name: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
 	})
 
 	tt.Run("IndexNotFound", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestRecord_Push(tt *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record (0) id: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
 	})
 
 	tt.Run("EmptyRecordData", func(t *testing.T) {
@@ -114,7 +114,7 @@ func TestRecord_Push(tt *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record (0) data: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: invalid record data: must not be empty")
 	})
 
 	tt.Run("InvalidDataJSON", func(t *testing.T) {
@@ -138,7 +138,7 @@ func TestRecord_Push(tt *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data (0): invalid json")
+		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json")
 	})
 
 	tt.Run("DataValidationFailed", func(t *testing.T) {
@@ -165,7 +165,7 @@ func TestRecord_Push(tt *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data (0): (root): foo is required")
+		assert.EqualError(t, err, "invalid_argument: invalid record data: (root): foo is required")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {

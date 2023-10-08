@@ -21,11 +21,7 @@ import (
 )
 
 func TestIndexHandler_Get(tt *testing.T) {
-	tt.Parallel()
-
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -45,8 +41,6 @@ func TestIndexHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("RepoNotFoundError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -66,8 +60,6 @@ func TestIndexHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("RepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
@@ -87,8 +79,6 @@ func TestIndexHandler_Get(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}

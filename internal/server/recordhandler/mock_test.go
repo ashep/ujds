@@ -90,6 +90,9 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //			GetAllFunc: func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 //				panic("mock out the GetAll method")
 //			},
+//			HistoryFunc: func(ctx context.Context, index string, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+//				panic("mock out the History method")
+//			},
 //			PushFunc: func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 //				panic("mock out the Push method")
 //			},
@@ -105,6 +108,9 @@ type recordRepoMock struct {
 
 	// GetAllFunc mocks the GetAll method.
 	GetAllFunc func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+
+	// HistoryFunc mocks the History method.
+	HistoryFunc func(ctx context.Context, index string, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// PushFunc mocks the Push method.
 	PushFunc func(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error
@@ -133,6 +139,21 @@ type recordRepoMock struct {
 			// Limit is the limit argument value.
 			Limit uint32
 		}
+		// History holds details about calls to the History method.
+		History []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Index is the index argument value.
+			Index string
+			// ID is the id argument value.
+			ID string
+			// Since is the since argument value.
+			Since time.Time
+			// Cursor is the cursor argument value.
+			Cursor uint64
+			// Limit is the limit argument value.
+			Limit uint32
+		}
 		// Push holds details about calls to the Push method.
 		Push []struct {
 			// Ctx is the ctx argument value.
@@ -145,9 +166,10 @@ type recordRepoMock struct {
 			Records []model.RecordUpdate
 		}
 	}
-	lockGet    sync.RWMutex
-	lockGetAll sync.RWMutex
-	lockPush   sync.RWMutex
+	lockGet     sync.RWMutex
+	lockGetAll  sync.RWMutex
+	lockHistory sync.RWMutex
+	lockPush    sync.RWMutex
 }
 
 // Get calls GetFunc.
@@ -235,6 +257,58 @@ func (mock *recordRepoMock) GetAllCalls() []struct {
 	mock.lockGetAll.RLock()
 	calls = mock.calls.GetAll
 	mock.lockGetAll.RUnlock()
+	return calls
+}
+
+// History calls HistoryFunc.
+func (mock *recordRepoMock) History(ctx context.Context, index string, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+	if mock.HistoryFunc == nil {
+		panic("recordRepoMock.HistoryFunc: method is nil but recordRepo.History was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		Index  string
+		ID     string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
+	}{
+		Ctx:    ctx,
+		Index:  index,
+		ID:     id,
+		Since:  since,
+		Cursor: cursor,
+		Limit:  limit,
+	}
+	mock.lockHistory.Lock()
+	mock.calls.History = append(mock.calls.History, callInfo)
+	mock.lockHistory.Unlock()
+	return mock.HistoryFunc(ctx, index, id, since, cursor, limit)
+}
+
+// HistoryCalls gets all the calls that were made to History.
+// Check the length with:
+//
+//	len(mockedrecordRepo.HistoryCalls())
+func (mock *recordRepoMock) HistoryCalls() []struct {
+	Ctx    context.Context
+	Index  string
+	ID     string
+	Since  time.Time
+	Cursor uint64
+	Limit  uint32
+} {
+	var calls []struct {
+		Ctx    context.Context
+		Index  string
+		ID     string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
+	}
+	mock.lockHistory.RLock()
+	calls = mock.calls.History
+	mock.lockHistory.RUnlock()
 	return calls
 }
 

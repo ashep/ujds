@@ -19,11 +19,7 @@ import (
 )
 
 func TestRecordHandler_GetAll(tt *testing.T) {
-	tt.Parallel()
-
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -45,8 +41,6 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 	})
 
 	tt.Run("RecordRepoInternalError", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -64,29 +58,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		assert.Equal(t, `{"level":"error","error":"theRecordRepoError","proc":"","err_code":123456789,"message":"record repo get all failed"}`+"\n", lb.String())
 	})
 
-	tt.Run("NoRecordsFound", func(t *testing.T) {
-		t.Parallel()
-
-		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
-		now := func() time.Time { return time.Unix(123456789, 0) }
-		lb := &strings.Builder{}
-		l := zerolog.New(lb)
-
-		rr.GetAllFunc = func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			return nil, 0, nil
-		}
-
-		h := recordhandler.New(ir, rr, now, l)
-		_, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{}))
-
-		assert.EqualError(t, err, "not_found: no records found")
-		assert.Empty(t, lb.String())
-	})
-
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
-
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
@@ -94,6 +66,11 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		l := zerolog.New(lb)
 
 		rr.GetAllFunc = func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+			assert.Equal(t, "theIndexName", index)
+			assert.Equal(t, time.Unix(0, 0), since)
+			assert.Equal(t, uint64(0), cursor)
+			assert.Equal(t, uint32(500), limit)
+
 			return []model.Record{
 				{
 					ID:        "theRecordID1",
@@ -116,7 +93,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 
 		h := recordhandler.New(ir, rr, now, l)
 		res, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{
-			Index: "theIndex1",
+			Index: "theIndexName",
 		}))
 
 		require.NoError(t, err)
@@ -126,14 +103,14 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		assert.Equal(t, uint64(345), res.Msg.Cursor)
 
 		assert.Equal(t, "theRecordID1", res.Msg.Records[0].Id)
-		assert.Equal(t, "theIndex1", res.Msg.Records[0].Index)
+		assert.Equal(t, "theIndexName", res.Msg.Records[0].Index)
 		assert.Equal(t, uint64(123), res.Msg.Records[0].Rev)
 		assert.Equal(t, `{"foo1":"bar1"}`, res.Msg.Records[0].Data)
 		assert.Equal(t, time.Unix(111, 0).Unix(), res.Msg.Records[0].CreatedAt)
 		assert.Equal(t, time.Unix(222, 0).Unix(), res.Msg.Records[0].UpdatedAt)
 
 		assert.Equal(t, "theRecordID2", res.Msg.Records[1].Id)
-		assert.Equal(t, "theIndex1", res.Msg.Records[1].Index)
+		assert.Equal(t, "theIndexName", res.Msg.Records[1].Index)
 		assert.Equal(t, uint64(234), res.Msg.Records[1].Rev)
 		assert.Equal(t, `{"foo2":"bar2"}`, res.Msg.Records[1].Data)
 		assert.Equal(t, time.Unix(333, 0).Unix(), res.Msg.Records[1].CreatedAt)

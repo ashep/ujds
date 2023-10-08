@@ -50,7 +50,7 @@ with the `code` and `message` fields. Use that information to understand what we
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.index.v1.IndexService/Push \
+  --url https://localhost:9000/ujds.index.v1.IndexService/Push \
   --header 'Authorization: Bearer WrongAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{}'
@@ -69,14 +69,14 @@ Creates a new index or updates an existing one.
 
 - Request fields:
     - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
-    - *optional* **string** `title`: Index title.
+    - *optional* **string** `title`: index title.
     - *optional* **string** `schema`: JSON validation schema.
 
 Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.index.v1.IndexService/Push \
+  --url https://localhost:9000/ujds.index.v1.IndexService/Push \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -103,7 +103,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.index.v1.IndexService/Get \
+  --url https://localhost:9000/ujds.index.v1.IndexService/Get \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{"name": "books"}'
@@ -134,7 +134,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.index.v1.IndexService/List \
+  --url https://localhost:9000/ujds.index.v1.IndexService/List \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{}'
@@ -172,7 +172,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.index.v1.IndexService/Clear \
+  --url https://localhost:9000/ujds.index.v1.IndexService/Clear \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{}'
@@ -192,7 +192,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.record.v1.RecordService/Push \
+  --url https://localhost:9000/ujds.record.v1.RecordService/Push \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -229,7 +229,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.record.v1.RecordService/Get \
+  --url https://localhost:9000/ujds.record.v1.RecordService/Get \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -276,7 +276,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://test.com/ujds.record.v1.RecordService/GetAll \
+  --url https://localhost:9000/ujds.record.v1.RecordService/GetAll \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -312,6 +312,65 @@ Response example:
   ]
 }
 ```
+
+### RecordService/History
+
+Returns record history.
+
+- Request fields:
+    - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
+    - *required* **string** `id`: record id.
+    - *optional* **int** `since`: return only history records, which have been created since provided UNIX timestamp.
+    - *optional* **int** `cursor`: pagination: return records starting from provided position.
+    - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
+- Response fields:
+    - **string** `cursor`: pagination cursor position, which should be used to retrieve the next result set.
+    - **[]object** `records`
+        - **string** `id`: record ID.
+        - **string** `index`: index name.
+        - **string** `rev`: revision number.
+        - **string** `createdAt`: creation time as UNIX timestamp.
+        - **string** `data`: data.
+
+Request example:
+
+```shell
+curl --request POST \
+  --url http://localhost:9000/ujds.record.v1.RecordService/History \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"index": "books",
+	"id": "castaneda-001",
+	"since": 1696767680,
+	"cursor": 28,
+	"limit": 2
+}'
+````
+
+Response example:
+
+```json
+{
+  "records": [
+    {
+      "id": "castaneda-001",
+      "rev": "30",
+      "index": "books",
+      "createdAt": "1696768530",
+      "data": "{\"title\": \"Tales of Power, version 1\", \"author\": \"Carlos Kastaneda\"}"
+    },
+    {
+      "id": "castaneda-001",
+      "rev": "28",
+      "index": "books",
+      "createdAt": "1696767687",
+      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+    }
+  ]
+}
+```
+
 
 ## Developers notes
 

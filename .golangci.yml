@@ -65,7 +65,7 @@ linters:
     - ireturn
 #    - lll
     - loggercheck
-    - maintidx
+#    - maintidx
     - makezero
 #    - maligned
     - mirror
@@ -81,7 +81,7 @@ linters:
     - nonamedreturns
 #    - nosnakecase
     - nosprintfhostport
-    - paralleltest
+#    - paralleltest
     - prealloc
     - predeclared
     - promlinter

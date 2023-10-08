@@ -12,7 +12,7 @@ func (r *Repository) List(ctx context.Context) ([]model.Index, error) {
 
 	rows, err := r.db.QueryContext(ctx, q)
 	if err != nil {
-		return nil, fmt.Errorf("db query failed: %w", err)
+		return nil, fmt.Errorf("db query: %w", err)
 	}
 
 	defer func() {
@@ -24,14 +24,14 @@ func (r *Repository) List(ctx context.Context) ([]model.Index, error) {
 	for rows.Next() {
 		idx := model.Index{}
 		if err := rows.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("db scan failed: %w", err)
+			return nil, fmt.Errorf("db scan: %w", err)
 		}
 
 		res = append(res, idx)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("db rows iteration failed: %w", err)
+		return nil, fmt.Errorf("db rows iteration: %w", err)
 	}
 
 	return res, nil

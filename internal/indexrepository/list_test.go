@@ -14,11 +14,9 @@ import (
 	"github.com/ashep/ujds/internal/indexrepository"
 )
 
-func TestRepository_List(tt *testing.T) {
-	tt.Parallel()
-
+func TestIndexRepository_List(tt *testing.T) {
 	tt.Run("DbQueryError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -27,14 +25,14 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnError(errors.New("theQueryError"))
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.List(context.Background())
 
-		assert.EqualError(t, err, "db query failed: theQueryError")
+		assert.EqualError(t, err, "db query: theQueryError")
 	})
 
 	tt.Run("DbRowsIterationError", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -47,14 +45,14 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.List(context.Background())
 
-		assert.EqualError(t, err, "db rows iteration failed: theRowError")
+		assert.EqualError(t, err, "db rows iteration: theRowError")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		t.Parallel()
+		nameValidator := &stringValidatorMock{}
 
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
@@ -67,7 +65,7 @@ func TestRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT id, name, title, schema, created_at, updated_at FROM index").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, indexrepository.NewNameValidator(), zerolog.Nop())
+		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
 		res, err := repo.List(context.Background())
 
 		require.NoError(t, err)

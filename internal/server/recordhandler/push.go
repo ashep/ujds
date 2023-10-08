@@ -20,7 +20,7 @@ func (h *Handler) Push(
 
 	switch {
 	case errors.As(err, &apperrors.InvalidArgError{}):
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("index get failed: %w", err))
+		return nil, connect.NewError(connect.CodeInvalidArgument, err)
 	case errors.As(err, &apperrors.NotFoundError{}):
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	case err != nil:
