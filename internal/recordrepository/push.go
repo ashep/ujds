@@ -55,8 +55,8 @@ func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, re
 		}
 	}()
 
-	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum)
-VALUES ($1, $2, $3, $4) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, updated_at=now()`)
+	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum, data)
+VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
 		return fmt.Errorf("db prepare: %w", err)
@@ -130,7 +130,7 @@ func (r *Repository) insertRecord(
 		return fmt.Errorf("db query: %w", err)
 	}
 
-	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, indexID, logID, sum[:]); err != nil {
+	if _, err := qInsertRecord.ExecContext(ctx, rec.ID, indexID, logID, sum[:], rec.Data); err != nil {
 		return fmt.Errorf("db query: %w", err)
 	}
 
