@@ -1,10 +1,9 @@
-# UJDS
+# UJDS: a Universal JSON Data Storage
 
 [![ci](https://github.com/ashep/ujds/actions/workflows/ci.yaml/badge.svg)](https://github.com/ashep/ujds/actions/workflows/ci.yaml)
 
-The **Universal JSON Data Storage** is a service aimed to store arbitrary JSON data keeping changes history. Data are
-being stored in **indices** as **records**. Indices may be supplied with JSON **schemas** to check incoming data upon
-updates.
+The **Universal JSON Data Storage** stores arbitrary JSON data and keeps changes history. Data are being stored in
+**indices** as **records**. Indices may have **schema** to check incoming data upon updates.
 
 ## Configuration
 
@@ -386,7 +385,7 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 - `RecordService/History` API method added.
 - Index name length extended to 255 chars.
-- Slash is not allowed in index name; replaced with dot.
+- Slash is not allowed in index names anymore; replaced with dot.
 
 ### 0.1 (2023-09-07)
 
