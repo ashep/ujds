@@ -89,13 +89,17 @@ loop:
 		}
 	}
 
+	if v == "" {
+		return token{pos: pos}, errors.New("operator expected")
+	}
+
 	switch v {
 	case opEq, opEqEq, opNeq, opGt, opLt, opGte, opLte:
 		return token{pos: pos, kind: tkOperatorCompare, value: v}, nil
 	case opAnd, opOr:
 		return token{pos: pos, kind: tkOperatorLogical, value: v}, nil
 	default:
-		return token{pos: pos}, errors.New("operator expected")
+		return token{pos: pos}, fmt.Errorf("unknown operator '%s'", v)
 	}
 }
 

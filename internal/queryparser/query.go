@@ -1,6 +1,8 @@
 package queryparser
 
 import (
+	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -9,10 +11,10 @@ type Query []token
 func (q Query) String(fieldName string) string {
 	res := ""
 
-	for _, tok := range q {
+	for i, tok := range q {
 		switch tok.kind {
 		case tkIdentifier:
-			res += q.formatIdentifier(fieldName, tok)
+			res += q.formatIdentifier(fieldName, tok, q[i+2])
 		case tkOperatorCompare, tkOperatorLogical:
 			res += q.formatOperator(tok)
 		case tkLiteralInt, tkLiteralFloat, tkLiteralString:
@@ -25,7 +27,7 @@ func (q Query) String(fieldName string) string {
 	return strings.TrimSpace(res)
 }
 
-func (q Query) formatIdentifier(fName string, idf token) string {
+func (q Query) formatIdentifier(fName string, idf, arg token) string {
 	idfParts := strings.Split(idf.value, ".")
 	for i := range idfParts {
 		idfParts[i] = "'" + idfParts[i] + "'"
@@ -33,12 +35,12 @@ func (q Query) formatIdentifier(fName string, idf token) string {
 
 	res := "(" + fName + "->" + strings.Join(idfParts, "->") + ")"
 
-	// switch arg.kind {
-	// case tkLiteralInt:
-	// 	res += "::int"
-	// case tkLiteralFloat:
-	// 	res += "::float"
-	// }
+	switch arg.kind {
+	case tkLiteralInt:
+		res += "::int"
+	case tkLiteralFloat:
+		res += "::float"
+	}
 
 	return res
 }
@@ -63,4 +65,50 @@ func (q Query) formatLiteral(tok token) string {
 	default:
 		return `'` + tok.value + `'`
 	}
+}
+
+func checkSyntax(input string, query Query) error {
+	exprIsComplete := false
+	expectedTKinds := []tKind{tkIdentifier}
+
+	for _, tok := range query {
+		found := false
+		for _, tk := range expectedTKinds {
+			if tok.kind == tk {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			var expStr []string
+			for _, tk := range expectedTKinds {
+				expStr = append(expStr, tk.String())
+			}
+			return fmt.Errorf("%s exepected: %s[...]", strings.Join(expStr, ", "), input[:tok.pos])
+		}
+
+		switch tok.kind {
+		case tkIdentifier:
+			expectedTKinds = []tKind{tkOperatorCompare}
+			exprIsComplete = false
+		case tkOperatorCompare:
+			expectedTKinds = []tKind{tkLiteralInt, tkLiteralFloat, tkLiteralString}
+			exprIsComplete = false
+		case tkOperatorLogical:
+			expectedTKinds = []tKind{tkIdentifier}
+			exprIsComplete = false
+		case tkLiteralInt, tkLiteralFloat, tkLiteralString:
+			expectedTKinds = []tKind{tkOperatorLogical}
+			exprIsComplete = true
+		default:
+			return fmt.Errorf("unexpected token %s at position %d", tok.kind, tok.pos)
+		}
+	}
+
+	if !exprIsComplete {
+		return errors.New("incomplete expression")
+	}
+
+	return nil
 }
