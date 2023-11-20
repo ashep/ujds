@@ -17,6 +17,7 @@ func (q Query) String(fieldName string, firstArgIndex int) string {
 	res := ""
 
 	for i, tok := range q.tokens {
+		//nolint:exhaustive // ok
 		switch tok.kind {
 		case tkIdentifier:
 			res += q.formatIdentifier(fieldName, tok, q.tokens[i+2])
@@ -26,7 +27,6 @@ func (q Query) String(fieldName string, firstArgIndex int) string {
 			res += "$" + strconv.Itoa(argCnt)
 			argCnt++
 		case tkLiteralString:
-			// res += `'"$` + strconv.Itoa(argCnt) + `"'`
 			res += `'"' || $` + strconv.Itoa(argCnt) + ` || '"'`
 			argCnt++
 		}
@@ -41,15 +41,16 @@ func (q Query) Args() []any {
 	res := make([]any, 0)
 
 	for _, tok := range q.tokens {
+		//nolint:exhaustive // ok
 		switch tok.kind {
 		case tkLiteralInt:
-			v, _ := strconv.Atoi(tok.value.(string))
+			v, _ := strconv.Atoi(tok.value)
 			res = append(res, v)
 		case tkLiteralFloat:
-			v, _ := strconv.ParseFloat(tok.value.(string), 64)
+			v, _ := strconv.ParseFloat(tok.value, 64)
 			res = append(res, v)
 		case tkLiteralString:
-			res = append(res, tok.value.(string))
+			res = append(res, tok.value)
 		}
 	}
 
@@ -57,13 +58,14 @@ func (q Query) Args() []any {
 }
 
 func (q Query) formatIdentifier(fName string, idf, arg token) string {
-	idfParts := strings.Split(idf.value.(string), ".")
+	idfParts := strings.Split(idf.value, ".")
 	for i := range idfParts {
 		idfParts[i] = "'" + idfParts[i] + "'"
 	}
 
 	res := "(" + fName + "->" + strings.Join(idfParts, "->") + ")"
 
+	//nolint:exhaustive // ok
 	switch arg.kind {
 	case tkLiteralInt:
 		res += "::int"
@@ -85,16 +87,18 @@ func (q Query) formatOperator(tok token) string {
 	case opOr:
 		return "OR"
 	default:
-		return tok.value.(string)
+		return tok.value
 	}
 }
 
+//nolint:cyclop // FIXME: calculated cyclomatic complexity for function checkSyntax is 12, max is 10
 func checkSyntax(input string, tokens []token) error {
 	exprIsComplete := false
 	expectedTKinds := []tKind{tkIdentifier}
 
 	for _, tok := range tokens {
 		found := false
+
 		for _, tk := range expectedTKinds {
 			if tok.kind == tk {
 				found = true
@@ -107,6 +111,7 @@ func checkSyntax(input string, tokens []token) error {
 			for _, tk := range expectedTKinds {
 				expStr = append(expStr, tk.String())
 			}
+
 			return fmt.Errorf("%s exepected: %s", strings.Join(expStr, ", "), input[:tok.pos])
 		}
 
@@ -120,7 +125,7 @@ func checkSyntax(input string, tokens []token) error {
 		case tkOperatorLogical:
 			expectedTKinds = []tKind{tkIdentifier}
 			exprIsComplete = false
-		case tkLiteralInt, tkLiteralFloat, tkLiteralString:
+		case tkLiteralAny, tkLiteralInt, tkLiteralFloat, tkLiteralString:
 			expectedTKinds = []tKind{tkOperatorLogical}
 			exprIsComplete = true
 		default:

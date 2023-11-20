@@ -30,7 +30,7 @@ func (t tKind) String() string {
 type token struct {
 	pos   int
 	kind  tKind
-	value any
+	value string
 }
 
 func Parse(s string) (Query, error) {

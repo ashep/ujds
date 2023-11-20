@@ -19,6 +19,7 @@ import (
 )
 
 func TestRecordHandler_History(tt *testing.T) {
+	//nolint:dupl // this is test
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
 		ir := &indexRepoMock{}
 		rr := &recordRepoMock{}

@@ -28,6 +28,7 @@ func tokenize(s string) ([]token, error) {
 	)
 
 	nextTK := tkIdentifier
+
 	for pos := 0; ; {
 		if s[pos] == ' ' {
 			pos++
@@ -44,7 +45,7 @@ func tokenize(s string) ([]token, error) {
 		case tkOperatorLogical:
 			tok, err = parseOperator(s, pos)
 			nextTK = tkIdentifier
-		case tkLiteralAny:
+		case tkLiteralAny, tkLiteralInt, tkLiteralFloat, tkLiteralString:
 			tok, err = parseLiteral(s, pos)
 			nextTK = tkOperatorLogical
 		default:
@@ -67,6 +68,7 @@ func tokenize(s string) ([]token, error) {
 	return res, nil
 }
 
+//nolint:cyclop // FIXME: calculated cyclomatic complexity for function parseIdentifier is 14, max is 10
 func parseIdentifier(s string, pos int) (token, error) {
 	v := ""
 
@@ -129,6 +131,7 @@ loop:
 	}
 }
 
+//nolint:cyclop // FIXME: calculated cyclomatic complexity for function parseLiteral is 18, max is 10
 func parseLiteral(s string, pos int) (token, error) {
 	v := ""
 	quotesCnt := 0
@@ -138,7 +141,7 @@ func parseLiteral(s string, pos int) (token, error) {
 		switch {
 		case s[pos] == '"':
 			quotesCnt++
-			if quotesCnt == 2 {
+			if quotesCnt == 2 { //nolint:gomnd // ok
 				stop = true
 			}
 		case s[pos] >= 'A' && s[pos] <= 'Z', s[pos] >= 'a' && s[pos] <= 'z', s[pos] == '_':
