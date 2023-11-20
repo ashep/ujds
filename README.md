@@ -62,6 +62,11 @@ curl --request POST \
 {"code":"unauthenticated","message":"not authorized"}
 ```
 
+### Search query syntax
+
+The `RecordService/Find` method provides a method of filtering result using search queries. The syntax has to be
+described here.
+
 ### IndexService/Push
 
 Creates a new index or updates an existing one.
@@ -252,12 +257,13 @@ Response example:
 }
 ```
 
-### RecordService/GetAll
+### RecordService/Find
 
 Returns all records from the index.
 
 - Request fields:
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
+    - *required* **string** `search`: search query. TODO: describe search query syntax.
     - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
     - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
@@ -280,6 +286,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{
 	"index": "books",
+	"search": "author=\"Carlos Kastaneda\"",
 	"since": 1694109017,
 	"cursor": 226,
 	"limit": 2
@@ -299,14 +306,6 @@ Response example:
       "createdAt": "1694109017",
       "updatedAt": "1694109017",
       "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
-    },
-    {
-      "id": "tanenbaum-001",
-      "rev": "228",
-      "index": "books",
-      "createdAt": "1694109017",
-      "updatedAt": "1694109017",
-      "data": "{\"title\": \"Distributed Systems, 4th ed.\", \"author\": \"M. van Steen and A.S. Tanenbaum\"}"
     }
   ]
 }
