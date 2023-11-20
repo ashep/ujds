@@ -13,7 +13,7 @@ import (
 	"github.com/ashep/ujds/internal/model"
 )
 
-//nolint:cyclop // that's ok
+//nolint:cyclop // ok
 func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error {
 	var err error
 
@@ -55,7 +55,7 @@ func (r *Repository) Push(ctx context.Context, indexID uint64, schema []byte, re
 		}
 	}()
 
-	qInsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum, data)
+	qUpsertRecord, err := tx.PrepareContext(ctx, `INSERT INTO record (id, index_id, log_id, checksum, data)
 VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, updated_at=now()`)
 	if err != nil {
 		_ = tx.Rollback()
@@ -63,13 +63,13 @@ VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, 
 	}
 
 	defer func() {
-		if err := qInsertRecord.Close(); err != nil {
+		if err := qUpsertRecord.Close(); err != nil {
 			r.l.Error().Err(err).Msg("prepared statement close failed")
 		}
 	}()
 
 	for _, rec := range records {
-		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qInsertRecord, indexID, schema, rec); err != nil {
+		if err := r.insertRecord(ctx, qGetRecord, qInsertLog, qUpsertRecord, indexID, schema, rec); err != nil {
 			_ = tx.Rollback()
 			return err
 		}
@@ -115,7 +115,7 @@ func (r *Repository) insertRecord(
 	// Check if we already have such data recorded as latest version
 	row := qGetRecord.QueryRowContext(ctx, sum[:])
 	if err := row.Scan(&logID); errors.Is(err, sql.ErrNoRows) { //nolint:revive // this is intentionally empty block
-		// Ok, continue to insert
+		// No record with the same data, continue to insert
 	} else if err != nil {
 		return fmt.Errorf("db scan: %w", err)
 	} else {

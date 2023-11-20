@@ -26,7 +26,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.GetAllFunc = func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 			return nil, 0, apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
@@ -34,7 +34,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
-		_, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{}))
+		_, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid theRecordRepoSubj: theRecordRepoReason")
 		assert.Empty(t, lb.String())
@@ -47,15 +47,15 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.GetAllFunc = func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 			return nil, 0, errors.New("theRecordRepoError")
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
-		_, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{}))
+		_, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
-		assert.Equal(t, `{"level":"error","error":"theRecordRepoError","proc":"","err_code":123456789,"message":"record repo get all failed"}`+"\n", lb.String())
+		assert.Equal(t, `{"level":"error","error":"theRecordRepoError","proc":"","err_code":123456789,"message":"record repo find failed"}`+"\n", lb.String())
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
@@ -65,7 +65,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.GetAllFunc = func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 			assert.Equal(t, "theIndexName", index)
 			assert.Equal(t, time.Unix(0, 0), since)
 			assert.Equal(t, uint64(0), cursor)
@@ -92,7 +92,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		}
 
 		h := recordhandler.New(ir, rr, now, l)
-		res, err := h.GetAll(context.Background(), connect.NewRequest(&proto.GetAllRequest{
+		res, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{
 			Index: "theIndexName",
 		}))
 

@@ -1,18 +1,5 @@
 package queryparser
 
-const (
-	opEq   = "="
-	opEqEq = "=="
-	opNeq  = "!="
-	opGt   = ">"
-	opLt   = "<"
-	opGte  = ">="
-	opLte  = "<="
-
-	opAnd = "&&"
-	opOr  = "||"
-)
-
 type tKind int
 
 const (
@@ -43,7 +30,7 @@ func (t tKind) String() string {
 type token struct {
 	pos   int
 	kind  tKind
-	value string
+	value any
 }
 
 func Parse(s string) (Query, error) {
@@ -56,5 +43,8 @@ func Parse(s string) (Query, error) {
 		return Query{}, err
 	}
 
-	return tokens, nil
+	return Query{
+		tokens: tokens,
+		args:   nil,
+	}, nil
 }

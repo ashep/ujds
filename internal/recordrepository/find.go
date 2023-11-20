@@ -6,11 +6,13 @@ import (
 	"time"
 
 	"github.com/ashep/ujds/internal/model"
+	"github.com/ashep/ujds/internal/queryparser"
 )
 
-func (r *Repository) GetAll(
+func (r *Repository) Find(
 	ctx context.Context,
 	index string,
+	search string,
 	since time.Time,
 	cursor uint64,
 	limit uint32,
@@ -22,9 +24,30 @@ func (r *Repository) GetAll(
 	q := `SELECT r.id, r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
-		WHERE i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4`
+		WHERE `
+	qArgs := []any{}
 
-	rows, err := r.db.QueryContext(ctx, q, index, since, cursor, limit+1)
+	if search != "" {
+		pq, err := queryparser.Parse(search)
+		if err != nil {
+			return nil, 0, fmt.Errorf("search query: %w", err)
+		}
+
+		qArgs = pq.Args()
+		ql := len(qArgs)
+
+		q += pq.String("r.data", 1)
+		q += fmt.Sprintf(
+			` AND i.name=$%d AND r.updated_at >= $%d AND l.id > $%d ORDER BY l.id LIMIT $%d`,
+			ql+1, ql+2, ql+3, ql+4,
+		)
+		qArgs = append(qArgs, index, since, cursor, limit+1)
+	} else {
+		q += `i.name=$1 AND r.updated_at >= $2 AND l.id > $3 ORDER BY l.id LIMIT $4`
+		qArgs = append(qArgs, index, since, cursor, limit+1)
+	}
+
+	rows, err := r.db.QueryContext(ctx, q, qArgs...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("db query: %w", err)
 	}

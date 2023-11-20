@@ -32,14 +32,15 @@ message GetResponse {
   Record record = 1;
 }
 
-message GetAllRequest {
+message FindRequest {
   string index = 1;
-  int64 since = 2;
-  uint32 limit = 3;
-  uint64 cursor = 4;
+  string search = 2;
+  int64 since = 3;
+  uint32 limit = 4;
+  uint64 cursor = 5;
 }
 
-message GetAllResponse {
+message FindResponse {
   uint64 cursor = 1;
   repeated Record records = 2;
 }
@@ -60,6 +61,6 @@ message HistoryResponse {
 service RecordService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
-  rpc GetAll(GetAllRequest) returns (GetAllResponse) {}
+  rpc Find(FindRequest) returns (FindResponse) {}
   rpc History(HistoryRequest) returns (HistoryResponse) {}
 }

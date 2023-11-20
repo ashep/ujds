@@ -3,22 +3,32 @@ package queryparser
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
-type Query []token
+type Query struct {
+	tokens []token
+	args   []any
+}
 
-func (q Query) String(fieldName string) string {
+func (q Query) String(fieldName string, firstArgIndex int) string {
+	argCnt := firstArgIndex
 	res := ""
 
-	for i, tok := range q {
+	for i, tok := range q.tokens {
 		switch tok.kind {
 		case tkIdentifier:
-			res += q.formatIdentifier(fieldName, tok, q[i+2])
+			res += q.formatIdentifier(fieldName, tok, q.tokens[i+2])
 		case tkOperatorCompare, tkOperatorLogical:
 			res += q.formatOperator(tok)
-		case tkLiteralInt, tkLiteralFloat, tkLiteralString:
-			res += q.formatLiteral(tok)
+		case tkLiteralInt, tkLiteralFloat:
+			res += "$" + strconv.Itoa(argCnt)
+			argCnt++
+		case tkLiteralString:
+			// res += `'"$` + strconv.Itoa(argCnt) + `"'`
+			res += `'"' || $` + strconv.Itoa(argCnt) + ` || '"'`
+			argCnt++
 		}
 
 		res += " "
@@ -27,8 +37,27 @@ func (q Query) String(fieldName string) string {
 	return strings.TrimSpace(res)
 }
 
+func (q Query) Args() []any {
+	res := make([]any, 0)
+
+	for _, tok := range q.tokens {
+		switch tok.kind {
+		case tkLiteralInt:
+			v, _ := strconv.Atoi(tok.value.(string))
+			res = append(res, v)
+		case tkLiteralFloat:
+			v, _ := strconv.ParseFloat(tok.value.(string), 64)
+			res = append(res, v)
+		case tkLiteralString:
+			res = append(res, tok.value.(string))
+		}
+	}
+
+	return res
+}
+
 func (q Query) formatIdentifier(fName string, idf, arg token) string {
-	idfParts := strings.Split(idf.value, ".")
+	idfParts := strings.Split(idf.value.(string), ".")
 	for i := range idfParts {
 		idfParts[i] = "'" + idfParts[i] + "'"
 	}
@@ -40,6 +69,8 @@ func (q Query) formatIdentifier(fName string, idf, arg token) string {
 		res += "::int"
 	case tkLiteralFloat:
 		res += "::float"
+	case tkLiteralString:
+		res += "::text"
 	}
 
 	return res
@@ -54,24 +85,15 @@ func (q Query) formatOperator(tok token) string {
 	case opOr:
 		return "OR"
 	default:
-		return tok.value
+		return tok.value.(string)
 	}
 }
 
-func (q Query) formatLiteral(tok token) string {
-	switch tok.kind {
-	case tkLiteralInt, tkLiteralFloat:
-		return tok.value
-	default:
-		return `'` + tok.value + `'`
-	}
-}
-
-func checkSyntax(input string, query Query) error {
+func checkSyntax(input string, tokens []token) error {
 	exprIsComplete := false
 	expectedTKinds := []tKind{tkIdentifier}
 
-	for _, tok := range query {
+	for _, tok := range tokens {
 		found := false
 		for _, tk := range expectedTKinds {
 			if tok.kind == tk {
@@ -85,7 +107,7 @@ func checkSyntax(input string, query Query) error {
 			for _, tk := range expectedTKinds {
 				expStr = append(expStr, tk.String())
 			}
-			return fmt.Errorf("%s exepected: %s[...]", strings.Join(expStr, ", "), input[:tok.pos])
+			return fmt.Errorf("%s exepected: %s", strings.Join(expStr, ", "), input[:tok.pos])
 		}
 
 		switch tok.kind {

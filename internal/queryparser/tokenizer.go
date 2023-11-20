@@ -7,6 +7,19 @@ import (
 	"strings"
 )
 
+const (
+	opEq   = "="
+	opEqEq = "=="
+	opNeq  = "!="
+	opGt   = ">"
+	opLt   = "<"
+	opGte  = ">="
+	opLte  = "<="
+
+	opAnd = "&&"
+	opOr  = "||"
+)
+
 func tokenize(s string) ([]token, error) {
 	var (
 		tok token
@@ -41,7 +54,7 @@ func tokenize(s string) ([]token, error) {
 		pos = tok.pos
 
 		if err != nil {
-			return nil, fmt.Errorf("%w at position %d: %s[...]", err, pos, s[:pos])
+			return nil, fmt.Errorf("%w at position %d: %s", err, pos, s[:pos])
 		}
 
 		res = append(res, tok)
@@ -57,16 +70,29 @@ func tokenize(s string) ([]token, error) {
 func parseIdentifier(s string, pos int) (token, error) {
 	v := ""
 
-	for stop := false; pos < len(s) && !stop; pos++ {
+loop:
+	for i := 0; pos < len(s); i++ {
 		switch {
 		case s[pos] >= '0' && s[pos] <= '9', s[pos] >= 'A' && s[pos] <= 'Z', s[pos] >= 'a' && s[pos] <= 'z':
 			v += string(s[pos])
-		case s[pos] == '.', s[pos] == '_':
+		case s[pos] == '.':
+			if i == 0 {
+				return token{pos: pos}, errors.New("identifier syntax error")
+			} else if i > 0 && v[i-1] == '.' {
+				return token{pos: pos + 1}, errors.New("identifier syntax error")
+			}
+			v += string(s[pos])
+		case s[pos] == '_':
 			v += string(s[pos])
 		default:
-			pos--
-			stop = true
+			break loop
 		}
+
+		pos++
+	}
+
+	if strings.HasSuffix(v, ".") {
+		return token{pos: pos}, errors.New("identifier syntax error")
 	}
 
 	if len(v) == 0 {
@@ -112,7 +138,6 @@ func parseLiteral(s string, pos int) (token, error) {
 		switch {
 		case s[pos] == '"':
 			quotesCnt++
-			v += string(s[pos])
 			if quotesCnt == 2 {
 				stop = true
 			}
@@ -131,13 +156,6 @@ func parseLiteral(s string, pos int) (token, error) {
 	}
 
 	if quotesCnt != 0 || nonNumCharsCnt > 0 {
-		if !strings.HasPrefix(v, `"`) {
-			v = `"` + v
-		}
-		if !strings.HasSuffix(v, `"`) {
-			v = v + `"`
-		}
-
 		return token{pos: pos, kind: tkLiteralString, value: v}, nil
 	}
 

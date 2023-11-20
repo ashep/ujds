@@ -19,7 +19,7 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestRecord_GetAll(tt *testing.T) {
+func TestRecord_Find(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
@@ -27,7 +27,7 @@ func TestRecord_GetAll(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
-		_, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{}))
+		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
@@ -39,7 +39,7 @@ func TestRecord_GetAll(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{}))
+		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
 	})
@@ -51,7 +51,7 @@ func TestRecord_GetAll(tt *testing.T) {
 		defer ta.AssertNoLogErrors(t)
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
 			Index: "theIndex",
 		}))
 
@@ -98,7 +98,7 @@ func TestRecord_GetAll(tt *testing.T) {
 		}))
 		require.NoError(t, err)
 
-		res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
 			Index: "theIndex1",
 		}))
 
@@ -119,6 +119,61 @@ func TestRecord_GetAll(tt *testing.T) {
 		assert.NotZero(t, res.Msg.Records[1].CreatedAt)
 		assert.Equal(t, res.Msg.Records[1].CreatedAt, res.Msg.Records[1].UpdatedAt)
 		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[1].Data)
+	})
+
+	tt.Run("OkWithSearch", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex1"}))
+		require.NoError(t, err)
+
+		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex2"}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Index: "theIndex1",
+			Records: []*recordproto.PushRequest_Record{
+				{Id: "theRecord1", Data: `{"foo1":"bar1"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Index: "theIndex2",
+			Records: []*recordproto.PushRequest_Record{
+				{Id: "theRecord2", Data: `{"foo2":"bar2"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Index: "theIndex1",
+			Records: []*recordproto.PushRequest_Record{
+				{Id: "theRecord3", Data: `{"foo3":"bar3"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
+			Index:  "theIndex1",
+			Search: "foo3 = bar3",
+		}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Records, 1)
+		assert.Equal(t, uint64(0), res.Msg.Cursor)
+
+		assert.Equal(t, "theRecord3", res.Msg.Records[0].Id)
+		assert.Equal(t, uint64(3), res.Msg.Records[0].Rev)
+		assert.Equal(t, "theIndex1", res.Msg.Records[0].Index)
+		assert.NotZero(t, res.Msg.Records[0].CreatedAt)
+		assert.Equal(t, res.Msg.Records[0].CreatedAt, res.Msg.Records[0].UpdatedAt)
+		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[0].Data)
 	})
 
 	tt.Run("OkOffsetLimit", func(t *testing.T) {
@@ -144,7 +199,7 @@ func TestRecord_GetAll(tt *testing.T) {
 
 		cur := uint64(0)
 		for i := 0; i < 10; i++ {
-			res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+			res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
 				Index:  "theIndex",
 				Limit:  1,
 				Cursor: cur,
@@ -203,7 +258,7 @@ func TestRecord_GetAll(tt *testing.T) {
 		}))
 		require.NoError(t, err)
 
-		res, err := cli.R.GetAll(context.Background(), connect.NewRequest(&recordproto.GetAllRequest{
+		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
 			Index: "theIndex",
 			Since: time.Now().Add(-time.Second).Unix(),
 		}))
