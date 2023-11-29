@@ -388,6 +388,11 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.3 (2023-11-29)
+
+- `RecordService/GetAll` API method renamed to `RecordService/Find`.
+- A new `search` optional field added to `RecordService/Find`.
+
 ### 0.2 (2023-10-08)
 
 - `RecordService/History` API method added.
