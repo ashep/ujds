@@ -1,10 +1,9 @@
-# UJDS
+# UJDS: a Universal JSON Data Storage
 
 [![ci](https://github.com/ashep/ujds/actions/workflows/ci.yaml/badge.svg)](https://github.com/ashep/ujds/actions/workflows/ci.yaml)
 
-The **Universal JSON Data Storage** is a service aimed to store arbitrary JSON data keeping changes history. Data are
-being stored in **indices** as **records**. Indices may be supplied with JSON **schemas** to check incoming data upon
-updates.
+The **Universal JSON Data Storage** stores arbitrary JSON data and keeps changes history. Data are being stored in
+**indices** as **records**. Indices may have **schema** to check incoming data upon updates.
 
 ## Configuration
 
@@ -62,6 +61,11 @@ curl --request POST \
 <
 {"code":"unauthenticated","message":"not authorized"}
 ```
+
+### Search query syntax
+
+The `RecordService/Find` method provides a method of filtering result using search queries. The syntax has to be
+described here.
 
 ### IndexService/Push
 
@@ -200,7 +204,7 @@ curl --request POST \
 	"records": [
 		{
 			"id": "castaneda-001",
-			"data": "{\"author\":\"Carlos Kastaneda\", \"title\":\"Tales of Power\"}"
+			"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
 		},
 		{
 			"id": "tanenbaum-001",
@@ -248,17 +252,18 @@ Response example:
     "index": "books",
     "createdAt": "1694109017",
     "updatedAt": "1694237265",
-    "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+    "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
   }
 }
 ```
 
-### RecordService/GetAll
+### RecordService/Find
 
 Returns all records from the index.
 
 - Request fields:
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
+    - *optional* **string** `search`: search query. TODO: describe search query syntax.
     - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
     - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
@@ -281,6 +286,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{
 	"index": "books",
+	"search": "author=\"Carlos Castaneda\"",
 	"since": 1694109017,
 	"cursor": 226,
 	"limit": 2
@@ -299,15 +305,15 @@ Response example:
       "index": "books",
       "createdAt": "1694109017",
       "updatedAt": "1694109017",
-      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
     },
     {
-      "id": "tanenbaum-001",
+      "id": "castaneda-002",
       "rev": "228",
       "index": "books",
       "createdAt": "1694109017",
       "updatedAt": "1694109017",
-      "data": "{\"title\": \"Distributed Systems, 4th ed.\", \"author\": \"M. van Steen and A.S. Tanenbaum\"}"
+      "data": "{\"title\": \"The Fire From Within\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73250-9\"}"
     }
   ]
 }
@@ -358,14 +364,14 @@ Response example:
       "rev": "30",
       "index": "books",
       "createdAt": "1696768530",
-      "data": "{\"title\": \"Tales of Power, version 1\", \"author\": \"Carlos Kastaneda\"}"
+      "data": "{\"title\": \"Tales of Power, second edition\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
     },
     {
       "id": "castaneda-001",
       "rev": "28",
       "index": "books",
       "createdAt": "1696767687",
-      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Kastaneda\"}"
+      "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
     }
   ]
 }
@@ -386,7 +392,7 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 - `RecordService/History` API method added.
 - Index name length extended to 255 chars.
-- Slash is not allowed in index name; replaced with dot.
+- Slash is not allowed in index names anymore; replaced with dot.
 
 ### 0.1 (2023-09-07)
 

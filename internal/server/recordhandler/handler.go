@@ -20,7 +20,7 @@ type indexRepo interface {
 type recordRepo interface {
 	Push(ctx context.Context, indexID uint64, schema []byte, records []model.RecordUpdate) error
 	Get(ctx context.Context, index string, id string) (model.Record, error)
-	GetAll(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+	Find(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 	History(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 }
 

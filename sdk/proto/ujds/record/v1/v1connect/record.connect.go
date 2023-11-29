@@ -29,7 +29,7 @@ const (
 type RecordServiceClient interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
-	GetAll(context.Context, *connect_go.Request[v1.GetAllRequest]) (*connect_go.Response[v1.GetAllResponse], error)
+	Find(context.Context, *connect_go.Request[v1.FindRequest]) (*connect_go.Response[v1.FindResponse], error)
 	History(context.Context, *connect_go.Request[v1.HistoryRequest]) (*connect_go.Response[v1.HistoryResponse], error)
 }
 
@@ -53,9 +53,9 @@ func NewRecordServiceClient(httpClient connect_go.HTTPClient, baseURL string, op
 			baseURL+"/ujds.record.v1.RecordService/Get",
 			opts...,
 		),
-		getAll: connect_go.NewClient[v1.GetAllRequest, v1.GetAllResponse](
+		find: connect_go.NewClient[v1.FindRequest, v1.FindResponse](
 			httpClient,
-			baseURL+"/ujds.record.v1.RecordService/GetAll",
+			baseURL+"/ujds.record.v1.RecordService/Find",
 			opts...,
 		),
 		history: connect_go.NewClient[v1.HistoryRequest, v1.HistoryResponse](
@@ -70,7 +70,7 @@ func NewRecordServiceClient(httpClient connect_go.HTTPClient, baseURL string, op
 type recordServiceClient struct {
 	push    *connect_go.Client[v1.PushRequest, v1.PushResponse]
 	get     *connect_go.Client[v1.GetRequest, v1.GetResponse]
-	getAll  *connect_go.Client[v1.GetAllRequest, v1.GetAllResponse]
+	find    *connect_go.Client[v1.FindRequest, v1.FindResponse]
 	history *connect_go.Client[v1.HistoryRequest, v1.HistoryResponse]
 }
 
@@ -84,9 +84,9 @@ func (c *recordServiceClient) Get(ctx context.Context, req *connect_go.Request[v
 	return c.get.CallUnary(ctx, req)
 }
 
-// GetAll calls ujds.record.v1.RecordService.GetAll.
-func (c *recordServiceClient) GetAll(ctx context.Context, req *connect_go.Request[v1.GetAllRequest]) (*connect_go.Response[v1.GetAllResponse], error) {
-	return c.getAll.CallUnary(ctx, req)
+// Find calls ujds.record.v1.RecordService.Find.
+func (c *recordServiceClient) Find(ctx context.Context, req *connect_go.Request[v1.FindRequest]) (*connect_go.Response[v1.FindResponse], error) {
+	return c.find.CallUnary(ctx, req)
 }
 
 // History calls ujds.record.v1.RecordService.History.
@@ -98,7 +98,7 @@ func (c *recordServiceClient) History(ctx context.Context, req *connect_go.Reque
 type RecordServiceHandler interface {
 	Push(context.Context, *connect_go.Request[v1.PushRequest]) (*connect_go.Response[v1.PushResponse], error)
 	Get(context.Context, *connect_go.Request[v1.GetRequest]) (*connect_go.Response[v1.GetResponse], error)
-	GetAll(context.Context, *connect_go.Request[v1.GetAllRequest]) (*connect_go.Response[v1.GetAllResponse], error)
+	Find(context.Context, *connect_go.Request[v1.FindRequest]) (*connect_go.Response[v1.FindResponse], error)
 	History(context.Context, *connect_go.Request[v1.HistoryRequest]) (*connect_go.Response[v1.HistoryResponse], error)
 }
 
@@ -119,9 +119,9 @@ func NewRecordServiceHandler(svc RecordServiceHandler, opts ...connect_go.Handle
 		svc.Get,
 		opts...,
 	))
-	mux.Handle("/ujds.record.v1.RecordService/GetAll", connect_go.NewUnaryHandler(
-		"/ujds.record.v1.RecordService/GetAll",
-		svc.GetAll,
+	mux.Handle("/ujds.record.v1.RecordService/Find", connect_go.NewUnaryHandler(
+		"/ujds.record.v1.RecordService/Find",
+		svc.Find,
 		opts...,
 	))
 	mux.Handle("/ujds.record.v1.RecordService/History", connect_go.NewUnaryHandler(
@@ -143,8 +143,8 @@ func (UnimplementedRecordServiceHandler) Get(context.Context, *connect_go.Reques
 	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.record.v1.RecordService.Get is not implemented"))
 }
 
-func (UnimplementedRecordServiceHandler) GetAll(context.Context, *connect_go.Request[v1.GetAllRequest]) (*connect_go.Response[v1.GetAllResponse], error) {
-	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.record.v1.RecordService.GetAll is not implemented"))
+func (UnimplementedRecordServiceHandler) Find(context.Context, *connect_go.Request[v1.FindRequest]) (*connect_go.Response[v1.FindResponse], error) {
+	return nil, connect_go.NewError(connect_go.CodeUnimplemented, errors.New("ujds.record.v1.RecordService.Find is not implemented"))
 }
 
 func (UnimplementedRecordServiceHandler) History(context.Context, *connect_go.Request[v1.HistoryRequest]) (*connect_go.Response[v1.HistoryResponse], error) {

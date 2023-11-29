@@ -84,11 +84,11 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //		// make and configure a mocked recordhandler.recordRepo
 //		mockedrecordRepo := &recordRepoMock{
+//			FindFunc: func(ctx context.Context, index string, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+//				panic("mock out the Find method")
+//			},
 //			GetFunc: func(ctx context.Context, index string, id string) (model.Record, error) {
 //				panic("mock out the Get method")
-//			},
-//			GetAllFunc: func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-//				panic("mock out the GetAll method")
 //			},
 //			HistoryFunc: func(ctx context.Context, index string, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
 //				panic("mock out the History method")
@@ -103,11 +103,11 @@ func (mock *indexRepoMock) GetCalls() []struct {
 //
 //	}
 type recordRepoMock struct {
+	// FindFunc mocks the Find method.
+	FindFunc func(ctx context.Context, index string, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+
 	// GetFunc mocks the Get method.
 	GetFunc func(ctx context.Context, index string, id string) (model.Record, error)
-
-	// GetAllFunc mocks the GetAll method.
-	GetAllFunc func(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
 
 	// HistoryFunc mocks the History method.
 	HistoryFunc func(ctx context.Context, index string, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
@@ -117,6 +117,21 @@ type recordRepoMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// Find holds details about calls to the Find method.
+		Find []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Index is the index argument value.
+			Index string
+			// Search is the search argument value.
+			Search string
+			// Since is the since argument value.
+			Since time.Time
+			// Cursor is the cursor argument value.
+			Cursor uint64
+			// Limit is the limit argument value.
+			Limit uint32
+		}
 		// Get holds details about calls to the Get method.
 		Get []struct {
 			// Ctx is the ctx argument value.
@@ -125,19 +140,6 @@ type recordRepoMock struct {
 			Index string
 			// ID is the id argument value.
 			ID string
-		}
-		// GetAll holds details about calls to the GetAll method.
-		GetAll []struct {
-			// Ctx is the ctx argument value.
-			Ctx context.Context
-			// Index is the index argument value.
-			Index string
-			// Since is the since argument value.
-			Since time.Time
-			// Cursor is the cursor argument value.
-			Cursor uint64
-			// Limit is the limit argument value.
-			Limit uint32
 		}
 		// History holds details about calls to the History method.
 		History []struct {
@@ -166,10 +168,62 @@ type recordRepoMock struct {
 			Records []model.RecordUpdate
 		}
 	}
+	lockFind    sync.RWMutex
 	lockGet     sync.RWMutex
-	lockGetAll  sync.RWMutex
 	lockHistory sync.RWMutex
 	lockPush    sync.RWMutex
+}
+
+// Find calls FindFunc.
+func (mock *recordRepoMock) Find(ctx context.Context, index string, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
+	if mock.FindFunc == nil {
+		panic("recordRepoMock.FindFunc: method is nil but recordRepo.Find was just called")
+	}
+	callInfo := struct {
+		Ctx    context.Context
+		Index  string
+		Search string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
+	}{
+		Ctx:    ctx,
+		Index:  index,
+		Search: search,
+		Since:  since,
+		Cursor: cursor,
+		Limit:  limit,
+	}
+	mock.lockFind.Lock()
+	mock.calls.Find = append(mock.calls.Find, callInfo)
+	mock.lockFind.Unlock()
+	return mock.FindFunc(ctx, index, search, since, cursor, limit)
+}
+
+// FindCalls gets all the calls that were made to Find.
+// Check the length with:
+//
+//	len(mockedrecordRepo.FindCalls())
+func (mock *recordRepoMock) FindCalls() []struct {
+	Ctx    context.Context
+	Index  string
+	Search string
+	Since  time.Time
+	Cursor uint64
+	Limit  uint32
+} {
+	var calls []struct {
+		Ctx    context.Context
+		Index  string
+		Search string
+		Since  time.Time
+		Cursor uint64
+		Limit  uint32
+	}
+	mock.lockFind.RLock()
+	calls = mock.calls.Find
+	mock.lockFind.RUnlock()
+	return calls
 }
 
 // Get calls GetFunc.
@@ -209,54 +263,6 @@ func (mock *recordRepoMock) GetCalls() []struct {
 	mock.lockGet.RLock()
 	calls = mock.calls.Get
 	mock.lockGet.RUnlock()
-	return calls
-}
-
-// GetAll calls GetAllFunc.
-func (mock *recordRepoMock) GetAll(ctx context.Context, index string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-	if mock.GetAllFunc == nil {
-		panic("recordRepoMock.GetAllFunc: method is nil but recordRepo.GetAll was just called")
-	}
-	callInfo := struct {
-		Ctx    context.Context
-		Index  string
-		Since  time.Time
-		Cursor uint64
-		Limit  uint32
-	}{
-		Ctx:    ctx,
-		Index:  index,
-		Since:  since,
-		Cursor: cursor,
-		Limit:  limit,
-	}
-	mock.lockGetAll.Lock()
-	mock.calls.GetAll = append(mock.calls.GetAll, callInfo)
-	mock.lockGetAll.Unlock()
-	return mock.GetAllFunc(ctx, index, since, cursor, limit)
-}
-
-// GetAllCalls gets all the calls that were made to GetAll.
-// Check the length with:
-//
-//	len(mockedrecordRepo.GetAllCalls())
-func (mock *recordRepoMock) GetAllCalls() []struct {
-	Ctx    context.Context
-	Index  string
-	Since  time.Time
-	Cursor uint64
-	Limit  uint32
-} {
-	var calls []struct {
-		Ctx    context.Context
-		Index  string
-		Since  time.Time
-		Cursor uint64
-		Limit  uint32
-	}
-	mock.lockGetAll.RLock()
-	calls = mock.calls.GetAll
-	mock.lockGetAll.RUnlock()
 	return calls
 }
 
