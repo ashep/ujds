@@ -52,6 +52,7 @@ func (h *Handler) Push(
 
 func (h *Handler) getIndex(ctx context.Context, proc, name string, cache map[string]model.Index) (model.Index, error) {
 	var err error
+
 	index, ok := cache[name]
 
 	if ok {

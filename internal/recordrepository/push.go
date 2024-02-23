@@ -37,7 +37,6 @@ func (s *statements) Close(l zerolog.Logger) {
 	}
 }
 
-//nolint:cyclop // ok
 func (r *Repository) Push(ctx context.Context, updates []model.RecordUpdate) error {
 	var err error
 

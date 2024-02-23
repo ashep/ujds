@@ -17,7 +17,7 @@ func (rec *RecordUpdate) Checksum() []byte {
 	indexIDBytes := make([]byte, 8) //nolint:gomnd // it's ok
 	binary.LittleEndian.PutUint64(indexIDBytes, rec.IndexID)
 
-	sumSrc := append([]byte(rec.Data), indexIDBytes...) //nolint:gocritic // it's ok
+	sumSrc := append([]byte(rec.Data), indexIDBytes...)
 	sumSrc = append(sumSrc, []byte(rec.ID)...)
 	sum := sha256.Sum256(sumSrc)
 

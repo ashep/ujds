@@ -2,7 +2,7 @@ run:
   skip-dirs:
     - sdk/proto
   skip-files:
-    - "mock_test.go"
+    - "_test.go$"
 linters:
   enable:
     - asasalint
