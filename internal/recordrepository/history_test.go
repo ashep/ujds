@@ -24,11 +24,12 @@ func TestRecordRepository_History(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
+		jsonValidator := &jsonValidatorMock{}
 
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "theIndexNameValidationError")
@@ -47,10 +48,12 @@ func TestRecordRepository_History(tt *testing.T) {
 			return fmt.Errorf("theRecordIDValidationError")
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "theRecordIDValidationError")
@@ -69,6 +72,8 @@ func TestRecordRepository_History(tt *testing.T) {
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -77,7 +82,7 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORD
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnError(errors.New("theDbQueryError"))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "db query: theDbQueryError")
@@ -96,6 +101,8 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 ORD
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"}).
 			RowError(0, errors.New("theRowError"))
 		rows.AddRow(123, 234, `{}`, time.Time{})
@@ -108,7 +115,7 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "db rows iteration: theRowError")
@@ -127,6 +134,8 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 		require.NoError(t, err)
 
@@ -135,7 +144,7 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.NoError(t, err)
@@ -156,6 +165,8 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"})
 		rows.AddRow(123, 234, `{"foo":"bar"}`, time.Time{})
 
@@ -167,7 +178,7 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			WithArgs("theIndexName", "theRecordID").
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.NoError(t, err)
@@ -192,6 +203,8 @@ FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND 
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"})
 		rows.AddRow(123, 234, `{"foo":"bar"}`, time.Time{})
 
@@ -203,7 +216,7 @@ WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC LIMIT $3`).
 			WithArgs("theIndexName", "theRecordID", int64(2)).
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 1)
 		require.NoError(t, err)
@@ -229,6 +242,8 @@ WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC LIMIT $3`).
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"})
 		rows.AddRow(123, 234, `{"foo":"bar"}`, time.Time{})
 
@@ -240,7 +255,7 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 AND
 			WithArgs("theIndexName", "theRecordID", uint64(123), int64(2)).
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 123, 1)
 		require.NoError(t, err)
@@ -266,6 +281,8 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2 AND
 			return nil
 		}
 
+		jsonValidator := &jsonValidatorMock{}
+
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"})
 		rows.AddRow(123, 234, `{"foo":"bar"}`, time.Time{})
 		rows.AddRow(345, 456, `{"foo2":"bar2"}`, time.Time{})
@@ -278,7 +295,7 @@ WHERE name=$1 LIMIT 1) AND record_id=$2 ORDER BY id DESC LIMIT $3`).
 			WithArgs("theIndexName", "theRecordID", int64(2)).
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 1)
 		require.NoError(t, err)

@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	_ "github.com/lib/pq" // it's ok in tests
+	_ "github.com/lib/pq" // ok in tests
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/migration"
+	"github.com/ashep/ujds/migration"
 )
 
 type Index struct {
@@ -33,8 +33,10 @@ type Record struct {
 	IndexID   int
 	LogID     int
 	Checksum  []byte
+	Data      string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	TouchedAt time.Time
 }
 
 type TestDB struct {
@@ -127,7 +129,7 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, index)
 func (d *TestDB) GetRecords(t *testing.T, index string) []Record {
 	t.Helper()
 
-	rows, err := d.db.Query(`SELECT id, index_id, log_id, checksum, created_at, updated_at FROM record
+	rows, err := d.db.Query(`SELECT id, index_id, log_id, checksum, data, created_at, updated_at, touched_at FROM record
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, index)
 	require.NoError(t, err)
 
@@ -135,7 +137,7 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, index)
 
 	for rows.Next() {
 		rec := Record{}
-		require.NoError(t, rows.Scan(&rec.ID, &rec.IndexID, &rec.LogID, &rec.Checksum, &rec.CreatedAt, &rec.UpdatedAt))
+		require.NoError(t, rows.Scan(&rec.ID, &rec.IndexID, &rec.LogID, &rec.Checksum, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt, &rec.TouchedAt))
 		res = append(res, rec)
 	}
 

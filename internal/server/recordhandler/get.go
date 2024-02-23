@@ -35,6 +35,7 @@ func (h *Handler) Get(
 		Index:     req.Msg.Index,
 		CreatedAt: rec.CreatedAt.Unix(),
 		UpdatedAt: rec.UpdatedAt.Unix(),
+		TouchedAt: rec.TouchedAt.Unix(),
 		Data:      rec.Data,
 	}}), nil
 }

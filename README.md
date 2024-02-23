@@ -187,10 +187,10 @@ curl --request POST \
 Creates records in the index or updates existing ones.
 
 - Request fields:
+  - *required* **[]object** `records`: records.
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
-    - *required* **[]object** `records`: records.
-        - *required* **string** `id`: record ID.
-        - *required* **string** `data`: record JSON data.
+    - *required* **string** `id`: record ID.
+    - *required* **string** `data`: record JSON data.
 
 Request example:
 
@@ -200,13 +200,14 @@ curl --request POST \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
-	"index": "books",
 	"records": [
 		{
+			"index": "books",
 			"id": "castaneda-001",
 			"data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
 		},
 		{
+			"index": "books",
 			"id": "tanenbaum-001",
 			"data": "{\"author\":\"M. van Steen and A.S. Tanenbaum\", \"title\":\"Distributed Systems, 4th ed.\"}"
 		}
@@ -266,7 +267,7 @@ Returns all records from the index.
     - *optional* **string** `search`: search query. TODO: describe search query syntax.
     - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
-    - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
+    - *optional* **int** `limit`: get only specified number of records; default and maximum is `500`.
 - Response fields:
     - **string** `cursor`: pagination cursor position, which should be used to retrieve the next result set.
     - **[]object** `records`

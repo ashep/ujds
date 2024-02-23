@@ -90,17 +90,10 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
-			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo1":"bar1"}`},
-			},
-		}))
-		require.NoError(t, err)
 
-		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo2":"bar2"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo2":"bar2"}`},
 			},
 		}))
 		require.NoError(t, err)
@@ -137,17 +130,10 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
-			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo1":"bar1"}`},
-			},
-		}))
-		require.NoError(t, err)
 
-		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo2":"bar2"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo2":"bar2"}`},
 			},
 		}))
 		require.NoError(t, err)
@@ -194,9 +180,9 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
+
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo1":"bar1"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
 			},
 		}))
 		require.NoError(t, err)
@@ -205,9 +191,8 @@ func TestRecord_History(tt *testing.T) {
 		since := time.Now()
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo2":"bar2"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo2":"bar2"}`},
 			},
 		}))
 		require.NoError(t, err)

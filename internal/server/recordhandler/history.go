@@ -42,6 +42,7 @@ func (h *Handler) History(
 			Data:      rec.Data,
 			CreatedAt: rec.CreatedAt.Unix(),
 			UpdatedAt: 0,
+			TouchedAt: 0,
 		}
 	}
 

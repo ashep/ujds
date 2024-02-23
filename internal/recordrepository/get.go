@@ -21,7 +21,7 @@ func (r *Repository) Get(ctx context.Context, index, id string) (model.Record, e
 		return model.Record{}, err //nolint:wrapcheck // ok
 	}
 
-	q := `SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
+	q := `SELECT r.index_id, r.log_id, l.data, r.created_at, r.updated_at, r.touched_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
 		WHERE i.name=$1 AND r.id=$2 ORDER BY l.created_at DESC LIMIT 1`
@@ -31,7 +31,7 @@ func (r *Repository) Get(ctx context.Context, index, id string) (model.Record, e
 		ID: id,
 	}
 
-	err := row.Scan(&rec.IndexID, &rec.Rev, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt)
+	err := row.Scan(&rec.IndexID, &rec.Rev, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt, &rec.TouchedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return model.Record{}, apperrors.NotFoundError{Subj: "record"}
 	} else if err != nil {

@@ -1,11 +1,20 @@
-name: ci
+name: build
+run-name: Build
 on: push
 jobs:
+  lint:
+    uses: ashep/ci/.github/workflows/go-lint.yaml@v1
+
+  test:
+    needs:
+      - lint
+    uses: ashep/ci/.github/workflows/go-test.yaml@v1
+
   build:
-    uses: ashep/ci/.github/workflows/build-go-app.yaml@v1
+    needs:
+      - test
+    uses: ashep/ci/.github/workflows/go-build.yaml@v1
     with:
-      app_name: ${{ github.event.repository.name }}
-      app_version: ${{ github.ref_name }}
       registry_user: ${{ vars.REGISTRY_USER }}
     secrets:
       registry_password: ${{ secrets.REGISTRY_PASSWORD }}

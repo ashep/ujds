@@ -105,9 +105,8 @@ func TestRecord_Get(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "theRecord", Data: `{"foo":"bar"}`},
+				{Index: "theIndex", Id: "theRecord", Data: `{"foo":"bar"}`},
 			},
 		}))
 		require.NoError(t, err)
@@ -123,6 +122,7 @@ func TestRecord_Get(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Record.Index)
 		assert.NotEmpty(t, "theIndex", res.Msg.Record.CreatedAt)
 		assert.Equal(t, res.Msg.Record.UpdatedAt, res.Msg.Record.CreatedAt)
+		assert.Equal(t, res.Msg.Record.TouchedAt, res.Msg.Record.CreatedAt)
 		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Record.Data)
 	})
 }
