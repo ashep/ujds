@@ -18,7 +18,7 @@ import (
 
 //nolint:maintidx // this is the test
 func TestRecordRepository_Push(tt *testing.T) {
-	tt.Run("NoUpdates", func(t *testing.T) {
+	tt.Run("EmptyUpdates", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
 		jsonValidator := &jsonValidatorMock{}
@@ -129,6 +129,29 @@ ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, update
 
 		err = repo.Push(context.Background(), []model.RecordUpdate{{}})
 		require.EqualError(t, err, "prepare statements: update record touch time: thePrepareTouchRecordError")
+	})
+
+	tt.Run("ZeroIndexID", func(t *testing.T) {
+		indexNameValidator := &stringValidatorMock{}
+		jsonValidator := &jsonValidatorMock{}
+		recordIDValidator := &stringValidatorMock{}
+
+		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		require.NoError(t, err)
+
+		dbm.ExpectBegin()
+		dbm.ExpectPrepare("SELECT log_id FROM record WHERE checksum=$1")
+		dbm.ExpectPrepare("INSERT INTO record_log (index_id, record_id, data) VALUES ($1, $2, $3) RETURNING id")
+		dbm.ExpectPrepare(`INSERT INTO record (id, index_id, log_id, checksum, data) VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, updated_at=now(), touched_at=now()`)
+		dbm.ExpectPrepare(`UPDATE record SET touched_at=now() WHERE log_id=$1`)
+
+		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+
+		err = repo.Push(context.Background(), []model.RecordUpdate{
+			{IndexID: 0, ID: "theRecordID"},
+		})
+		require.EqualError(t, err, "invalid record 0: zero index id")
 	})
 
 	tt.Run("RecordIDValidationError", func(t *testing.T) {
@@ -386,7 +409,7 @@ ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, update
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
 		})
 
-		require.EqualError(t, err, "db commit: theCommitError")
+		require.EqualError(t, err, "commit: theCommitError")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {

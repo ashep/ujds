@@ -13,14 +13,14 @@ import (
 )
 
 type statements struct {
-	getRecordByChecksum *sql.Stmt
-	insertLog           *sql.Stmt
-	upsertRecord        *sql.Stmt
-	touchRecord         *sql.Stmt
+	getLog       *sql.Stmt
+	insertLog    *sql.Stmt
+	upsertRecord *sql.Stmt
+	touchRecord  *sql.Stmt
 }
 
 func (s *statements) Close(l zerolog.Logger) {
-	if err := s.getRecordByChecksum.Close(); err != nil {
+	if err := s.getLog.Close(); err != nil {
 		l.Error().Err(err).Msg("prepared statement close failed")
 	}
 
@@ -69,14 +69,14 @@ func (r *Repository) Push(ctx context.Context, updates []model.RecordUpdate) err
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("db commit: %w", err)
+		return fmt.Errorf("commit: %w", err)
 	}
 
 	return nil
 }
 
 func (r *Repository) prepareStatements(ctx context.Context, tx *sql.Tx) (*statements, error) {
-	getRecord, err := tx.PrepareContext(ctx, `SELECT log_id FROM record WHERE checksum=$1`)
+	getLog, err := tx.PrepareContext(ctx, `SELECT log_id FROM record WHERE checksum=$1`)
 	if err != nil {
 		return nil, fmt.Errorf("get record by log id: %w", err)
 	}
@@ -100,10 +100,10 @@ ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, update
 	}
 
 	return &statements{
-		getRecordByChecksum: getRecord,
-		insertLog:           insertLog,
-		upsertRecord:        upsertRecord,
-		touchRecord:         touchRecord,
+		getLog:       getLog,
+		insertLog:    insertLog,
+		upsertRecord: upsertRecord,
+		touchRecord:  touchRecord,
 	}, nil
 }
 
@@ -120,7 +120,18 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd mo
 		return apperrors.InvalidArgError{Subj: "record data", Reason: err.Error()}
 	}
 
-	row := stmt.getRecordByChecksum.QueryRowContext(ctx, upd.Checksum())
+	// FIXME: there is a non-last log with the searched checksum may exist, and this will cause inconsistency.
+	// Suppose, we have the following history:
+	//   0: checksum="foo"
+	//   1: checksum="bar"
+	// and then we get a request with the "foo" checksum.
+	// We're expecting for a new log with index 2 inserted, but we will NOT get it, because the log with "foo" is found,
+	// but it must not be considered correct, because it is NOT LAST.
+	// What to do:
+	// 	1. Get last log with given record id
+	//  2. Check its checksum
+	//  3. ...
+	row := stmt.getLog.QueryRowContext(ctx, upd.Checksum())
 
 	logID := uint64(0)
 	if err := row.Scan(&logID); errors.Is(err, sql.ErrNoRows) {
@@ -128,8 +139,9 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd mo
 			return fmt.Errorf("upsert record: %w", err)
 		}
 	} else if err != nil {
-		return fmt.Errorf("get record by checksum scan: %w", err)
+		return fmt.Errorf("get record log by checksum scan: %w", err)
 	} else {
+		//
 		if err := r.touch(ctx, stmt.touchRecord, logID); err != nil {
 			return fmt.Errorf("touch record: %w", err)
 		}
@@ -138,10 +150,11 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd mo
 	return nil
 }
 
+// upsert
 func (r *Repository) upsert(
 	ctx context.Context,
 	insertLogStmt *sql.Stmt,
-	insertRecordStmt *sql.Stmt,
+	upsertRecordStmt *sql.Stmt,
 	upd model.RecordUpdate,
 ) error {
 	var logID uint64
@@ -153,7 +166,7 @@ func (r *Repository) upsert(
 		return fmt.Errorf("insert log db query: %w", err)
 	}
 
-	if _, err := insertRecordStmt.ExecContext(ctx, upd.ID, upd.IndexID, logID, upd.Checksum(), upd.Data); err != nil {
+	if _, err := upsertRecordStmt.ExecContext(ctx, upd.ID, upd.IndexID, logID, upd.Checksum(), upd.Data); err != nil {
 		return fmt.Errorf("insert record db query: %w", err)
 	}
 
