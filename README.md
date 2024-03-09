@@ -35,7 +35,7 @@ All the requests must be performed use `POST` method.
 
 ### Response JSON types
 
-Please note, that **numerical data in responses are encoded as strings**.
+Please note that **numerical data in responses are encoded as strings**.
 
 ### Authorization
 
@@ -222,12 +222,13 @@ Returns a single record.
 - Request fields:
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
 - Response field:
-    - **object** `record`:
+    - **object** `record`
         - **string** `id`: ID.
         - **string** `index`: index name.
         - **string** `rev`: revision number.
         - **string** `createdAt`: creation time as UNIX timestamp.
-        - **string** `updatedAt`: update time as UNIX timestamp.
+        - **string** `updatedAt`: last change time as UNIX timestamp.
+        - **string** `touchedAt`: last update time as UNIX timestamp.
         - **string** `data`: data.
 
 Request example:
@@ -253,6 +254,7 @@ Response example:
     "index": "books",
     "createdAt": "1694109017",
     "updatedAt": "1694237265",
+    "touchedAt": "1702938162",
     "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
   }
 }
@@ -275,7 +277,8 @@ Returns all records from the index.
         - **string** `index`: index name.
         - **string** `rev`: revision number.
         - **string** `createdAt`: creation time as UNIX timestamp.
-        - **string** `updatedAt`: update time as UNIX timestamp.
+        - **string** `updatedAt`: last change time as UNIX timestamp.
+        - **string** `touchedAt`: last update time as UNIX timestamp.
         - **string** `data`: data.
 
 Request example:
@@ -306,6 +309,7 @@ Response example:
       "index": "books",
       "createdAt": "1694109017",
       "updatedAt": "1694109017",
+      "touchedAt": "1702938162",
       "data": "{\"title\": \"Tales of Power\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73252-3\"}"
     },
     {
@@ -314,6 +318,7 @@ Response example:
       "index": "books",
       "createdAt": "1694109017",
       "updatedAt": "1694109017",
+      "touchedAt": "1702938162",
       "data": "{\"title\": \"The Fire From Within\", \"author\": \"Carlos Castaneda\", \"isbn\":\"978-0-671-73250-9\"}"
     }
   ]
@@ -329,7 +334,7 @@ Returns record history.
     - *required* **string** `id`: record id.
     - *optional* **int** `since`: return only history records, which have been created since provided UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
-    - *optional* **int** `limit`: get only specified amount of records; default and maximum is `500`.
+    - *optional* **int** `limit`: get only specified number of records; default and maximum is `500`.
 - Response fields:
     - **string** `cursor`: pagination cursor position, which should be used to retrieve the next result set.
     - **[]object** `records`
@@ -388,6 +393,12 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog
+
+### 0.4 (2024-03-09)
+
+- `RecordService/Push`:
+  - now the index should be specified on each record;
+  - a new `touched_at` field added; it is always being updated with a current timestamp, even if record hasn't changed.
 
 ### 0.3 (2023-11-29)
 

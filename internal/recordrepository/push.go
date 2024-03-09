@@ -140,7 +140,6 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd mo
 	return nil
 }
 
-// upsert
 func (r *Repository) upsert(
 	ctx context.Context,
 	insertLogStmt *sql.Stmt,
