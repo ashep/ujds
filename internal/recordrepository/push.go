@@ -120,28 +120,18 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd mo
 		return apperrors.InvalidArgError{Subj: "record data", Reason: err.Error()}
 	}
 
-	// FIXME: there is a non-last log with the searched checksum may exist, and this will cause inconsistency.
-	// Suppose, we have the following history:
-	//   0: checksum="foo"
-	//   1: checksum="bar"
-	// and then we get a request with the "foo" checksum.
-	// We're expecting for a new log with index 2 inserted, but we will NOT get it, because the log with "foo" is found,
-	// but it must not be considered correct, because it is NOT LAST.
-	// What to do:
-	// 	1. Get last log with given record id
-	//  2. Check its checksum
-	//  3. ...
 	row := stmt.getLog.QueryRowContext(ctx, upd.Checksum())
 
 	logID := uint64(0)
 	if err := row.Scan(&logID); errors.Is(err, sql.ErrNoRows) {
+		// There is no record with requested checksum exists, try to insert it
 		if err := r.upsert(ctx, stmt.insertLog, stmt.upsertRecord, upd); err != nil {
 			return fmt.Errorf("upsert record: %w", err)
 		}
 	} else if err != nil {
-		return fmt.Errorf("get record log by checksum scan: %w", err)
+		return fmt.Errorf("get record by checksum scan: %w", err)
 	} else {
-		//
+		// There is a record with the same checksum exists, just touch it
 		if err := r.touch(ctx, stmt.touchRecord, logID); err != nil {
 			return fmt.Errorf("touch record: %w", err)
 		}

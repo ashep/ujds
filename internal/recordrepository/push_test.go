@@ -242,7 +242,7 @@ ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, update
 		require.EqualError(t, err, "invalid record data: theJSONValidatorError")
 	})
 
-	tt.Run("DbSelectRecordError", func(t *testing.T) {
+	tt.Run("DbGetRecordByChecksumError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 
 		recordIDValidator := &stringValidatorMock{}
