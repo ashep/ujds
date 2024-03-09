@@ -42,6 +42,7 @@ func (h *Handler) Find(
 			Data:      rec.Data,
 			CreatedAt: rec.CreatedAt.Unix(),
 			UpdatedAt: rec.UpdatedAt.Unix(),
+			TouchedAt: rec.TouchedAt.Unix(),
 		}
 	}
 

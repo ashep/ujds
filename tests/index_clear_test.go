@@ -77,21 +77,13 @@ func TestIndex_Clear(tt *testing.T) {
 		assert.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex1",
 			Records: []*recordproto.PushRequest_Record{
-				{Id: "foo", Data: "{}"},
-				{Id: "bar", Data: "{}"},
-				{Id: "baz", Data: "{}"},
-			},
-		}))
-		assert.NoError(t, err)
-
-		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex2",
-			Records: []*recordproto.PushRequest_Record{
-				{Id: "foo", Data: "{}"},
-				{Id: "bar", Data: "{}"},
-				{Id: "baz", Data: "{}"},
+				{Index: "theIndex1", Id: "foo", Data: "{}"},
+				{Index: "theIndex1", Id: "bar", Data: "{}"},
+				{Index: "theIndex1", Id: "baz", Data: "{}"},
+				{Index: "theIndex2", Id: "foo", Data: "{}"},
+				{Index: "theIndex2", Id: "bar", Data: "{}"},
+				{Index: "theIndex2", Id: "baz", Data: "{}"},
 			},
 		}))
 		assert.NoError(t, err)

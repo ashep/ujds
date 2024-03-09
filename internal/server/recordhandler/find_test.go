@@ -11,6 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/model"
@@ -19,20 +20,20 @@ import (
 )
 
 func TestRecordHandler_GetAll(tt *testing.T) {
-	//nolint:dupl // this is test
+	//nolint:dupl // this is a test
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
+
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			return nil, 0, apperrors.InvalidArgError{
+		rr := &recordRepoMock{}
+		rr.On("Find", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return([]model.Record(nil), uint64(0), apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
-			}
-		}
+			})
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{}))
@@ -48,9 +49,8 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			return nil, 0, errors.New("theRecordRepoError")
-		}
+		rr.On("Find", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return([]model.Record(nil), uint64(0), errors.New("theRecordRepoError"))
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{}))
@@ -61,36 +61,32 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 
 	tt.Run("Ok", func(t *testing.T) {
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.FindFunc = func(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			assert.Equal(t, "theIndexName", index)
-			assert.Equal(t, time.Unix(0, 0), since)
-			assert.Equal(t, uint64(0), cursor)
-			assert.Equal(t, uint32(500), limit)
-
-			return []model.Record{
+		rr := &recordRepoMock{}
+		rr.On("Find", mock.Anything, "theIndexName", "", time.Unix(0, 0), uint64(0), uint32(500)).
+			Return([]model.Record{
 				{
 					ID:        "theRecordID1",
 					IndexID:   11,
 					Rev:       123,
 					Data:      `{"foo1":"bar1"}`,
 					CreatedAt: time.Unix(111, 0),
-					UpdatedAt: time.Unix(222, 0),
+					UpdatedAt: time.Unix(112, 0),
+					TouchedAt: time.Unix(113, 0),
 				},
 				{
 					ID:        "theRecordID2",
 					IndexID:   22,
 					Rev:       234,
 					Data:      `{"foo2":"bar2"}`,
-					CreatedAt: time.Unix(333, 0),
-					UpdatedAt: time.Unix(444, 0),
+					CreatedAt: time.Unix(221, 0),
+					UpdatedAt: time.Unix(222, 0),
+					TouchedAt: time.Unix(223, 0),
 				},
-			}, 345, nil
-		}
+			}, uint64(345), nil)
 
 		h := recordhandler.New(ir, rr, now, l)
 		res, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{
@@ -108,13 +104,15 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		assert.Equal(t, uint64(123), res.Msg.Records[0].Rev)
 		assert.Equal(t, `{"foo1":"bar1"}`, res.Msg.Records[0].Data)
 		assert.Equal(t, time.Unix(111, 0).Unix(), res.Msg.Records[0].CreatedAt)
-		assert.Equal(t, time.Unix(222, 0).Unix(), res.Msg.Records[0].UpdatedAt)
+		assert.Equal(t, time.Unix(112, 0).Unix(), res.Msg.Records[0].UpdatedAt)
+		assert.Equal(t, time.Unix(113, 0).Unix(), res.Msg.Records[0].TouchedAt)
 
 		assert.Equal(t, "theRecordID2", res.Msg.Records[1].Id)
 		assert.Equal(t, "theIndexName", res.Msg.Records[1].Index)
 		assert.Equal(t, uint64(234), res.Msg.Records[1].Rev)
 		assert.Equal(t, `{"foo2":"bar2"}`, res.Msg.Records[1].Data)
-		assert.Equal(t, time.Unix(333, 0).Unix(), res.Msg.Records[1].CreatedAt)
-		assert.Equal(t, time.Unix(444, 0).Unix(), res.Msg.Records[1].UpdatedAt)
+		assert.Equal(t, time.Unix(221, 0).Unix(), res.Msg.Records[1].CreatedAt)
+		assert.Equal(t, time.Unix(222, 0).Unix(), res.Msg.Records[1].UpdatedAt)
+		assert.Equal(t, time.Unix(223, 0).Unix(), res.Msg.Records[1].TouchedAt)
 	})
 }

@@ -12,12 +12,12 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/ashep/ujds/internal/indexrepository"
-	"github.com/ashep/ujds/internal/migration"
 	"github.com/ashep/ujds/internal/recordrepository"
 	"github.com/ashep/ujds/internal/server"
 	"github.com/ashep/ujds/internal/server/indexhandler"
 	"github.com/ashep/ujds/internal/server/recordhandler"
 	"github.com/ashep/ujds/internal/validation"
+	"github.com/ashep/ujds/migration"
 )
 
 type App struct {
@@ -58,7 +58,7 @@ func (a *App) Run(ctx context.Context, args []string) error {
 
 	if *migDown {
 		if err := migration.Down(db); err != nil {
-			return fmt.Errorf("migrration applreverty failed: %w", err)
+			return fmt.Errorf("migrration revert failed: %w", err)
 		}
 
 		a.l.Info().Msg("migrations reverted")
@@ -67,7 +67,13 @@ func (a *App) Run(ctx context.Context, args []string) error {
 	}
 
 	ir := indexrepository.New(db, validation.NewIndexNameValidator(), a.l)
-	rr := recordrepository.New(db, validation.NewIndexNameValidator(), validation.NewRecordIDValidator(), a.l)
+	rr := recordrepository.New(
+		db,
+		validation.NewIndexNameValidator(),
+		validation.NewRecordIDValidator(),
+		validation.NewJSONValidator(),
+		a.l,
+	)
 
 	ih := indexhandler.New(ir, time.Now, a.l)
 	rh := recordhandler.New(ir, rr, time.Now, a.l)

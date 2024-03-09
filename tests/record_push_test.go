@@ -30,30 +30,6 @@ func TestRecord_Push(tt *testing.T) {
 		assert.EqualError(t, err, "unauthenticated: not authorized")
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
-
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
-
-		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-	})
-
-	tt.Run("IndexNotFound", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
-
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
-		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{Index: "anIndex"}))
-
-		assert.EqualError(t, err, "not_found: index is not found")
-	})
-
 	tt.Run("EmptyRecords", func(t *testing.T) {
 		ta := testapp.New(t)
 
@@ -65,9 +41,45 @@ func TestRecord_Push(tt *testing.T) {
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
 
-		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{Index: "theIndex"}))
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid records: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: empty records")
+	})
+
+	tt.Run("EmptyIndexName", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Records: []*recordproto.PushRequest_Record{
+				{
+					Index: "",
+				},
+			},
+		}))
+
+		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+	})
+
+	tt.Run("IndexNotFound", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Records: []*recordproto.PushRequest_Record{
+				{
+					Index: "anUnknownIndex",
+				},
+			},
+		}))
+
+		assert.EqualError(t, err, "not_found: index is not found")
 	})
 
 	tt.Run("EmptyRecordID", func(t *testing.T) {
@@ -82,10 +94,10 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id: "",
+					Index: "theIndex",
+					Id:    "",
 				},
 			},
 		}))
@@ -105,11 +117,11 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: "",
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  "",
 				},
 			},
 		}))
@@ -129,16 +141,16 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: "{]",
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  "{]",
 				},
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json")
+		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json schema or data: invalid character ']' looking for beginning of object key string")
 	})
 
 	tt.Run("DataValidationFailed", func(t *testing.T) {
@@ -156,16 +168,16 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: "{}",
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  "{}",
 				},
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data: (root): foo is required")
+		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json: (root): foo is required")
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
@@ -183,11 +195,11 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar"}`,
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  `{"foo":"bar"}`,
 				},
 			},
 		}))
@@ -207,9 +219,11 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
 		assert.Equal(t, 1, rcs[0].LogID)
+		assert.Equal(t, `{"foo": "bar"}`, rcs[0].Data)
 		assert.Equal(t, []byte{0xd7, 0xae, 0xdc, 0xee, 0x96, 0x9c, 0xe8, 0x55, 0x47, 0x83, 0xff, 0x37, 0x31, 0x3a, 0xcd, 0x6b, 0x7e, 0xcc, 0xa, 0xcf, 0x68, 0xcd, 0xfc, 0xdb, 0x86, 0x70, 0xd7, 0x65, 0xa6, 0x2, 0x9c, 0x0}, rcs[0].Checksum)
 		assert.NotZero(t, rcs[0].CreatedAt)
-		assert.NotZero(t, rcs[0].UpdatedAt)
+		assert.Equal(t, rcs[0].CreatedAt, rcs[0].UpdatedAt) // the record has no updates
+		assert.Equal(t, rcs[0].CreatedAt, rcs[0].TouchedAt) // the record has no touches
 	})
 
 	tt.Run("OkUpdate", func(t *testing.T) {
@@ -227,48 +241,55 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar1"}`,
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  `{"foo":"bar1"}`,
 				},
 			},
 		}))
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar2"}`,
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  `{"foo":"bar2"}`,
 				},
 			},
 		}))
 		require.NoError(t, err)
 
+		// We must have 2 log records: the first one for the insert, the second one for the update
 		rls := ta.DB().GetRecordLogs(t, "theIndex")
 		require.Len(t, rls, 2)
+
+		// First log record
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
 		assert.Equal(t, "theRecordID", rls[0].RecordID)
 		assert.Equal(t, `{"foo": "bar1"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
+		// Second log record
 		assert.Equal(t, 2, rls[1].ID)
 		assert.Equal(t, 1, rls[1].IndexID)
 		assert.Equal(t, "theRecordID", rls[1].RecordID)
 		assert.Equal(t, `{"foo": "bar2"}`, rls[1].Data)
 		assert.Greater(t, rls[1].CreatedAt, rls[0].CreatedAt)
 
+		// Actual record state
 		rcs := ta.DB().GetRecords(t, "theIndex")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
 		assert.Equal(t, 2, rcs[0].LogID)
+		assert.Equal(t, `{"foo": "bar2"}`, rcs[0].Data)
 		assert.Equal(t, []byte{0x2e, 0x82, 0xd8, 0x32, 0xa1, 0x18, 0xff, 0x72, 0x77, 0x32, 0xf7, 0xb4, 0xec, 0x4f, 0x9c, 0xef, 0xf1, 0x16, 0x97, 0x5, 0xfc, 0xc7, 0xa0, 0xd1, 0xe9, 0x9f, 0xbb, 0x6a, 0x91, 0xca, 0x23, 0x72}, rcs[0].Checksum)
-		assert.Greater(t, rcs[0].UpdatedAt, rcs[0].CreatedAt)
+		assert.Greater(t, rcs[0].UpdatedAt, rcs[0].CreatedAt) // the record was updated after creation
+		assert.Equal(t, rcs[0].UpdatedAt, rcs[0].TouchedAt)   // and was not touched after the update
 	})
 
 	tt.Run("OkUpdateWithSameData", func(t *testing.T) {
@@ -285,30 +306,32 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 		require.NoError(t, err)
 
+		// Insert record
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar"}`,
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  `{"foo":"bar"}`,
 				},
 			},
 		}))
 		require.NoError(t, err)
 
+		// Update it
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar"}`,
+					Index: "theIndex",
+					Id:    "theRecordID",
+					Data:  `{"foo":"bar"}`, // the same as on first push
 				},
 			},
 		}))
 		require.NoError(t, err)
 
 		rls := ta.DB().GetRecordLogs(t, "theIndex")
-		require.Len(t, rls, 1)
+		require.Len(t, rls, 1) // only one log record despite two pushes
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
 		assert.Equal(t, "theRecordID", rls[0].RecordID)
@@ -322,9 +345,11 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, 1, rcs[0].LogID)
 		assert.Equal(t, []byte{0xd7, 0xae, 0xdc, 0xee, 0x96, 0x9c, 0xe8, 0x55, 0x47, 0x83, 0xff, 0x37, 0x31, 0x3a, 0xcd, 0x6b, 0x7e, 0xcc, 0xa, 0xcf, 0x68, 0xcd, 0xfc, 0xdb, 0x86, 0x70, 0xd7, 0x65, 0xa6, 0x2, 0x9c, 0x0}, rcs[0].Checksum)
 		assert.NotZero(t, rcs[0].CreatedAt)
-		assert.Equal(t, rcs[0].UpdatedAt, rcs[0].CreatedAt)
+		assert.Equal(t, rcs[0].CreatedAt, rcs[0].UpdatedAt)   // no data updated after second push
+		assert.Greater(t, rcs[0].TouchedAt, rcs[0].UpdatedAt) // but the record was touched
 	})
 
+	// Check that records with same IDs but in different indices are not interfering
 	tt.Run("OkDifferentIndicesWithSameData", func(t *testing.T) {
 		ta := testapp.New(t)
 
@@ -333,35 +358,37 @@ func TestRecord_Push(tt *testing.T) {
 
 		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
 
+		// Create first index
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex1",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex1",
 		}))
 		require.NoError(t, err)
 
+		// Create second index
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex2",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex2",
 		}))
 		require.NoError(t, err)
 
+		// Push a record to the first index
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex1",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar"}`,
+					Index: "theIndex1",
+					Id:    "theRecordID",
+					Data:  `{"foo1":"bar1"}`,
 				},
 			},
 		}))
 		require.NoError(t, err)
 
+		// Push a record to the second index; note the same record ID as in the first index
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-			Index: "theIndex2",
 			Records: []*recordproto.PushRequest_Record{
 				{
-					Id:   "theRecordID",
-					Data: `{"foo":"bar"}`,
+					Index: "theIndex2",
+					Id:    "theRecordID",
+					Data:  `{"foo2":"bar2"}`,
 				},
 			},
 		}))
@@ -372,7 +399,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
 		assert.Equal(t, "theRecordID", rls[0].RecordID)
-		assert.Equal(t, `{"foo": "bar"}`, rls[0].Data)
+		assert.Equal(t, `{"foo1": "bar1"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
 		rcs := ta.DB().GetRecords(t, "theIndex1")
@@ -380,16 +407,15 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
 		assert.Equal(t, 1, rcs[0].LogID)
-		assert.Equal(t, []byte{0xd7, 0xae, 0xdc, 0xee, 0x96, 0x9c, 0xe8, 0x55, 0x47, 0x83, 0xff, 0x37, 0x31, 0x3a, 0xcd, 0x6b, 0x7e, 0xcc, 0xa, 0xcf, 0x68, 0xcd, 0xfc, 0xdb, 0x86, 0x70, 0xd7, 0x65, 0xa6, 0x2, 0x9c, 0x0}, rcs[0].Checksum)
-		assert.NotZero(t, rcs[0].CreatedAt)
-		assert.Equal(t, rcs[0].UpdatedAt, rcs[0].CreatedAt)
+		assert.Equal(t, `{"foo1": "bar1"}`, rcs[0].Data)
+		assert.Equal(t, []byte{0x0, 0xdb, 0x9a, 0xb1, 0xa1, 0xff, 0x7d, 0x9d, 0x7a, 0x93, 0xf1, 0xf7, 0x4f, 0xb9, 0x20, 0x7, 0x34, 0x5f, 0xa3, 0x85, 0x5c, 0xd6, 0x98, 0xcc, 0x9e, 0x35, 0x5d, 0x43, 0x93, 0x4e, 0x64, 0x90}, rcs[0].Checksum)
 
 		rls = ta.DB().GetRecordLogs(t, "theIndex2")
 		require.Len(t, rls, 1)
 		assert.Equal(t, 2, rls[0].ID)
 		assert.Equal(t, 2, rls[0].IndexID)
 		assert.Equal(t, "theRecordID", rls[0].RecordID)
-		assert.Equal(t, `{"foo": "bar"}`, rls[0].Data)
+		assert.Equal(t, `{"foo2": "bar2"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
 		rcs = ta.DB().GetRecords(t, "theIndex2")
@@ -397,8 +423,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 2, rcs[0].IndexID)
 		assert.Equal(t, 2, rcs[0].LogID)
-		assert.Equal(t, []byte{0x35, 0x80, 0x91, 0x87, 0xc5, 0x85, 0xb6, 0x8a, 0xc8, 0xde, 0xab, 0xcd, 0x94, 0xff, 0x52, 0x1f, 0x50, 0x5e, 0xaa, 0x1c, 0x0, 0x70, 0xe4, 0x71, 0x1a, 0x82, 0x6e, 0xbe, 0x34, 0x25, 0x9e, 0xb5}, rcs[0].Checksum)
-		assert.NotZero(t, rcs[0].CreatedAt)
-		assert.Equal(t, rcs[0].UpdatedAt, rcs[0].CreatedAt)
+		assert.Equal(t, `{"foo2": "bar2"}`, rcs[0].Data)
+		assert.Equal(t, []byte{0x3c, 0x79, 0x3c, 0xf4, 0xdd, 0x1c, 0x1f, 0x6d, 0x37, 0x11, 0xe3, 0x1c, 0xaf, 0xcf, 0x74, 0xe0, 0xcc, 0x9f, 0x7b, 0xcb, 0x1d, 0x1f, 0x3b, 0x58, 0xb2, 0x72, 0xe3, 0x60, 0x6e, 0x61, 0xbe, 0x8d}, rcs[0].Checksum)
 	})
 }

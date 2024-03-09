@@ -68,3 +68,71 @@ func (mock *stringValidatorMock) ValidateCalls() []struct {
 	mock.lockValidate.RUnlock()
 	return calls
 }
+
+// jsonValidatorMock is a mock implementation of recordrepository.jsonValidator.
+//
+//	func TestSomethingThatUsesjsonValidator(t *testing.T) {
+//
+//		// make and configure a mocked recordrepository.jsonValidator
+//		mockedjsonValidator := &jsonValidatorMock{
+//			ValidateFunc: func(schema []byte, data []byte) error {
+//				panic("mock out the Validate method")
+//			},
+//		}
+//
+//		// use mockedjsonValidator in code that requires recordrepository.jsonValidator
+//		// and then make assertions.
+//
+//	}
+type jsonValidatorMock struct {
+	// ValidateFunc mocks the Validate method.
+	ValidateFunc func(schema []byte, data []byte) error
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// Validate holds details about calls to the Validate method.
+		Validate []struct {
+			// Schema is the schema argument value.
+			Schema []byte
+			// Data is the data argument value.
+			Data []byte
+		}
+	}
+	lockValidate sync.RWMutex
+}
+
+// Validate calls ValidateFunc.
+func (mock *jsonValidatorMock) Validate(schema []byte, data []byte) error {
+	if mock.ValidateFunc == nil {
+		panic("jsonValidatorMock.ValidateFunc: method is nil but jsonValidator.Validate was just called")
+	}
+	callInfo := struct {
+		Schema []byte
+		Data   []byte
+	}{
+		Schema: schema,
+		Data:   data,
+	}
+	mock.lockValidate.Lock()
+	mock.calls.Validate = append(mock.calls.Validate, callInfo)
+	mock.lockValidate.Unlock()
+	return mock.ValidateFunc(schema, data)
+}
+
+// ValidateCalls gets all the calls that were made to Validate.
+// Check the length with:
+//
+//	len(mockedjsonValidator.ValidateCalls())
+func (mock *jsonValidatorMock) ValidateCalls() []struct {
+	Schema []byte
+	Data   []byte
+} {
+	var calls []struct {
+		Schema []byte
+		Data   []byte
+	}
+	mock.lockValidate.RLock()
+	calls = mock.calls.Validate
+	mock.lockValidate.RUnlock()
+	return calls
+}

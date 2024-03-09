@@ -21,7 +21,7 @@ func (r *Repository) Find(
 		return nil, 0, err //nolint:wrapcheck // ok
 	}
 
-	q := `SELECT r.id, r.index_id, r.log_id, l.data, r.created_at, r.updated_at FROM record r
+	q := `SELECT r.id, r.index_id, r.log_id, l.data, r.created_at, r.updated_at, r.touched_at FROM record r
 		LEFT JOIN record_log l ON r.log_id = l.id
 		LEFT JOIN index i ON r.index_id = i.id
 		WHERE `
@@ -59,10 +59,10 @@ func (r *Repository) Find(
 	}()
 
 	records := make([]model.Record, 0)
-	recID, indexID, logID, data, crAt, upAt := "", uint64(0), uint64(0), "", time.Time{}, time.Time{}
+	recID, indexID, logID, data, crAt, upAt, tcAt := "", uint64(0), uint64(0), "", time.Time{}, time.Time{}, time.Time{}
 
 	for rows.Next() {
-		if err := rows.Scan(&recID, &indexID, &logID, &data, &crAt, &upAt); err != nil {
+		if err := rows.Scan(&recID, &indexID, &logID, &data, &crAt, &upAt, &tcAt); err != nil {
 			return nil, 0, fmt.Errorf("db scan: %w", err)
 		}
 
@@ -73,6 +73,7 @@ func (r *Repository) Find(
 			Data:      data,
 			CreatedAt: crAt,
 			UpdatedAt: upAt,
+			TouchedAt: tcAt,
 		})
 	}
 

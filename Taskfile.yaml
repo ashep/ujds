@@ -9,20 +9,8 @@ vars:
     sh: echo "${ARCH:-$(uname -m)}"
 
 includes:
-  app:
-    taskfile: .ci/Taskfile.go.yaml
-    optional: true
-  gen:
-    taskfile: .ci/Taskfile.gen.yaml
-    optional: true
-  lint:
-    taskfile: .ci/Taskfile.lint.yaml
-    optional: true
-  test:
-    taskfile: .ci/Taskfile.test.yaml
-    optional: true
-  docker:
-    taskfile: .ci/Taskfile.docker.yaml
+  go:
+    taskfile: .ci/go/Taskfile.yaml
     optional: true
 
 tasks:

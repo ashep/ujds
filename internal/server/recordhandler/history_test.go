@@ -11,6 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/model"
@@ -22,17 +23,17 @@ func TestRecordHandler_History(tt *testing.T) {
 	//nolint:dupl // this is test
 	tt.Run("RecordRepoInvalidArgumentError", func(t *testing.T) {
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
+
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.HistoryFunc = func(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			return nil, 0, apperrors.InvalidArgError{
+		rr := &recordRepoMock{}
+		rr.On("History", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return([]model.Record(nil), uint64(0), apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
-			}
-		}
+			})
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
@@ -43,14 +44,13 @@ func TestRecordHandler_History(tt *testing.T) {
 
 	tt.Run("RecordRepoInternalError", func(t *testing.T) {
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.HistoryFunc = func(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			return nil, 0, errors.New("theRecordRepoInternalError")
-		}
+		rr := &recordRepoMock{}
+		rr.On("History", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return([]model.Record(nil), uint64(0), errors.New("theRecordRepoInternalError"))
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
@@ -61,19 +61,13 @@ func TestRecordHandler_History(tt *testing.T) {
 
 	tt.Run("Ok", func(t *testing.T) {
 		ir := &indexRepoMock{}
-		rr := &recordRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		rr.HistoryFunc = func(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error) {
-			assert.Equal(t, "theIndexName", index)
-			assert.Equal(t, "theRecordID", id)
-			assert.Equal(t, time.Unix(55, 0), since)
-			assert.Equal(t, uint64(77), cursor)
-			assert.Equal(t, uint32(66), limit)
-
-			return []model.Record{
+		rr := &recordRepoMock{}
+		rr.On("History", mock.Anything, "theIndexName", "theRecordID", time.Unix(55, 0), uint64(77), uint32(66)).
+			Return([]model.Record{
 				{
 					ID:        "theRecord1",
 					IndexID:   11,
@@ -90,8 +84,7 @@ func TestRecordHandler_History(tt *testing.T) {
 					CreatedAt: time.Unix(2222, 0),
 					UpdatedAt: time.Unix(2233, 0),
 				},
-			}, 78, nil
-		}
+			}, uint64(78), nil)
 
 		h := recordhandler.New(ir, rr, now, l)
 		res, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{
@@ -113,6 +106,7 @@ func TestRecordHandler_History(tt *testing.T) {
 		assert.Equal(t, "theData1", res.Msg.Records[0].Data)
 		assert.Equal(t, int64(1122), res.Msg.Records[0].CreatedAt)
 		assert.Equal(t, int64(0), res.Msg.Records[0].UpdatedAt)
+		assert.Equal(t, int64(0), res.Msg.Records[0].TouchedAt)
 
 		assert.Equal(t, "theRecord2", res.Msg.Records[1].Id)
 		assert.Equal(t, uint64(222), res.Msg.Records[1].Rev)
@@ -120,5 +114,6 @@ func TestRecordHandler_History(tt *testing.T) {
 		assert.Equal(t, "theData2", res.Msg.Records[1].Data)
 		assert.Equal(t, int64(2222), res.Msg.Records[1].CreatedAt)
 		assert.Equal(t, int64(0), res.Msg.Records[1].UpdatedAt)
+		assert.Equal(t, int64(0), res.Msg.Records[1].TouchedAt)
 	})
 }
