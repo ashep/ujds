@@ -397,6 +397,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.5 (2024-03-30)
+
+The `filter` request field added to `IndexService/List` method.
+
 ### 0.4 (2024-03-09)
 
 - `RecordService/Push`:
