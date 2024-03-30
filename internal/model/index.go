@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+type IndexFilter struct {
+	Names []string
+}
+
 type Index struct {
 	ID        uint64
 	Name      string

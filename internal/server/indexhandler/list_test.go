@@ -11,6 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/model"
@@ -20,16 +21,16 @@ import (
 
 func TestIndexHandler_List(tt *testing.T) {
 	tt.Run("RepoError", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.ListFunc = func(ctx context.Context) ([]model.Index, error) {
-			return nil, errors.New("theRepoListError")
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("List", mock.Anything).
+			Return([]model.Index(nil), errors.New("theRepoListError"))
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
@@ -37,13 +38,14 @@ func TestIndexHandler_List(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.ListFunc = func(ctx context.Context) ([]model.Index, error) {
-			return []model.Index{
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("List", mock.Anything).
+			Return([]model.Index{
 				{
 					ID:        123,
 					Name:      "theIndex1",
@@ -60,10 +62,9 @@ func TestIndexHandler_List(tt *testing.T) {
 					CreatedAt: time.Unix(432, 0),
 					UpdatedAt: time.Unix(543, 0),
 				},
-			}, nil
-		}
+			}, nil)
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		res, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{}))
 
 		require.NoError(t, err)
@@ -75,5 +76,47 @@ func TestIndexHandler_List(tt *testing.T) {
 
 		assert.Equal(t, "theIndex2", res.Msg.Indices[1].Name)
 		assert.Equal(t, "theTitle2", res.Msg.Indices[1].Title)
+	})
+
+	tt.Run("OkWithFilter", func(t *testing.T) {
+		now := func() time.Time { return time.Unix(123456789, 0) }
+		lb := &strings.Builder{}
+		l := zerolog.New(lb)
+
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("List", mock.Anything).
+			Return([]model.Index{
+				{
+					ID:        123,
+					Name:      "theIndex1Foo",
+					Title:     sql.NullString{String: "theTitle1", Valid: true},
+					Schema:    []byte("theSchema1"),
+					CreatedAt: time.Unix(234, 0),
+					UpdatedAt: time.Unix(345, 0),
+				},
+				{
+					ID:        321,
+					Name:      "theIndex2Bar",
+					Title:     sql.NullString{String: "theTitle2", Valid: true},
+					Schema:    []byte("theSchema2"),
+					CreatedAt: time.Unix(432, 0),
+					UpdatedAt: time.Unix(543, 0),
+				},
+			}, nil)
+
+		h := indexhandler.New(rm, now, l)
+		res, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{
+			Filter: &proto.ListRequestFilter{
+				Names: []string{"theIndex2*"},
+			},
+		}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Indices, 1)
+		assert.Empty(t, lb.String())
+
+		assert.Equal(t, "theIndex2Bar", res.Msg.Indices[0].Name)
+		assert.Equal(t, "theTitle2", res.Msg.Indices[0].Title)
 	})
 }

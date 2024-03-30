@@ -129,6 +129,9 @@ Response example:
 
 Returns existing indices list.
 
+- Request fields:
+    - *optional* **object** `filter`: filter.
+      - *optional* **[]string** `names`: index name patterns. Allowed wildcard symbols: `*`.
 - Response fields:
     - **[]object** `indices`
         - **string** `name`: index name.
@@ -141,7 +144,7 @@ curl --request POST \
   --url https://localhost:9000/ujds.index.v1.IndexService/List \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
-  --data '{}'
+  --data '{"filter":{"names": ["book*", "recip*", "cartoons"]}}'
 ```
 
 Response example:
@@ -393,6 +396,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog
+
+### 0.5 (2024-03-30)
+
+The `filter` request field added to `IndexService/List` method.
 
 ### 0.4 (2024-03-09)
 

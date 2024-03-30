@@ -90,7 +90,6 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-
 			Records: []*recordproto.PushRequest_Record{
 				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
 				{Index: "theIndex", Id: "theRecord", Data: `{"foo2":"bar2"}`},
@@ -130,7 +129,6 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-
 			Records: []*recordproto.PushRequest_Record{
 				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
 				{Index: "theIndex", Id: "theRecord", Data: `{"foo2":"bar2"}`},
@@ -180,7 +178,6 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-
 			Records: []*recordproto.PushRequest_Record{
 				{Index: "theIndex", Id: "theRecord", Data: `{"foo1":"bar1"}`},
 			},

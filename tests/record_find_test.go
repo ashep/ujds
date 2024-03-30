@@ -215,7 +215,6 @@ func TestRecord_Find(tt *testing.T) {
 		time.Sleep(time.Second * 2)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
-
 			Records: []*recordproto.PushRequest_Record{
 				{Index: "theIndex", Id: "theRecord0", Data: `{"foo00":"bar00"}`},
 				{Index: "theIndex", Id: "theRecord5", Data: `{"foo55":"bar55"}`},

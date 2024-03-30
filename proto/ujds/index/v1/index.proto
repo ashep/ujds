@@ -2,7 +2,12 @@ syntax = "proto3";
 package ujds.index.v1;
 option go_package = "github.com/ashep/ujds/sdk/proto/ujds/index/v1";
 
+message ListRequestFilter {
+  repeated string names = 1;
+}
+
 message ListRequest {
+  ListRequestFilter filter = 1;
 }
 
 message ListResponse {

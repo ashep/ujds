@@ -2,8 +2,6 @@ on: push
 jobs:
   lint:
     uses: ashep/ci/.github/workflows/go-lint.yaml@v1
-    with:
-      govulncheck_enabled: false # temporary due to a bug https://github.com/golang/go/issues/66139
 
   test:
     needs:
