@@ -26,6 +26,7 @@ func (h *Handler) List(
 	}
 
 	respData := make([]*proto.ListResponse_Index, 0)
+
 	for _, idx := range indices {
 		if h.filterIndexName(patterns, idx.Name) {
 			respData = append(respData, &proto.ListResponse_Index{Name: idx.Name, Title: idx.Title.String})
@@ -48,6 +49,7 @@ func (h *Handler) makeIndexNameFilter(reqFilter *proto.ListRequestFilter) ([]*re
 	}
 
 	patterns := make([]*regexp.Regexp, len(names))
+
 	for i, pat := range names {
 		pat = strings.ReplaceAll(pat, ".", "\\.")
 		pat = strings.ReplaceAll(pat, "*", ".*")
@@ -56,6 +58,7 @@ func (h *Handler) makeIndexNameFilter(reqFilter *proto.ListRequestFilter) ([]*re
 		if err != nil {
 			return nil, fmt.Errorf("invalid index name pattern: %w", err)
 		}
+
 		patterns[i] = re
 	}
 

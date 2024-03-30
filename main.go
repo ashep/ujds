@@ -10,5 +10,5 @@ import (
 )
 
 func main() {
-	apprun.Run("ujds", app.New, app.Config{})
+	apprun.Run(app.New, app.Config{})
 }

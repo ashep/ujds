@@ -1,18 +1,18 @@
 module github.com/ashep/ujds
 
-go 1.21.1
+go 1.22.1
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.0
-	github.com/ashep/go-apperrors v0.0.0-20230816161553-60f80ce2bcb4
-	github.com/ashep/go-apprun v0.0.0-20230903162903-744b0e2914a6
-	github.com/bufbuild/connect-go v1.5.2
-	github.com/golang-migrate/migrate/v4 v4.15.2
-	github.com/lib/pq v1.10.7
-	github.com/rs/zerolog v1.30.0
-	github.com/stretchr/testify v1.8.4
+	github.com/DATA-DOG/go-sqlmock v1.5.2
+	github.com/ashep/go-apperrors v0.0.0-20230816175101-fd34c483d2f1
+	github.com/ashep/go-apprun v0.0.0-20240324122456-5aab7df448d6
+	github.com/bufbuild/connect-go v1.10.0
+	github.com/golang-migrate/migrate/v4 v4.17.0
+	github.com/lib/pq v1.10.9
+	github.com/rs/zerolog v1.32.0
+	github.com/stretchr/testify v1.9.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	google.golang.org/protobuf v1.28.1
+	google.golang.org/protobuf v1.33.0
 )
 
 require (
@@ -22,12 +22,13 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
