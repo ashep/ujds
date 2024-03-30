@@ -2,14 +2,14 @@ package indexhandler
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 
 	"github.com/ashep/ujds/internal/model"
 )
-
-//go:generate moq -out mock_test.go -pkg indexhandler_test -skip-ensure . indexRepo
 
 type indexRepo interface {
 	Upsert(ctx context.Context, name, title, schema string) error
@@ -26,4 +26,11 @@ type Handler struct {
 
 func New(repo indexRepo, now func() time.Time, l zerolog.Logger) *Handler {
 	return &Handler{repo: repo, now: now, l: l}
+}
+
+func (h *Handler) newInternalError(req connect.AnyRequest, err error, msg string) error {
+	c := h.now().Unix()
+	h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg(msg)
+
+	return connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/ashep/ujds/internal/server/indexhandler"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
@@ -18,16 +19,16 @@ import (
 
 func TestIndexHandler_Push(tt *testing.T) {
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.UpsertFunc = func(ctx context.Context, name, title, schema string) error {
-			return apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"}
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
@@ -38,16 +39,16 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("RepoInternalError", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.UpsertFunc = func(ctx context.Context, name, title, schema string) error {
-			return errors.New("theRepoError")
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("theRepoError"))
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
@@ -58,16 +59,16 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("IndexNotFound", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.UpsertFunc = func(ctx context.Context, name, title, schema string) error {
-			return apperrors.NotFoundError{Subj: "theNotFoundSubj"}
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+			Return(apperrors.NotFoundError{Subj: "theNotFoundSubj"})
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
@@ -78,20 +79,19 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.UpsertFunc = func(ctx context.Context, name, title, schema string) error {
-			assert.Equal(t, "theIndexName", name)
-			assert.Equal(t, `{"foo":"bar"}`, schema)
-			return nil
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Upsert", mock.Anything, "theIndexName", "", `{"foo":"bar"}`).
+			Return(nil)
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
+			Title:  "",
 			Schema: `{"foo":"bar"}`,
 		}))
 
@@ -100,22 +100,20 @@ func TestIndexHandler_Push(tt *testing.T) {
 	})
 
 	tt.Run("OkWithTitle", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.UpsertFunc = func(ctx context.Context, name, title, schema string) error {
-			assert.Equal(t, "theIndexName", name)
-			assert.Equal(t, `{"foo":"bar"}`, schema)
-			return nil
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Upsert", mock.Anything, "theIndexName", "theIndexTitle", `{"foo":"bar"}`).
+			Return(nil)
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:   "theIndexName",
-			Schema: `{"foo":"bar"}`,
 			Title:  "theIndexTitle",
+			Schema: `{"foo":"bar"}`,
 		}))
 
 		assert.NoError(t, err)

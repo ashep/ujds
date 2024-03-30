@@ -50,4 +50,27 @@ func TestIndex_List(tt *testing.T) {
 		assert.Equal(t, "theIndexName2", res.Msg.Indices[1].Name)
 		assert.Equal(t, "theIndexTitle2", res.Msg.Indices[1].Title)
 	})
+
+	tt.Run("OkWithFilter", func(t *testing.T) {
+		ta := testapp.New(t)
+
+		defer ta.Start(t)()
+		defer ta.AssertNoLogErrors(t)
+
+		ta.DB().InsertIndex(t, "theIndexName1Foo", "theIndexTitle1", `{}`)
+		ta.DB().InsertIndex(t, "theIndexName2Bar", "theIndexTitle2", `{}`)
+
+		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{
+			Filter: &indexproto.ListRequestFilter{
+				Names: []string{"theIndexName2*"},
+			},
+		}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Indices, 1)
+
+		assert.Equal(t, "theIndexName2Bar", res.Msg.Indices[0].Name)
+		assert.Equal(t, "theIndexTitle2", res.Msg.Indices[0].Title)
+	})
 }

@@ -3,7 +3,6 @@ package indexhandler
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/ashep/go-apperrors"
 	"github.com/bufbuild/connect-go"
@@ -23,10 +22,7 @@ func (h *Handler) Get(
 	case errors.As(err, &apperrors.NotFoundError{}):
 		return nil, connect.NewError(connect.CodeNotFound, err)
 	case err != nil:
-		c := h.now().Unix()
-		h.l.Error().Err(err).Str("proc", req.Spec().Procedure).Int64("err_code", c).Msg("index repo get failed")
-
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
+		return nil, h.newInternalError(req, err, "index repo get failed")
 	}
 
 	return connect.NewResponse(&proto.GetResponse{

@@ -11,6 +11,7 @@ import (
 	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/server/indexhandler"
@@ -19,16 +20,16 @@ import (
 
 func TestIndexHandler_Clear(tt *testing.T) {
 	tt.Run("RepoInvalidArgError", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.ClearFunc = func(ctx context.Context, name string) error {
-			return apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"}
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Clear", mock.Anything, mock.Anything).
+			Return(apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))
@@ -38,16 +39,16 @@ func TestIndexHandler_Clear(tt *testing.T) {
 	})
 
 	tt.Run("RepoInternalError", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.ClearFunc = func(ctx context.Context, name string) error {
-			return errors.New("theRepoError")
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Clear", mock.Anything, mock.Anything).
+			Return(errors.New("theRepoError"))
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))
@@ -57,16 +58,16 @@ func TestIndexHandler_Clear(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ir := &indexRepoMock{}
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
 
-		ir.ClearFunc = func(ctx context.Context, name string) error {
-			return nil
-		}
+		rm := &repoMock{}
+		defer rm.AssertExpectations(t)
+		rm.On("Clear", mock.Anything, mock.Anything).
+			Return(nil)
 
-		h := indexhandler.New(ir, now, l)
+		h := indexhandler.New(rm, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))
