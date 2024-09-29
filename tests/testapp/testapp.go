@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ashep/go-apprun/apprun"
 	_ "github.com/lib/pq" // it's ok in tests
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -40,15 +41,24 @@ func New(t *testing.T) *TestApp {
 	lb := &strings.Builder{}
 	l := zerolog.New(lb)
 
-	a := app.New(app.Config{
-		DB: app.Database{
-			DSN: "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable",
+	cfg := apprun.Config[app.Config]{
+		AppName:   "ujds",
+		AppVer:    "test",
+		LogLevel:  zerolog.DebugLevel,
+		LogWriter: l,
+		App: app.Config{
+			DB: app.Database{
+				DSN: "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable",
+			},
+			Server: server.Config{
+				Address:   ":" + strconv.Itoa(tcpPort),
+				AuthToken: "theAuthToken",
+			},
 		},
-		Server: server.Config{
-			Address:   ":" + strconv.Itoa(tcpPort),
-			AuthToken: "theAuthToken",
-		},
-	}, l)
+	}
+
+	a, err := app.New(cfg)
+	require.NoError(t, err)
 
 	return &TestApp{
 		app: a,
@@ -73,7 +83,7 @@ func (a *TestApp) Start(t *testing.T) func() {
 			}
 		}
 
-		require.NoError(t, a.app.Run(ctx, args))
+		require.NoError(t, a.app.Run(ctx))
 		close(done)
 	}()
 

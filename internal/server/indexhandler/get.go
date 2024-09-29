@@ -29,7 +29,7 @@ func (h *Handler) Get(
 		Name:      index.Name,
 		Title:     index.Title.String,
 		Schema:    string(index.Schema),
-		CreatedAt: uint64(index.CreatedAt.Unix()),
-		UpdatedAt: uint64(index.UpdatedAt.Unix()),
+		CreatedAt: uint64(index.CreatedAt.Unix()), //nolint:gosec // ok
+		UpdatedAt: uint64(index.UpdatedAt.Unix()), //nolint:gosec // ok
 	}), nil
 }
