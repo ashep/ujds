@@ -36,9 +36,11 @@ message GetResponse {
 message FindRequest {
   string index = 1;
   string search = 2;
-  int64 since = 3;
-  uint32 limit = 4;
-  uint64 cursor = 5;
+  int64 created_after = 3;
+  int64 updated_after = 4;
+  int64 touched_after = 5;
+  uint32 limit = 6;
+  uint64 cursor = 7;
 }
 
 message FindResponse {
