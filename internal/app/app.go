@@ -50,7 +50,7 @@ func New(cfg apprun.Config[Config]) (*App, error) {
 	}, nil
 }
 
-func (a *App) Run(ctx context.Context) error {
+func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
 	args := []string{os.Args[0]}
 
 	for _, v := range os.Args[1:] {
