@@ -4,13 +4,11 @@ package tests
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ashep/ujds/sdk/client"
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
@@ -19,10 +17,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
+		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
@@ -31,10 +29,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("EmptyIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name: "",
 		}))
@@ -45,10 +43,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("InvalidIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name: "the n@me",
 		}))
@@ -59,10 +57,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("InvalidSchema", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{]",
@@ -74,10 +72,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle",
@@ -85,7 +83,7 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndices(t)
+		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
@@ -98,10 +96,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("OkEmptyTitle", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Schema: "{}",
@@ -109,7 +107,7 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndices(t)
+		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
@@ -122,10 +120,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("OkEmptySchema", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle",
@@ -133,7 +131,7 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndices(t)
+		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
@@ -146,10 +144,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("OkPushTheSame", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle",
@@ -164,7 +162,7 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndices(t)
+		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
@@ -177,10 +175,10 @@ func TestIndex_Push(tt *testing.T) {
 	tt.Run("OkPushUpdate", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle1",
@@ -195,7 +193,7 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		idx := ta.DB().GetIndices(t)
+		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)

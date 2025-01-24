@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
-	"github.com/bufbuild/connect-go"
 
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )

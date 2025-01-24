@@ -2,153 +2,148 @@ package testapp
 
 import (
 	"context"
+	"fmt"
 	"net"
-	"os"
-	"strconv"
-	"strings"
+	"net/http"
 	"testing"
 	"time"
 
-	"github.com/ashep/go-apprun/apprun"
-	_ "github.com/lib/pq" // it's ok in tests
-	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-
+	"github.com/ashep/go-app/buflogwriter"
+	"github.com/ashep/go-app/runner"
 	"github.com/ashep/ujds/internal/app"
 	"github.com/ashep/ujds/internal/server"
+	"github.com/ashep/ujds/sdk/client"
+	_ "github.com/lib/pq" // it's ok in tests
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
-	tcpPort     = 9000
 	checkPeriod = time.Millisecond * 100
 	checkCount  = 50
+	dbDSN       = "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"
 )
 
 type TestApp struct {
-	app *app.App
-	db  *TestDB
-	l   zerolog.Logger
-	lb  *strings.Builder
+	t      *testing.T
+	runner *runner.Runner[*app.App, app.Config]
+	stop   context.CancelFunc // shut down the app
+	done   chan struct{}      // closed when the app stopped
+	db     *TestDB
+	l      *buflogwriter.BufLogWriter
 }
 
 func New(t *testing.T) *TestApp {
 	t.Helper()
 
-	db := newDB(t)
-	db.Reset(t)
+	db := newDB(t, dbDSN)
 
-	lb := &strings.Builder{}
-	l := zerolog.New(lb)
+	// Get free port
+	lis, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(fmt.Errorf("listen: %w", err))
+	}
 
-	cfg := apprun.Config[app.Config]{
-		AppName:   "ujds",
-		AppVer:    "test",
-		LogLevel:  zerolog.DebugLevel,
-		LogWriter: l,
-		App: app.Config{
-			DB: app.Database{
-				DSN: "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable",
-			},
-			Server: server.Config{
-				Address:   ":" + strconv.Itoa(tcpPort),
-				AuthToken: "theAuthToken",
-			},
+	addr := lis.Addr().String()
+	require.NoError(t, lis.Close())
+
+	cfg := app.Config{
+		DB: app.Database{
+			DSN: dbDSN,
+		},
+		Server: server.Config{
+			Address:   addr,
+			AuthToken: "theAuthToken",
 		},
 	}
 
-	a, err := app.New(cfg)
-	require.NoError(t, err)
-
-	return &TestApp{
-		app: a,
-		db:  db,
-		l:   l,
-		lb:  lb,
+	ta := &TestApp{
+		t:    t,
+		db:   db,
+		done: make(chan struct{}),
+		l:    buflogwriter.New(),
 	}
+
+	ta.runner = runner.New(app.New, cfg).
+		WithLogWriter(ta.l).
+		WithDefaultHTPServer().
+		WithStopper(func(cf context.CancelFunc) { ta.stop = cf })
+
+	return ta
 }
 
-func (a *TestApp) Start(t *testing.T) func() {
-	t.Helper()
+func (ta *TestApp) Start() *TestApp {
+	ta.db.Reset()
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	done := make(chan struct{})
 	go func() {
-		args := []string{os.Args[0]}
-
-		for _, v := range os.Args[1:] {
-			if !strings.HasPrefix(v, "-test.") {
-				args = append(args, v)
-			}
-		}
-
-		require.NoError(t, a.app.Run(ctx))
-		close(done)
+		ta.runner.Run()
+		close(ta.done)
 	}()
 
+	netAddr, err := net.ResolveTCPAddr("tcp", ta.runner.AppConfig().Server.Address)
+	require.NoError(ta.t, err)
+
+	tk := time.NewTicker(checkPeriod)
+	defer tk.Stop()
+
 	started := false
+	for i := 0; i < checkCount && !started; i++ {
+		<-tk.C
 
-	addr := net.TCPAddr{
-		IP:   net.ParseIP("127.0.0.1"),
-		Port: tcpPort,
-	}
-
-	tk1 := time.NewTicker(checkPeriod)
-	defer tk1.Stop()
-
-	for i := 0; i < checkCount; i++ {
-		<-tk1.C
-
-		if _, err := net.DialTCP("tcp", nil, &addr); err != nil {
+		if _, err := net.DialTCP("tcp", nil, netAddr); err != nil {
 			continue
 		}
 
 		started = true
-
-		break
 	}
 
 	if !started {
-		t.Fatalf("app has not started within %s", checkPeriod*checkCount)
+		ta.t.Fatalf("app has not started within %s", checkPeriod*checkCount)
 	}
 
-	return func() {
-		cancel()
-		<-done
+	return ta
+}
 
-		tk2 := time.NewTicker(checkPeriod)
-		defer tk2.Stop()
+func (ta *TestApp) Stop() {
+	ta.stop()
 
-		defer a.db.db.Close()
+	tk := time.NewTicker(checkPeriod)
+	defer tk.Stop()
 
-		for i := 0; i < checkCount; i++ {
-			select {
-			case <-done:
-				return
-			case <-tk2.C:
-				continue
-			}
+	defer ta.db.d.Close()
+
+	for i := 0; i < checkCount; i++ {
+		select {
+		case <-ta.done:
+			return
+		case <-tk.C:
+			continue
 		}
-
-		t.Fatalf("app has not stopped within %s", checkPeriod*checkCount)
 	}
+
+	ta.t.Fatalf("app has not stopped within %s", checkPeriod*checkCount)
 }
 
-func (a *TestApp) Logs() string {
-	return a.lb.String()
+func (ta *TestApp) Client(authToken string) *client.Client {
+	if authToken == "" {
+		authToken = ta.runner.AppConfig().Server.AuthToken
+	}
+
+	return client.New("http://"+ta.runner.AppConfig().Server.Address, authToken, http.DefaultClient)
 }
 
-func (a *TestApp) AssertNoLogErrors(t *testing.T) {
-	t.Helper()
-	assert.NotContains(t, a.Logs(), `"level":"error"`)
+func (ta *TestApp) Logs() string {
+	return ta.l.String()
 }
 
-func (a *TestApp) AssertNoLogWarns(t *testing.T) {
-	t.Helper()
-	assert.NotContains(t, a.Logs(), `"level":"warn"`)
+func (ta *TestApp) AssertNoLogErrors() {
+	assert.NotContains(ta.t, ta.Logs(), `"level":"error"`)
 }
 
-func (a *TestApp) DB() *TestDB {
-	return a.db
+func (ta *TestApp) AssertNoLogWarns() {
+	assert.NotContains(ta.t, ta.Logs(), `"level":"warn"`)
+}
+
+func (ta *TestApp) DB() *TestDB {
+	return ta.db
 }

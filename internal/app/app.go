@@ -11,8 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ashep/go-apprun/apprun"
-	"github.com/ashep/go-apprun/httplogwriter"
+	"github.com/ashep/go-app/runner"
 	"github.com/rs/zerolog"
 
 	"github.com/ashep/ujds/internal/indexrepository"
@@ -29,24 +28,10 @@ type App struct {
 	l   zerolog.Logger
 }
 
-func New(cfg apprun.Config[Config]) (*App, error) {
-	var l zerolog.Logger
-
-	if cfg.App.LogServer.URL != "" {
-		lw, err := httplogwriter.New(cfg.App.LogServer.URL, cfg.App.LogServer.Username, cfg.App.LogServer.Password, nil)
-		if err != nil {
-			return nil, fmt.Errorf("init http log writer: %w", err)
-		}
-
-		l = zerolog.New(zerolog.MultiLevelWriter(cfg.LogWriter, lw)).Level(cfg.LogLevel).
-			With().Str("app", cfg.AppName).Str("app_v", cfg.AppVer).Logger()
-	} else {
-		l = zerolog.New(cfg.LogWriter).With().Logger()
-	}
-
+func New(cfg Config, rt *runner.Runtime) (*App, error) {
 	return &App{
-		cfg: cfg.App,
-		l:   l,
+		cfg: cfg,
+		l:   rt.Logger,
 	}, nil
 }
 

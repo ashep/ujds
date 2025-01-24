@@ -4,14 +4,12 @@ package tests
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/sdk/client"
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	"github.com/ashep/ujds/tests/testapp"
 )
@@ -20,10 +18,10 @@ func TestIndex_List(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
+		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
@@ -32,13 +30,13 @@ func TestIndex_List(tt *testing.T) {
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		ta.DB().InsertIndex(t, "theIndexName1", "theIndexTitle1", `{}`)
-		ta.DB().InsertIndex(t, "theIndexName2", "theIndexTitle2", `{}`)
+		ta.DB().InsertIndex("theIndexName1", "theIndexTitle1", `{}`)
+		ta.DB().InsertIndex("theIndexName2", "theIndexTitle2", `{}`)
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
 
 		require.NoError(t, err)
@@ -54,13 +52,13 @@ func TestIndex_List(tt *testing.T) {
 	tt.Run("OkWithFilter", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		ta.DB().InsertIndex(t, "theIndexName1Foo", "theIndexTitle1", `{}`)
-		ta.DB().InsertIndex(t, "theIndexName2Bar", "theIndexTitle2", `{}`)
+		ta.DB().InsertIndex("theIndexName1Foo", "theIndexTitle1", `{}`)
+		ta.DB().InsertIndex("theIndexName2Bar", "theIndexTitle2", `{}`)
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{
 			Filter: &indexproto.ListRequestFilter{
 				Names: []string{"theIndexName2*"},

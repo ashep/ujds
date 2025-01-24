@@ -14,7 +14,7 @@ type RecordUpdate struct {
 }
 
 func (rec *RecordUpdate) Checksum() []byte {
-	indexIDBytes := make([]byte, 8) //nolint:gomnd // it's ok
+	indexIDBytes := make([]byte, 8) //nolint:mnd // it's ok
 	binary.LittleEndian.PutUint64(indexIDBytes, rec.IndexID)
 
 	sumSrc := append([]byte(rec.Data), indexIDBytes...)

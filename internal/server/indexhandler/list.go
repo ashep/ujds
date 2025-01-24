@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
