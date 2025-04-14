@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/rs/zerolog"
 
 	indexconnect "github.com/ashep/ujds/sdk/proto/ujds/index/v1/v1connect"

@@ -39,7 +39,7 @@ func (r *Repository) Find(
 		q += pq.String("r.data", 1)
 		q += fmt.Sprintf(
 			` AND i.name=$%d AND r.updated_at >= $%d AND l.id > $%d ORDER BY l.id LIMIT $%d`,
-			ql+1, ql+2, ql+3, ql+4, //nolint:gomnd // ok
+			ql+1, ql+2, ql+3, ql+4, //nolint:mnd // ok
 		)
 
 		qArgs = append(qArgs, index, since, cursor, limit+1)

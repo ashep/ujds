@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
-	"github.com/bufbuild/connect-go"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
-	"github.com/bufbuild/connect-go"
 
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )

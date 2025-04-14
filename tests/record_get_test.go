@@ -4,14 +4,12 @@ package tests
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/sdk/client"
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 	"github.com/ashep/ujds/tests/testapp"
@@ -21,10 +19,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
+		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
@@ -33,10 +31,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("EmptyIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "",
 		}))
@@ -47,10 +45,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("EmptyRecordId", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "",
@@ -62,10 +60,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("IndexNotExists", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "theRecord",
@@ -77,10 +75,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("RecordNotExists", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
@@ -96,10 +94,10 @@ func TestRecord_Get(tt *testing.T) {
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)

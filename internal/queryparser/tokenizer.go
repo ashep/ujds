@@ -141,7 +141,7 @@ func parseLiteral(s string, pos int) (token, error) {
 		switch {
 		case s[pos] == '"':
 			quotesCnt++
-			if quotesCnt == 2 { //nolint:gomnd // ok
+			if quotesCnt == 2 { //nolint:mnd // ok
 				stop = true
 			}
 		case s[pos] >= 'A' && s[pos] <= 'Z', s[pos] >= 'a' && s[pos] <= 'z', s[pos] == '_':

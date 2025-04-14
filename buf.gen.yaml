@@ -1,8 +1,8 @@
-version: v1
+version: v2
 plugins:
-  - name: go
-    out: sdk
+  - local: protoc-gen-go
+    out: sdk/proto
     opt: paths=source_relative
-  - name: connect-go
-    out: sdk
+  - local: protoc-gen-connect-go
+    out: sdk/proto
     opt: paths=source_relative

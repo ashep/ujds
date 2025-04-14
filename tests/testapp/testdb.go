@@ -40,109 +40,103 @@ type Record struct {
 }
 
 type TestDB struct {
-	db *sql.DB
+	t *testing.T
+	d *sql.DB
 }
 
-func newDB(t *testing.T) *TestDB {
+func newDB(t *testing.T, dsn string) *TestDB {
 	t.Helper()
 
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable")
+	db, err := sql.Open("postgres", dsn)
 
 	require.NoError(t, err)
 	require.NoError(t, db.Ping())
 
-	return &TestDB{db: db}
+	return &TestDB{
+		t: t,
+		d: db,
+	}
 }
 
-func (d *TestDB) Reset(t *testing.T) {
-	t.Helper()
+func (d *TestDB) Reset() *TestDB {
+	require.NoError(d.t, migration.Down(d.d))
+	require.NoError(d.t, migration.Up(d.d))
 
-	require.NoError(t, migration.Down(d.db))
-	require.NoError(t, migration.Up(d.db))
+	return d
 }
 
-func (d *TestDB) GetIndex(t *testing.T, name string) Index {
-	t.Helper()
-
-	row := d.db.QueryRow(`SELECT id, name, title, schema, created_at, updated_at FROM index WHERE name=$1`, name)
-	require.NoError(t, row.Err())
+func (d *TestDB) GetIndex(name string) Index {
+	row := d.d.QueryRow(`SELECT id, name, title, schema, created_at, updated_at FROM index WHERE name=$1`, name)
+	require.NoError(d.t, row.Err())
 
 	idx := Index{}
-	require.NoError(t, row.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
+	require.NoError(d.t, row.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
 
 	return idx
 }
 
-func (d *TestDB) GetIndices(t *testing.T) []Index {
-	t.Helper()
-
-	rows, err := d.db.Query(`SELECT id, name, title, schema, created_at, updated_at FROM index`)
-	require.NoError(t, err)
+func (d *TestDB) GetIndices() []Index {
+	rows, err := d.d.Query(`SELECT id, name, title, schema, created_at, updated_at FROM index`)
+	require.NoError(d.t, err)
 
 	res := make([]Index, 0)
 
 	for rows.Next() {
 		idx := Index{}
-		require.NoError(t, rows.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
+		require.NoError(d.t, rows.Scan(&idx.ID, &idx.Name, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt))
 		res = append(res, idx)
 	}
 
-	require.NoError(t, rows.Err())
-	require.NoError(t, rows.Close()) //nolint:sqlclosecheck // this is testing code
+	require.NoError(d.t, rows.Err())
+	require.NoError(d.t, rows.Close()) //nolint:sqlclosecheck // this is testing code
 
 	return res
 }
 
-func (d *TestDB) InsertIndex(t *testing.T, name, title, schema string) {
-	t.Helper()
-
+func (d *TestDB) InsertIndex(name, title, schema string) {
 	sqlTitle := sql.NullString{
 		String: title,
 		Valid:  title != "",
 	}
 
-	_, err := d.db.Exec("INSERT INTO index (name, title, schema) VALUES ($1, $2, $3)", name, sqlTitle, schema)
-	require.NoError(t, err)
+	_, err := d.d.Exec("INSERT INTO index (name, title, schema) VALUES ($1, $2, $3)", name, sqlTitle, schema)
+	require.NoError(d.t, err)
 }
 
-func (d *TestDB) GetRecordLogs(t *testing.T, index string) []RecordLog {
-	t.Helper()
-
-	rows, err := d.db.Query(`SELECT id, index_id, record_id, data, created_at FROM record_log
+func (d *TestDB) GetRecordLogs(index string) []RecordLog {
+	rows, err := d.d.Query(`SELECT id, index_id, record_id, data, created_at FROM record_log
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, index)
-	require.NoError(t, err)
+	require.NoError(d.t, err)
 
 	res := make([]RecordLog, 0)
 
 	for rows.Next() {
 		rec := RecordLog{}
-		require.NoError(t, rows.Scan(&rec.ID, &rec.IndexID, &rec.RecordID, &rec.Data, &rec.CreatedAt))
+		require.NoError(d.t, rows.Scan(&rec.ID, &rec.IndexID, &rec.RecordID, &rec.Data, &rec.CreatedAt))
 		res = append(res, rec)
 	}
 
-	require.NoError(t, rows.Err())
-	require.NoError(t, rows.Close()) //nolint:sqlclosecheck // this is testing code
+	require.NoError(d.t, rows.Err())
+	require.NoError(d.t, rows.Close()) //nolint:sqlclosecheck // this is testing code
 
 	return res
 }
 
-func (d *TestDB) GetRecords(t *testing.T, index string) []Record {
-	t.Helper()
-
-	rows, err := d.db.Query(`SELECT id, index_id, log_id, checksum, data, created_at, updated_at, touched_at FROM record
+func (d *TestDB) GetRecords(index string) []Record {
+	rows, err := d.d.Query(`SELECT id, index_id, log_id, checksum, data, created_at, updated_at, touched_at FROM record
 WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`, index)
-	require.NoError(t, err)
+	require.NoError(d.t, err)
 
 	res := make([]Record, 0)
 
 	for rows.Next() {
 		rec := Record{}
-		require.NoError(t, rows.Scan(&rec.ID, &rec.IndexID, &rec.LogID, &rec.Checksum, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt, &rec.TouchedAt))
+		require.NoError(d.t, rows.Scan(&rec.ID, &rec.IndexID, &rec.LogID, &rec.Checksum, &rec.Data, &rec.CreatedAt, &rec.UpdatedAt, &rec.TouchedAt))
 		res = append(res, rec)
 	}
 
-	require.NoError(t, rows.Err())
-	require.NoError(t, rows.Close()) //nolint:sqlclosecheck // this is testing code
+	require.NoError(d.t, rows.Err())
+	require.NoError(d.t, rows.Close()) //nolint:sqlclosecheck // this is testing code
 
 	return res
 }

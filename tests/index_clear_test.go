@@ -4,13 +4,11 @@ package tests
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ashep/ujds/sdk/client"
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 	"github.com/ashep/ujds/tests/testapp"
@@ -20,10 +18,10 @@ func TestIndex_Clear(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
+		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
@@ -32,10 +30,10 @@ func TestIndex_Clear(tt *testing.T) {
 	tt.Run("EmptyIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
 			Name: "",
 		}))
@@ -46,10 +44,10 @@ func TestIndex_Clear(tt *testing.T) {
 	tt.Run("InvalidIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
 			Name: "the n@me",
 		}))
@@ -60,10 +58,10 @@ func TestIndex_Clear(tt *testing.T) {
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex1",
 			Schema: "",
@@ -88,10 +86,10 @@ func TestIndex_Clear(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		rcs := ta.DB().GetRecords(t, "theIndex1")
+		rcs := ta.DB().GetRecords("theIndex1")
 		assert.Len(t, rcs, 3)
 
-		rcs = ta.DB().GetRecords(t, "theIndex2")
+		rcs = ta.DB().GetRecords("theIndex2")
 		assert.Len(t, rcs, 3)
 
 		_, err = cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
@@ -99,10 +97,10 @@ func TestIndex_Clear(tt *testing.T) {
 		}))
 		assert.NoError(t, err)
 
-		rcs = ta.DB().GetRecords(t, "theIndex1")
+		rcs = ta.DB().GetRecords("theIndex1")
 		assert.Len(t, rcs, 0)
 
-		rcs = ta.DB().GetRecords(t, "theIndex2")
+		rcs = ta.DB().GetRecords("theIndex2")
 		assert.Len(t, rcs, 3)
 	})
 }

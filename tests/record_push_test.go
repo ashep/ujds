@@ -4,14 +4,12 @@ package tests
 
 import (
 	"context"
-	"net/http"
 	"testing"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/sdk/client"
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 	"github.com/ashep/ujds/tests/testapp"
@@ -21,10 +19,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "anInvalidAuthToken", &http.Client{})
+		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
@@ -33,10 +31,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("EmptyRecords", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
@@ -49,10 +47,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("EmptyIndexName", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -67,10 +65,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("IndexNotFound", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -85,10 +83,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("EmptyRecordID", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
@@ -108,10 +106,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("EmptyRecordData", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
@@ -132,10 +130,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("InvalidDataJSON", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
 		require.NoError(t, err)
@@ -156,10 +154,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("DataValidationFailed", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex",
@@ -183,10 +181,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("Ok", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex",
@@ -206,7 +204,7 @@ func TestRecord_Push(tt *testing.T) {
 
 		require.NoError(t, err)
 
-		rls := ta.DB().GetRecordLogs(t, "theIndex")
+		rls := ta.DB().GetRecordLogs("theIndex")
 		require.Len(t, rls, 1)
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
@@ -214,7 +212,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo": "bar"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
-		rcs := ta.DB().GetRecords(t, "theIndex")
+		rcs := ta.DB().GetRecords("theIndex")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
@@ -229,10 +227,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("OkUpdate", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex",
@@ -263,7 +261,7 @@ func TestRecord_Push(tt *testing.T) {
 		require.NoError(t, err)
 
 		// We must have 2 log records: the first one for the insert, the second one for the update
-		rls := ta.DB().GetRecordLogs(t, "theIndex")
+		rls := ta.DB().GetRecordLogs("theIndex")
 		require.Len(t, rls, 2)
 
 		// First log record
@@ -281,7 +279,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Greater(t, rls[1].CreatedAt, rls[0].CreatedAt)
 
 		// Actual record state
-		rcs := ta.DB().GetRecords(t, "theIndex")
+		rcs := ta.DB().GetRecords("theIndex")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
@@ -295,10 +293,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("OkUpdateWithSameData", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex",
@@ -330,7 +328,7 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 		require.NoError(t, err)
 
-		rls := ta.DB().GetRecordLogs(t, "theIndex")
+		rls := ta.DB().GetRecordLogs("theIndex")
 		require.Len(t, rls, 1) // only one log record despite two pushes
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
@@ -338,7 +336,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo": "bar"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
-		rcs := ta.DB().GetRecords(t, "theIndex")
+		rcs := ta.DB().GetRecords("theIndex")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
@@ -353,10 +351,10 @@ func TestRecord_Push(tt *testing.T) {
 	tt.Run("OkDifferentIndicesWithSameData", func(t *testing.T) {
 		ta := testapp.New(t)
 
-		defer ta.Start(t)()
-		defer ta.AssertNoLogErrors(t)
+		defer ta.Start().Stop()
+		defer ta.AssertNoLogErrors()
 
-		cli := client.New("http://localhost:9000", "theAuthToken", &http.Client{})
+		cli := ta.Client("")
 
 		// Create first index
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -394,7 +392,7 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 		require.NoError(t, err)
 
-		rls := ta.DB().GetRecordLogs(t, "theIndex1")
+		rls := ta.DB().GetRecordLogs("theIndex1")
 		require.Len(t, rls, 1)
 		assert.Equal(t, 1, rls[0].ID)
 		assert.Equal(t, 1, rls[0].IndexID)
@@ -402,7 +400,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo1": "bar1"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
-		rcs := ta.DB().GetRecords(t, "theIndex1")
+		rcs := ta.DB().GetRecords("theIndex1")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 1, rcs[0].IndexID)
@@ -410,7 +408,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo1": "bar1"}`, rcs[0].Data)
 		assert.Equal(t, []byte{0x0, 0xdb, 0x9a, 0xb1, 0xa1, 0xff, 0x7d, 0x9d, 0x7a, 0x93, 0xf1, 0xf7, 0x4f, 0xb9, 0x20, 0x7, 0x34, 0x5f, 0xa3, 0x85, 0x5c, 0xd6, 0x98, 0xcc, 0x9e, 0x35, 0x5d, 0x43, 0x93, 0x4e, 0x64, 0x90}, rcs[0].Checksum)
 
-		rls = ta.DB().GetRecordLogs(t, "theIndex2")
+		rls = ta.DB().GetRecordLogs("theIndex2")
 		require.Len(t, rls, 1)
 		assert.Equal(t, 2, rls[0].ID)
 		assert.Equal(t, 2, rls[0].IndexID)
@@ -418,7 +416,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, `{"foo2": "bar2"}`, rls[0].Data)
 		assert.NotZero(t, rls[0].CreatedAt)
 
-		rcs = ta.DB().GetRecords(t, "theIndex2")
+		rcs = ta.DB().GetRecords("theIndex2")
 		require.Len(t, rcs, 1)
 		assert.Equal(t, "theRecordID", rcs[0].ID)
 		assert.Equal(t, 2, rcs[0].IndexID)

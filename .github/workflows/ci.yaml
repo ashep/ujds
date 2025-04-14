@@ -4,12 +4,11 @@ jobs:
     uses: ashep/ci/.github/workflows/go-lint.yaml@v1
 
   test:
-    needs:
-      - lint
     uses: ashep/ci/.github/workflows/go-test.yaml@v1
 
   build:
     needs:
+      - lint
       - test
     uses: ashep/ci/.github/workflows/go-build.yaml@v1
     with:
