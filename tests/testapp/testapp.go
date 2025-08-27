@@ -110,7 +110,7 @@ func (ta *TestApp) Stop() {
 	tk := time.NewTicker(checkPeriod)
 	defer tk.Stop()
 
-	defer ta.db.d.Close()
+	defer ta.db.d.Close() // nolint:errcheck // it's ok in tests
 
 	for i := 0; i < checkCount; i++ {
 		select {
