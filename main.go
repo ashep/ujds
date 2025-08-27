@@ -7,11 +7,6 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var (
-	appName = "" //nolint:gochecknoglobals // set externally
-	appVer  = "" //nolint:gochecknoglobals // set externally
-)
-
 func main() {
 	runner.New(app.New, app.Config{}).
 		WithExtConfig().
