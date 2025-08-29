@@ -9,13 +9,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/model"
-	"github.com/ashep/ujds/internal/server/recordhandler"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 

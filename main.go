@@ -8,11 +8,10 @@ import (
 )
 
 func main() {
-	runner.New(app.New, app.Config{}).
-		WithExtConfig().
+	runner.New(app.New).
 		WithConsoleLogWriter().
-		WithDefaultHTTPLogWriter(false).
-		WithDefaultHTPServer().
-		WithMetricsHandler().
+		WithDefaultHTTPLogWriter().
+		WithDefaultHTTPServer().
+		WithDefaultMetricsHandler().
 		Run()
 }

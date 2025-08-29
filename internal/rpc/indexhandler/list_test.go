@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/ashep/ujds/internal/rpc/indexhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ashep/ujds/internal/model"
-	"github.com/ashep/ujds/internal/server/indexhandler"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
