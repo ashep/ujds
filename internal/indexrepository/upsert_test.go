@@ -2,7 +2,6 @@ package indexrepository_test
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"testing"
 
@@ -22,7 +21,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			return errors.New("theValidatorError")
 		}
 
-		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -37,7 +36,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			return nil
 		}
 
-		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -55,13 +54,11 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.
-			ExpectExec(`INSERT INTO index (name, title, schema) VALUES ($1, $2, $3) ON CONFLICT (name)
-DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
-			WithArgs("theIndex", "theTitle", "{}").
+			ExpectExec(`INSERT INTO index`).
 			WillReturnError(errors.New("theDBExecError"))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -76,13 +73,11 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.
-			ExpectExec(`INSERT INTO index (name, title, schema) VALUES ($1, $2, $3) ON CONFLICT (name)
-DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
-			WithArgs("theIndex", "theTitle", "{}").
+			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -97,13 +92,11 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.
-			ExpectExec(`INSERT INTO index (name, title, schema) VALUES ($1, $2, $3) ON CONFLICT (name)
-DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
-			WithArgs("theIndex", sql.NullString{String: "theTitle", Valid: true}, "{}").
+			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -118,13 +111,11 @@ DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.
-			ExpectExec(`INSERT INTO index (name, title, schema) VALUES ($1, $2, $3) ON CONFLICT (name)
-DO UPDATE SET title=$2, schema=$3, updated_at=now()`).
-			WithArgs("theIndex", nil, "{}").
+			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())

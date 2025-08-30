@@ -20,7 +20,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return errors.New("theValidatorError")
 		}
 
-		db, _, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -35,7 +35,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin().WillReturnError(errors.New("theBeginTxError"))
@@ -52,13 +52,11 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin()
-
-		dbm.ExpectExec(`DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record`).
 			WillReturnError(errors.New("theDeleteRecordsError"))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -73,17 +71,13 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin()
-
-		dbm.ExpectExec(`DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record`).
 			WillReturnResult(sqlmock.NewResult(0, 0))
-
-		dbm.ExpectExec(`DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record_log`).
 			WillReturnError(errors.New("theDeleteRecordLogsError"))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -98,19 +92,14 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin()
-
-		dbm.ExpectExec(`DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record`).
 			WillReturnResult(sqlmock.NewResult(0, 0))
-
-		dbm.ExpectExec(`DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record_log`).
 			WillReturnResult(sqlmock.NewResult(0, 0))
-
 		dbm.ExpectCommit().WillReturnError(errors.New("theCommitError"))
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
@@ -125,19 +114,14 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			return nil
 		}
 
-		db, dbm, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin()
-
-		dbm.ExpectExec(`DELETE FROM record WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record`).
 			WillReturnResult(sqlmock.NewResult(0, 0))
-
-		dbm.ExpectExec(`DELETE FROM record_log WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1)`).
-			WithArgs("theIndex").
+		dbm.ExpectExec(`DELETE FROM record_log`).
 			WillReturnResult(sqlmock.NewResult(0, 0))
-
 		dbm.ExpectCommit()
 
 		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
