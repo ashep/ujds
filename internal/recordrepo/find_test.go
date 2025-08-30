@@ -1,4 +1,4 @@
-package recordrepository_test
+package recordrepo_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/recordrepository"
+	"github.com/ashep/ujds/internal/recordrepo"
 )
 
 func TestRecordRepository_Find(tt *testing.T) {
@@ -29,7 +29,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
 		require.EqualError(t, err, "theIndexNameValidationError")
 	})
@@ -47,7 +47,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 		_, _, err = repo.Find(context.Background(), "theIndex", "foo bar baz", time.Unix(123, 0), 234, 345)
 		require.EqualError(t, err, "search query: operator expected at position 4: foo ")
 	})
@@ -68,7 +68,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnError(errors.New("theDbError"))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
 		assert.EqualError(t, err, "db query: theDbError")
@@ -94,7 +94,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(rows)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
 		assert.EqualError(t, err, "db rows iteration: theRowError")
@@ -116,7 +116,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		res, cur, err := repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
 		assert.NoError(t, err)

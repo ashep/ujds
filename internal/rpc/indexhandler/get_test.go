@@ -10,13 +10,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/ashep/ujds/internal/rpc/indexhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
@@ -29,7 +29,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
+			Return(indexrepo.Index{}, apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
@@ -48,7 +48,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, apperrors.NotFoundError{Subj: "theSubj"})
+			Return(indexrepo.Index{}, apperrors.NotFoundError{Subj: "theSubj"})
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
@@ -67,7 +67,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, errors.New("theRepoError"))
+			Return(indexrepo.Index{}, errors.New("theRepoError"))
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
@@ -86,7 +86,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("Get", mock.Anything, "theIndexName").
-			Return(model.Index{
+			Return(indexrepo.Index{
 				ID:        123,
 				Name:      "theIndexName",
 				Title:     sql.NullString{String: "theIndexTitle", Valid: true},

@@ -4,22 +4,22 @@ import (
 	"context"
 	"time"
 
+	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/rs/zerolog"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 const perPageMax = 500
 
 type indexRepo interface {
-	Get(ctx context.Context, name string) (model.Index, error)
+	Get(ctx context.Context, name string) (indexrepo.Index, error)
 }
 
 type recordRepo interface {
-	Push(ctx context.Context, records []model.RecordUpdate) error
-	Get(ctx context.Context, index string, id string) (model.Record, error)
-	Find(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
-	History(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]model.Record, uint64, error)
+	Push(ctx context.Context, records []recordrepo.RecordUpdate) error
+	Get(ctx context.Context, index string, id string) (recordrepo.Record, error)
+	Find(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]recordrepo.Record, uint64, error)
+	History(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]recordrepo.Record, uint64, error)
 }
 
 type Handler struct {

@@ -1,12 +1,11 @@
-package recordrepository
+package recordrepo
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"github.com/ashep/ujds/internal/model"
-	"github.com/ashep/ujds/internal/queryparser"
+	"github.com/ashep/ujds/internal/searchquery"
 )
 
 func (r *Repository) Find(
@@ -16,7 +15,7 @@ func (r *Repository) Find(
 	since time.Time,
 	cursor uint64,
 	limit uint32,
-) ([]model.Record, uint64, error) {
+) ([]Record, uint64, error) {
 	if err := r.indexNameValidator.Validate(index); err != nil {
 		return nil, 0, err //nolint:wrapcheck // ok
 	}
@@ -28,7 +27,7 @@ func (r *Repository) Find(
 	qArgs := []any{}
 
 	if search != "" {
-		pq, err := queryparser.Parse(search)
+		pq, err := searchquery.Parse(search)
 		if err != nil {
 			return nil, 0, fmt.Errorf("search query: %w", err)
 		}
@@ -58,7 +57,7 @@ func (r *Repository) Find(
 		_ = rows.Close()
 	}()
 
-	records := make([]model.Record, 0)
+	records := make([]Record, 0)
 	recID, indexID, logID, data, crAt, upAt, tcAt := "", uint64(0), uint64(0), "", time.Time{}, time.Time{}, time.Time{}
 
 	for rows.Next() {
@@ -66,7 +65,7 @@ func (r *Repository) Find(
 			return nil, 0, fmt.Errorf("db scan: %w", err)
 		}
 
-		records = append(records, model.Record{
+		records = append(records, Record{
 			ID:        recID,
 			IndexID:   indexID,
 			Rev:       logID,

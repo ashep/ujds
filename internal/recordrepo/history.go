@@ -1,11 +1,9 @@
-package recordrepository
+package recordrepo
 
 import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 func (r *Repository) History( //nolint:cyclop // TODO: calculated cyclomatic complexity for function History is 12, max is 10
@@ -15,7 +13,7 @@ func (r *Repository) History( //nolint:cyclop // TODO: calculated cyclomatic com
 	since time.Time,
 	cursor uint64,
 	limit uint32,
-) ([]model.Record, uint64, error) {
+) ([]Record, uint64, error) {
 	if err := r.indexNameValidator.Validate(index); err != nil {
 		return nil, 0, err //nolint:wrapcheck // ok
 	}
@@ -54,10 +52,10 @@ WHERE index_id=(SELECT id FROM index WHERE name=$1 LIMIT 1) AND record_id=$2`
 		_ = rows.Close()
 	}()
 
-	records := make([]model.Record, 0)
+	records := make([]Record, 0)
 
 	for rows.Next() {
-		rec := model.Record{ID: id}
+		rec := Record{ID: id}
 		if err := rows.Scan(&rec.Rev, &rec.IndexID, &rec.Data, &rec.CreatedAt); err != nil {
 			return nil, 0, fmt.Errorf("db scan: %w", err)
 		}

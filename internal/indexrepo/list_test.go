@@ -1,4 +1,4 @@
-package indexrepository_test
+package indexrepo_test
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/indexrepo"
 )
 
 func TestIndexRepository_List(tt *testing.T) {
@@ -25,7 +25,7 @@ func TestIndexRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT .+ FROM index").
 			WillReturnError(errors.New("theQueryError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.List(context.Background())
 
 		assert.EqualError(t, err, "db query: theQueryError")
@@ -45,7 +45,7 @@ func TestIndexRepository_List(tt *testing.T) {
 			ExpectQuery("SELECT .+ FROM index").
 			WillReturnRows(rows)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.List(context.Background())
 
 		assert.EqualError(t, err, "db rows iteration: theRowError")

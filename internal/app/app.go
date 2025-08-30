@@ -13,8 +13,8 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-app/runner"
-	"github.com/ashep/ujds/internal/indexrepository"
-	"github.com/ashep/ujds/internal/recordrepository"
+	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/indexhandler"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/ashep/ujds/internal/validation"
@@ -76,8 +76,8 @@ func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
 		return nil
 	}
 
-	ir := indexrepository.New(db, validation.NewIndexNameValidator(), a.l)
-	rr := recordrepository.New(
+	ir := indexrepo.New(db, validation.NewIndexNameValidator(), a.l)
+	rr := recordrepo.New(
 		db,
 		validation.NewIndexNameValidator(),
 		validation.NewRecordIDValidator(),

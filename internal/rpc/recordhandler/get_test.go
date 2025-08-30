@@ -9,13 +9,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
@@ -29,7 +29,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(model.Record{}, apperrors.InvalidArgError{
+			Return(recordrepo.Record{}, apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
 			})
@@ -49,7 +49,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(model.Record{}, apperrors.NotFoundError{
+			Return(recordrepo.Record{}, apperrors.NotFoundError{
 				Subj: "theRecordRepoSubj",
 			})
 
@@ -68,7 +68,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Get", mock.Anything, mock.Anything, mock.Anything).
-			Return(model.Record{}, errors.New("theRecordRepoError"))
+			Return(recordrepo.Record{}, errors.New("theRecordRepoError"))
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
@@ -85,7 +85,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Get", mock.Anything, "theIndexName", "theRecordID").
-			Return(model.Record{
+			Return(recordrepo.Record{
 				ID:        "theRecordID",
 				IndexID:   123,
 				Rev:       234,

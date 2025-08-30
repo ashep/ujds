@@ -6,15 +6,14 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/rs/zerolog"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 type indexRepo interface {
 	Upsert(ctx context.Context, name, title, schema string) error
-	Get(ctx context.Context, name string) (model.Index, error)
-	List(ctx context.Context) ([]model.Index, error)
+	Get(ctx context.Context, name string) (indexrepo.Index, error)
+	List(ctx context.Context) ([]indexrepo.Index, error)
 	Clear(ctx context.Context, name string) error
 }
 

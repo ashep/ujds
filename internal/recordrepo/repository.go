@@ -1,4 +1,4 @@
-package recordrepository
+package recordrepo
 
 import (
 	"database/sql"

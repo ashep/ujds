@@ -1,4 +1,4 @@
-package recordrepository
+package recordrepo
 
 import (
 	"context"
@@ -8,8 +8,6 @@ import (
 
 	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 type statements struct {
@@ -37,7 +35,7 @@ func (s *statements) Close(l zerolog.Logger) {
 	}
 }
 
-func (r *Repository) Push(ctx context.Context, updates []model.RecordUpdate) error {
+func (r *Repository) Push(ctx context.Context, updates []RecordUpdate) error {
 	var err error
 
 	if len(updates) == 0 {
@@ -107,7 +105,7 @@ ON CONFLICT (id, index_id) DO UPDATE SET log_id=$3, checksum=$4, data=$5, update
 	}, nil
 }
 
-func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd model.RecordUpdate) error {
+func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd RecordUpdate) error {
 	if err := r.recordIDValidator.Validate(upd.ID); err != nil {
 		return err //nolint:wrapcheck // ok
 	}
@@ -144,7 +142,7 @@ func (r *Repository) upsert(
 	ctx context.Context,
 	insertLogStmt *sql.Stmt,
 	upsertRecordStmt *sql.Stmt,
-	upd model.RecordUpdate,
+	upd RecordUpdate,
 ) error {
 	var logID uint64
 

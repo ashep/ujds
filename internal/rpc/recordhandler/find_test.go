@@ -9,13 +9,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
@@ -30,7 +30,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Find", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return([]model.Record(nil), uint64(0), apperrors.InvalidArgError{
+			Return([]recordrepo.Record(nil), uint64(0), apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
 			})
@@ -50,7 +50,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		l := zerolog.New(lb)
 
 		rr.On("Find", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return([]model.Record(nil), uint64(0), errors.New("theRecordRepoError"))
+			Return([]recordrepo.Record(nil), uint64(0), errors.New("theRecordRepoError"))
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.Find(context.Background(), connect.NewRequest(&proto.FindRequest{}))
@@ -67,7 +67,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("Find", mock.Anything, "theIndexName", "", time.Unix(0, 0), uint64(0), uint32(500)).
-			Return([]model.Record{
+			Return([]recordrepo.Record{
 				{
 					ID:        "theRecordID1",
 					IndexID:   11,

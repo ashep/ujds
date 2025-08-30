@@ -1,4 +1,4 @@
-package recordrepository_test
+package recordrepo_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/recordrepository"
+	"github.com/ashep/ujds/internal/recordrepo"
 )
 
 func TestRecordRepository_Get(tt *testing.T) {
@@ -29,7 +29,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "theIndexNameValidationError")
 	})
@@ -52,7 +52,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "theRecordIDValidationError")
 	})
@@ -79,7 +79,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT`).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "record"})
@@ -107,7 +107,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT`).
 			WillReturnError(errors.New("theSQLError"))
 
-		repo := recordrepository.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
 
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "db scan: theSQLError")

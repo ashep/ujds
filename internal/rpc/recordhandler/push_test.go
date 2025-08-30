@@ -9,13 +9,14 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
@@ -46,7 +47,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, apperrors.InvalidArgError{
+			Return(indexrepo.Index{}, apperrors.InvalidArgError{
 				Subj:   "theIndexRepoSubj",
 				Reason: "theIndexRepoReason",
 			})
@@ -71,7 +72,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, apperrors.NotFoundError{
+			Return(indexrepo.Index{}, apperrors.NotFoundError{
 				Subj: "theIndexRepoSubj",
 			})
 
@@ -95,7 +96,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, errors.New("theIndexRepoOtherError"))
+			Return(indexrepo.Index{}, errors.New("theIndexRepoOtherError"))
 
 		rr := &recordRepoMock{}
 		defer rr.AssertExpectations(t)
@@ -118,7 +119,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, nil)
+			Return(indexrepo.Index{}, nil)
 
 		rr := &recordRepoMock{}
 		defer rr.AssertExpectations(t)
@@ -149,7 +150,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, mock.Anything).
-			Return(model.Index{}, nil)
+			Return(indexrepo.Index{}, nil)
 
 		rr := &recordRepoMock{}
 		defer rr.AssertExpectations(t)
@@ -178,14 +179,14 @@ func TestRecordHandler_Push(tt *testing.T) {
 		ir := &indexRepoMock{}
 		defer ir.AssertExpectations(t)
 		ir.On("Get", mock.Anything, "theIndex").
-			Return(model.Index{
+			Return(indexrepo.Index{
 				ID:     123,
 				Schema: []byte("theIndexSchema"),
 			}, nil)
 
 		rr := &recordRepoMock{}
 		defer rr.AssertExpectations(t)
-		rr.On("Push", mock.Anything, []model.RecordUpdate{
+		rr.On("Push", mock.Anything, []recordrepo.RecordUpdate{
 			{
 				ID:      "theRecordID",
 				IndexID: 123,

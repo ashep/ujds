@@ -9,13 +9,13 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
@@ -30,7 +30,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("History", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return([]model.Record(nil), uint64(0), apperrors.InvalidArgError{
+			Return([]recordrepo.Record(nil), uint64(0), apperrors.InvalidArgError{
 				Subj:   "theRecordRepoSubj",
 				Reason: "theRecordRepoReason",
 			})
@@ -50,7 +50,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("History", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-			Return([]model.Record(nil), uint64(0), errors.New("theRecordRepoInternalError"))
+			Return([]recordrepo.Record(nil), uint64(0), errors.New("theRecordRepoInternalError"))
 
 		h := recordhandler.New(ir, rr, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
@@ -67,7 +67,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		rr := &recordRepoMock{}
 		rr.On("History", mock.Anything, "theIndexName", "theRecordID", time.Unix(55, 0), uint64(77), uint32(66)).
-			Return([]model.Record{
+			Return([]recordrepo.Record{
 				{
 					ID:        "theRecord1",
 					IndexID:   11,

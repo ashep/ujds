@@ -1,4 +1,4 @@
-package indexrepository_test
+package indexrepo_test
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/indexrepo"
 )
 
 func TestIndexRepository_Clear(tt *testing.T) {
@@ -23,7 +23,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "")
 
 		assert.EqualError(t, err, "theValidatorError")
@@ -40,7 +40,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 
 		dbm.ExpectBegin().WillReturnError(errors.New("theBeginTxError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "begin transaction: theBeginTxError")
@@ -59,7 +59,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 		dbm.ExpectExec(`DELETE FROM record`).
 			WillReturnError(errors.New("theDeleteRecordsError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "delete records: theDeleteRecordsError")
@@ -80,7 +80,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 		dbm.ExpectExec(`DELETE FROM record_log`).
 			WillReturnError(errors.New("theDeleteRecordLogsError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "delete record log: theDeleteRecordLogsError")
@@ -102,7 +102,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		dbm.ExpectCommit().WillReturnError(errors.New("theCommitError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		assert.EqualError(t, err, "db commit: theCommitError")
@@ -124,7 +124,7 @@ func TestIndexRepository_Clear(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 		dbm.ExpectCommit()
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Clear(context.Background(), "theIndex")
 
 		require.NoError(t, err)

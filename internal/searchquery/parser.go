@@ -1,4 +1,4 @@
-package queryparser
+package searchquery
 
 type tKind int
 

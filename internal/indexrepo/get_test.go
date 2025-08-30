@@ -1,4 +1,4 @@
-package indexrepository_test
+package indexrepo_test
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/indexrepo"
 )
 
 func TestIndexRepository_Get(tt *testing.T) {
@@ -25,7 +25,7 @@ func TestIndexRepository_Get(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "")
 
 		assert.EqualError(t, err, "theValidatorError")
@@ -44,7 +44,7 @@ func TestIndexRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT .+ FROM index`).
 			WillReturnError(sql.ErrNoRows)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "index"})
@@ -63,7 +63,7 @@ func TestIndexRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT .+ FROM index`).
 			WillReturnError(errors.New("theDBExecError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndex")
 
 		require.EqualError(t, err, "db scan: theDBExecError")

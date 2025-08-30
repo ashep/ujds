@@ -4,25 +4,25 @@ import (
 	"context"
 	"time"
 
+	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/stretchr/testify/mock"
-
-	"github.com/ashep/ujds/internal/model"
 )
 
 type indexRepoMock struct {
 	mock.Mock
 }
 
-func (m *indexRepoMock) Get(ctx context.Context, name string) (model.Index, error) {
+func (m *indexRepoMock) Get(ctx context.Context, name string) (indexrepo.Index, error) {
 	args := m.Called(ctx, name)
-	return args.Get(0).(model.Index), args.Error(1)
+	return args.Get(0).(indexrepo.Index), args.Error(1)
 }
 
 type recordRepoMock struct {
 	mock.Mock
 }
 
-func (m *recordRepoMock) Push(ctx context.Context, records []model.RecordUpdate) error {
+func (m *recordRepoMock) Push(ctx context.Context, records []recordrepo.RecordUpdate) error {
 	args := m.Called(ctx, records)
 	return args.Error(0)
 }
@@ -31,9 +31,9 @@ func (m *recordRepoMock) Get(
 	ctx context.Context,
 	index string,
 	id string,
-) (model.Record, error) {
+) (recordrepo.Record, error) {
 	args := m.Called(ctx, index, id)
-	return args.Get(0).(model.Record), args.Error(1)
+	return args.Get(0).(recordrepo.Record), args.Error(1)
 }
 
 func (m *recordRepoMock) Find(
@@ -43,9 +43,9 @@ func (m *recordRepoMock) Find(
 	since time.Time,
 	cursor uint64,
 	limit uint32,
-) ([]model.Record, uint64, error) {
+) ([]recordrepo.Record, uint64, error) {
 	args := m.Called(ctx, index, search, since, cursor, limit)
-	return args.Get(0).([]model.Record), args.Get(1).(uint64), args.Error(2)
+	return args.Get(0).([]recordrepo.Record), args.Get(1).(uint64), args.Error(2)
 }
 
 func (m *recordRepoMock) History(
@@ -55,7 +55,7 @@ func (m *recordRepoMock) History(
 	since time.Time,
 	cursor uint64,
 	limit uint32,
-) ([]model.Record, uint64, error) {
+) ([]recordrepo.Record, uint64, error) {
 	args := m.Called(ctx, index, id, since, cursor, limit)
-	return args.Get(0).([]model.Record), args.Get(1).(uint64), args.Error(2)
+	return args.Get(0).([]recordrepo.Record), args.Get(1).(uint64), args.Error(2)
 }

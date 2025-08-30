@@ -7,8 +7,9 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/recordrepo"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
 
@@ -20,8 +21,8 @@ func (h *Handler) Push(
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("empty records"))
 	}
 
-	cache := make(map[string]model.Index)
-	updates := make([]model.RecordUpdate, 0)
+	cache := make(map[string]indexrepo.Index)
+	updates := make([]recordrepo.RecordUpdate, 0)
 
 	for _, rec := range req.Msg.GetRecords() {
 		index, err := h.getIndex(ctx, req.Spec().Procedure, rec.Index, cache)
@@ -29,7 +30,7 @@ func (h *Handler) Push(
 			return nil, err
 		}
 
-		updates = append(updates, model.RecordUpdate{
+		updates = append(updates, recordrepo.RecordUpdate{
 			ID:      rec.GetId(),
 			IndexID: index.ID,
 			Schema:  index.Schema,
@@ -50,7 +51,7 @@ func (h *Handler) Push(
 	return connect.NewResponse(&proto.PushResponse{}), nil
 }
 
-func (h *Handler) getIndex(ctx context.Context, proc, name string, cache map[string]model.Index) (model.Index, error) {
+func (h *Handler) getIndex(ctx context.Context, proc, name string, cache map[string]indexrepo.Index) (indexrepo.Index, error) {
 	var err error
 
 	index, ok := cache[name]
@@ -62,14 +63,14 @@ func (h *Handler) getIndex(ctx context.Context, proc, name string, cache map[str
 	if index, err = h.ir.Get(ctx, name); err != nil {
 		switch {
 		case errors.As(err, &apperrors.InvalidArgError{}):
-			return model.Index{}, connect.NewError(connect.CodeInvalidArgument, err)
+			return indexrepo.Index{}, connect.NewError(connect.CodeInvalidArgument, err)
 		case errors.As(err, &apperrors.NotFoundError{}):
-			return model.Index{}, connect.NewError(connect.CodeNotFound, err)
+			return indexrepo.Index{}, connect.NewError(connect.CodeNotFound, err)
 		default:
 			c := h.now().UnixMilli()
 			h.l.Error().Err(err).Str("proc", proc).Int64("err_code", c).Msg("index repo get failed")
 
-			return model.Index{}, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
+			return indexrepo.Index{}, connect.NewError(connect.CodeInternal, fmt.Errorf("err_code: %d", c))
 		}
 	}
 

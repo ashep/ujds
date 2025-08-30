@@ -1,4 +1,4 @@
-package indexrepository_test
+package indexrepo_test
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/indexrepository"
+	"github.com/ashep/ujds/internal/indexrepo"
 )
 
 func TestIndexRepository_Upsert(tt *testing.T) {
@@ -24,7 +24,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "", "", "")
 
 		assert.EqualError(t, err, "theValidatorError")
@@ -39,7 +39,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "", "{]")
 
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
@@ -61,7 +61,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			ExpectExec(`INSERT INTO index`).
 			WillReturnError(errors.New("theDBExecError"))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
 
 		require.EqualError(t, err, "db query failed: theDBExecError")
@@ -80,7 +80,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
 
 		require.NoError(t, err)
@@ -99,7 +99,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "")
 
 		require.NoError(t, err)
@@ -118,7 +118,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			ExpectExec(`INSERT INTO index`).
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
-		repo := indexrepository.New(db, nameValidator, zerolog.Nop())
+		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
 		err = repo.Upsert(context.Background(), "theIndex", "", "{}")
 
 		require.NoError(t, err)

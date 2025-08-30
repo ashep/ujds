@@ -1,4 +1,4 @@
-package indexrepository
+package indexrepo
 
 import (
 	"database/sql"

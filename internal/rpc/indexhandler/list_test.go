@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/ashep/ujds/internal/rpc/indexhandler"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ashep/ujds/internal/model"
 	proto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 )
 
@@ -28,7 +28,7 @@ func TestIndexHandler_List(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("List", mock.Anything).
-			Return([]model.Index(nil), errors.New("theRepoListError"))
+			Return([]indexrepo.Index(nil), errors.New("theRepoListError"))
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{}))
@@ -45,7 +45,7 @@ func TestIndexHandler_List(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("List", mock.Anything).
-			Return([]model.Index{
+			Return([]indexrepo.Index{
 				{
 					ID:        123,
 					Name:      "theIndex1",
@@ -86,7 +86,7 @@ func TestIndexHandler_List(tt *testing.T) {
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
 		rm.On("List", mock.Anything).
-			Return([]model.Index{
+			Return([]indexrepo.Index{
 				{
 					ID:        123,
 					Name:      "theIndex1Foo",
