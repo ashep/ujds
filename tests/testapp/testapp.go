@@ -11,7 +11,6 @@ import (
 	"github.com/ashep/go-app/httpserver"
 	"github.com/ashep/go-app/runner"
 	"github.com/ashep/ujds/internal/app"
-	"github.com/ashep/ujds/internal/server"
 	"github.com/ashep/ujds/sdk/client"
 	_ "github.com/lib/pq" // it's ok in tests
 	"github.com/stretchr/testify/assert"
@@ -43,7 +42,7 @@ func New(t *testing.T) *TestApp {
 		DB: app.Database{
 			DSN: dbDSN,
 		},
-		Server: server.Config{
+		Server: app.Server{
 			AuthToken: "theAuthToken",
 		},
 	}
@@ -93,10 +92,12 @@ func (ta *TestApp) Start() *TestApp {
 		ta.t.Fatalf("app has not started within %s", checkPeriod*checkCount)
 	}
 
+	ta.t.Cleanup(ta.shutdown)
+
 	return ta
 }
 
-func (ta *TestApp) Stop() {
+func (ta *TestApp) shutdown() {
 	ta.stop()
 
 	tk := time.NewTicker(checkPeriod)

@@ -17,23 +17,17 @@ import (
 
 func TestRecord_Push(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("anInvalidAuthToken")
+
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyRecords", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -42,15 +36,13 @@ func TestRecord_Push(tt *testing.T) {
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: empty records")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
+
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -60,15 +52,13 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("IndexNotFound", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
+
 		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Records: []*recordproto.PushRequest_Record{
 				{
@@ -78,14 +68,11 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: index is not found")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyRecordID", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -101,14 +88,11 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyRecordData", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -125,14 +109,11 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record data: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("InvalidDataJSON", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -149,14 +130,11 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json schema or data: invalid character ']' looking for beginning of object key string")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("DataValidationFailed", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -176,14 +154,11 @@ func TestRecord_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json: (root): foo is required")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -222,14 +197,12 @@ func TestRecord_Push(tt *testing.T) {
 		assert.NotZero(t, rcs[0].CreatedAt)
 		assert.Equal(t, rcs[0].CreatedAt, rcs[0].UpdatedAt) // the record has no updates
 		assert.Equal(t, rcs[0].CreatedAt, rcs[0].TouchedAt) // the record has no touches
+
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("OkUpdate", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -288,14 +261,12 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, []byte{0x2e, 0x82, 0xd8, 0x32, 0xa1, 0x18, 0xff, 0x72, 0x77, 0x32, 0xf7, 0xb4, 0xec, 0x4f, 0x9c, 0xef, 0xf1, 0x16, 0x97, 0x5, 0xfc, 0xc7, 0xa0, 0xd1, 0xe9, 0x9f, 0xbb, 0x6a, 0x91, 0xca, 0x23, 0x72}, rcs[0].Checksum)
 		assert.Greater(t, rcs[0].UpdatedAt, rcs[0].CreatedAt) // the record was updated after creation
 		assert.Equal(t, rcs[0].UpdatedAt, rcs[0].TouchedAt)   // and was not touched after the update
+
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("OkUpdateWithSameData", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -345,15 +316,13 @@ func TestRecord_Push(tt *testing.T) {
 		assert.NotZero(t, rcs[0].CreatedAt)
 		assert.Equal(t, rcs[0].CreatedAt, rcs[0].UpdatedAt)   // no data updated after second push
 		assert.Greater(t, rcs[0].TouchedAt, rcs[0].UpdatedAt) // but the record was touched
+
+		ta.AssertNoLogErrors()
 	})
 
 	// Check that records with same IDs but in different indices are not interfering
 	tt.Run("OkDifferentIndicesWithSameData", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		// Create first index
@@ -423,5 +392,7 @@ func TestRecord_Push(tt *testing.T) {
 		assert.Equal(t, 2, rcs[0].LogID)
 		assert.Equal(t, `{"foo2": "bar2"}`, rcs[0].Data)
 		assert.Equal(t, []byte{0x3c, 0x79, 0x3c, 0xf4, 0xdd, 0x1c, 0x1f, 0x6d, 0x37, 0x11, 0xe3, 0x1c, 0xaf, 0xcf, 0x74, 0xe0, 0xcc, 0x9f, 0x7b, 0xcb, 0x1d, 0x1f, 0x3b, 0x58, 0xb2, 0x72, 0xe3, 0x60, 0x6e, 0x61, 0xbe, 0x8d}, rcs[0].Checksum)
+
+		ta.AssertNoLogErrors()
 	})
 }

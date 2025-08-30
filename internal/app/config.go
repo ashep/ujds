@@ -1,14 +1,14 @@
 package app
 
-import (
-	"github.com/ashep/ujds/internal/server"
-)
+type Server struct {
+	AuthToken string `json:"auth_token" yaml:"auth_token"`
+}
 
 type Database struct {
 	DSN string `json:"dsn" yaml:"dsn"`
 }
 
 type Config struct {
-	DB     Database      `json:"db" yaml:"db"`
-	Server server.Config `json:"server" yaml:"server"`
+	DB     Database `json:"db" yaml:"db"`
+	Server Server   `json:"server" yaml:"server"`
 }

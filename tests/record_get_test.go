@@ -17,67 +17,55 @@ import (
 
 func TestRecord_Get(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("anInvalidAuthToken")
+
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
+
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "",
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyRecordId", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
+
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "",
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("IndexNotExists", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
+
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{
 			Index: "theIndex",
 			Id:    "theRecord",
 		}))
 
 		assert.EqualError(t, err, "not_found: record is not found")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("RecordNotExists", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -89,14 +77,11 @@ func TestRecord_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: record is not found")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
-
+		ta := testapp.New(t).Start()
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -122,5 +107,7 @@ func TestRecord_Get(tt *testing.T) {
 		assert.Equal(t, res.Msg.Record.UpdatedAt, res.Msg.Record.CreatedAt)
 		assert.Equal(t, res.Msg.Record.TouchedAt, res.Msg.Record.CreatedAt)
 		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Record.Data)
+
+		ta.AssertNoLogErrors()
 	})
 }

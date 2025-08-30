@@ -16,22 +16,17 @@ import (
 
 func TestIndex_Get(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
+		ta := testapp.New(t).Start()
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
+		ta := testapp.New(t).Start()
 
 		cli := ta.Client("")
 		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
@@ -39,13 +34,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("InvalidIndexName", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
+		ta := testapp.New(t).Start()
 
 		cli := ta.Client("")
 		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
@@ -53,13 +46,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("IndexNotExists", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
+		ta := testapp.New(t).Start()
 
 		cli := ta.Client("")
 		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
@@ -67,13 +58,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: index is not found")
+		ta.AssertNoLogErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t)
-
-		defer ta.Start().Stop()
-		defer ta.AssertNoLogErrors()
+		ta := testapp.New(t).Start()
 
 		ta.DB().InsertIndex("theIndexName", "theIndexTitle", `{"foo":"bar"}`)
 
@@ -89,5 +78,7 @@ func TestIndex_Get(tt *testing.T) {
 		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Schema)
 		assert.NotZero(t, res.Msg.CreatedAt)
 		assert.NotZero(t, res.Msg.UpdatedAt)
+
+		ta.AssertNoLogErrors()
 	})
 }
