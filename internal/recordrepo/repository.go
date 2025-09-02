@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-//go:generate moq -out mock_test.go -pkg recordrepository_test -skip-ensure . stringValidator jsonValidator
+//go:generate moq -out mock_test.go -pkg recordrepo_test -skip-ensure . stringValidator jsonValidator
 
 type stringValidator interface {
 	Validate(s string) error

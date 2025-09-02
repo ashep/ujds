@@ -66,7 +66,7 @@ func TestRecordHandler_GetAll(tt *testing.T) {
 		l := zerolog.New(lb)
 
 		rr := &recordRepoMock{}
-		rr.On("Find", mock.Anything, "theIndexName", "", time.Unix(0, 0), uint64(0), uint32(500)).
+		rr.On("Find", mock.Anything, mock.Anything).
 			Return([]recordrepo.Record{
 				{
 					ID:        "theRecordID1",

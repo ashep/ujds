@@ -8,6 +8,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/go-apperrors"
+	"github.com/ashep/ujds/internal/recordrepo"
 
 	proto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
 )
@@ -20,8 +21,20 @@ func (h *Handler) Find(
 		req.Msg.Limit = perPageMax
 	}
 
-	since := time.Unix(req.Msg.Since, 0)
-	records, cur, err := h.rr.Find(ctx, req.Msg.Index, req.Msg.Search, since, req.Msg.Cursor, req.Msg.Limit)
+	var ntSince *time.Time
+	if req.Msg.NotTouchedSince != 0 {
+		t := time.Unix(req.Msg.NotTouchedSince, 0)
+		ntSince = &t
+	}
+
+	records, cur, err := h.rr.Find(ctx, recordrepo.FindRequest{
+		Index:           req.Msg.Index,
+		Query:           req.Msg.Search,
+		Since:           time.Unix(req.Msg.Since, 0),
+		Cursor:          req.Msg.Cursor,
+		Limit:           req.Msg.Limit,
+		NotTouchedSince: ntSince,
+	})
 
 	switch {
 	case errors.As(err, &apperrors.InvalidArgError{}):

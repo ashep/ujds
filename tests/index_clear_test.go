@@ -8,6 +8,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	recordproto "github.com/ashep/ujds/sdk/proto/ujds/record/v1"
@@ -57,13 +58,13 @@ func TestIndex_Clear(tt *testing.T) {
 			Name:   "theIndex1",
 			Schema: "",
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndex2",
 			Schema: "",
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
 			Records: []*recordproto.PushRequest_Record{
@@ -75,7 +76,7 @@ func TestIndex_Clear(tt *testing.T) {
 				{Index: "theIndex2", Id: "baz", Data: "{}"},
 			},
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		rcs := ta.DB().GetRecords("theIndex1")
 		assert.Len(t, rcs, 3)
@@ -86,7 +87,7 @@ func TestIndex_Clear(tt *testing.T) {
 		_, err = cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{
 			Name: "theIndex1",
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		rcs = ta.DB().GetRecords("theIndex1")
 		assert.Len(t, rcs, 0)

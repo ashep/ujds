@@ -36,7 +36,7 @@ func TestRecord_History(tt *testing.T) {
 			Id:    "theRecord",
 		}))
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Empty(t, res.Msg.Records)
 		assert.Zero(t, res.Msg.Cursor)
 		ta.AssertNoLogErrors()

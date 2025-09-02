@@ -30,7 +30,15 @@ func TestRecordRepository_Find(tt *testing.T) {
 		require.NoError(t, err)
 
 		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
-		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
+		req := recordrepo.FindRequest{
+			Index:           "theIndex",
+			Query:           "",
+			Since:           time.Unix(123, 0),
+			Cursor:          234,
+			Limit:           345,
+			NotTouchedSince: nil,
+		}
+		_, _, err = repo.Find(context.Background(), req)
 		require.EqualError(t, err, "theIndexNameValidationError")
 	})
 
@@ -48,7 +56,16 @@ func TestRecordRepository_Find(tt *testing.T) {
 		require.NoError(t, err)
 
 		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
-		_, _, err = repo.Find(context.Background(), "theIndex", "foo bar baz", time.Unix(123, 0), 234, 345)
+		req := recordrepo.FindRequest{
+			Index:           "theIndex",
+			Query:           "foo bar baz",
+			Since:           time.Unix(123, 0),
+			Cursor:          234,
+			Limit:           345,
+			NotTouchedSince: nil,
+		}
+
+		_, _, err = repo.Find(context.Background(), req)
 		require.EqualError(t, err, "search query: operator expected at position 4: foo ")
 	})
 
@@ -69,8 +86,16 @@ func TestRecordRepository_Find(tt *testing.T) {
 			WillReturnError(errors.New("theDbError"))
 
 		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		req := recordrepo.FindRequest{
+			Index:           "theIndex",
+			Query:           "",
+			Since:           time.Unix(123, 0),
+			Cursor:          234,
+			Limit:           345,
+			NotTouchedSince: nil,
+		}
 
-		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
+		_, _, err = repo.Find(context.Background(), req)
 		assert.EqualError(t, err, "db query: theDbError")
 	})
 
@@ -95,8 +120,16 @@ func TestRecordRepository_Find(tt *testing.T) {
 			WillReturnRows(rows)
 
 		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		req := recordrepo.FindRequest{
+			Index:           "theIndex",
+			Query:           "",
+			Since:           time.Unix(123, 0),
+			Cursor:          234,
+			Limit:           345,
+			NotTouchedSince: nil,
+		}
 
-		_, _, err = repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
+		_, _, err = repo.Find(context.Background(), req)
 		assert.EqualError(t, err, "db rows iteration: theRowError")
 	})
 
@@ -117,8 +150,16 @@ func TestRecordRepository_Find(tt *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
 		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		req := recordrepo.FindRequest{
+			Index:           "theIndex",
+			Query:           "",
+			Since:           time.Unix(123, 0),
+			Cursor:          234,
+			Limit:           345,
+			NotTouchedSince: nil,
+		}
 
-		res, cur, err := repo.Find(context.Background(), "theIndex", "", time.Unix(123, 0), 234, 345)
+		res, cur, err := repo.Find(context.Background(), req)
 		assert.NoError(t, err)
 		assert.Empty(t, res)
 		assert.Zero(t, cur)

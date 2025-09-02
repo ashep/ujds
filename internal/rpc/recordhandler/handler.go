@@ -18,7 +18,7 @@ type indexRepo interface {
 type recordRepo interface {
 	Push(ctx context.Context, records []recordrepo.RecordUpdate) error
 	Get(ctx context.Context, index string, id string) (recordrepo.Record, error)
-	Find(ctx context.Context, index, search string, since time.Time, cursor uint64, limit uint32) ([]recordrepo.Record, uint64, error)
+	Find(ctx context.Context, req recordrepo.FindRequest) ([]recordrepo.Record, uint64, error)
 	History(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]recordrepo.Record, uint64, error)
 }
 
