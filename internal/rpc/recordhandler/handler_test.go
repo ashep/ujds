@@ -36,15 +36,8 @@ func (m *recordRepoMock) Get(
 	return args.Get(0).(recordrepo.Record), args.Error(1)
 }
 
-func (m *recordRepoMock) Find(
-	ctx context.Context,
-	index string,
-	search string,
-	since time.Time,
-	cursor uint64,
-	limit uint32,
-) ([]recordrepo.Record, uint64, error) {
-	args := m.Called(ctx, index, search, since, cursor, limit)
+func (m *recordRepoMock) Find(ctx context.Context, req recordrepo.FindRequest) ([]recordrepo.Record, uint64, error) {
+	args := m.Called(ctx, req)
 	return args.Get(0).([]recordrepo.Record), args.Get(1).(uint64), args.Error(2)
 }
 

@@ -11,14 +11,14 @@ import (
 //
 //	func TestSomethingThatUsesstringValidator(t *testing.T) {
 //
-//		// make and configure a mocked recordrepository.stringValidator
+//		// make and configure a mocked recordrepo.stringValidator
 //		mockedstringValidator := &stringValidatorMock{
 //			ValidateFunc: func(s string) error {
 //				panic("mock out the Validate method")
 //			},
 //		}
 //
-//		// use mockedstringValidator in code that requires recordrepository.stringValidator
+//		// use mockedstringValidator in code that requires recordrepo.stringValidator
 //		// and then make assertions.
 //
 //	}
@@ -73,14 +73,14 @@ func (mock *stringValidatorMock) ValidateCalls() []struct {
 //
 //	func TestSomethingThatUsesjsonValidator(t *testing.T) {
 //
-//		// make and configure a mocked recordrepository.jsonValidator
+//		// make and configure a mocked recordrepo.jsonValidator
 //		mockedjsonValidator := &jsonValidatorMock{
 //			ValidateFunc: func(schema []byte, data []byte) error {
 //				panic("mock out the Validate method")
 //			},
 //		}
 //
-//		// use mockedjsonValidator in code that requires recordrepository.jsonValidator
+//		// use mockedjsonValidator in code that requires recordrepo.jsonValidator
 //		// and then make assertions.
 //
 //	}

@@ -131,7 +131,7 @@ Returns existing indices list.
 
 - Request fields:
     - *optional* **object** `filter`: filter.
-      - *optional* **[]string** `names`: index name patterns. Allowed wildcard symbols: `*`.
+        - *optional* **[]string** `names`: index name patterns. Allowed wildcard symbols: `*`.
 - Response fields:
     - **[]object** `indices`
         - **string** `name`: index name.
@@ -190,10 +190,10 @@ curl --request POST \
 Creates records in the index or updates existing ones.
 
 - Request fields:
-  - *required* **[]object** `records`: records.
-    - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
-    - *required* **string** `id`: record ID.
-    - *required* **string** `data`: record JSON data.
+    - *required* **[]object** `records`: records.
+        - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
+        - *required* **string** `id`: record ID.
+        - *required* **string** `data`: record JSON data.
 
 Request example:
 
@@ -270,11 +270,12 @@ Returns all records from the index.
 - Request fields:
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
     - *optional* **string** `search`: search query. TODO: describe search query syntax.
-    - *optional* **int** `since`: return only records, which have been modified since provided UNIX timestamp.
+    - *optional* **int** `since`: return only records, that have been modified since provided UNIX timestamp.
+    - *optional* **int** `notTouchedSince`: return only records, that have not been touched since a UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
     - *optional* **int** `limit`: get only specified number of records; default and maximum is `500`.
 - Response fields:
-    - **string** `cursor`: pagination cursor position, which should be used to retrieve the next result set.
+    - **string** `cursor`: pagination cursor position, that should be used to retrieve the next result set.
     - **[]object** `records`
         - **string** `id`: ID.
         - **string** `index`: index name.
@@ -288,7 +289,7 @@ Request example:
 
 ```shell
 curl --request POST \
-  --url https://localhost:9000/ujds.record.v1.RecordService/GetAll \
+  --url https://localhost:9000/ujds.record.v1.RecordService/Find \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -397,6 +398,11 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.6 (2025-09-02)
+
+`RecordService/Find` request got the new `notTouchedSince` argument.
+
+
 ### 0.5 (2024-03-30)
 
 The `filter` request field added to `IndexService/List` method.
@@ -404,8 +410,9 @@ The `filter` request field added to `IndexService/List` method.
 ### 0.4 (2024-03-09)
 
 - `RecordService/Push`:
-  - now the index should be specified on each record;
-  - a new `touched_at` field added; it is always being updated with a current timestamp, even if record hasn't changed.
+    - now the index should be specified on each record;
+    - a new `touched_at` field added; it is always being updated with a current timestamp, even if record hasn't
+      changed.
 
 ### 0.3 (2023-11-29)
 

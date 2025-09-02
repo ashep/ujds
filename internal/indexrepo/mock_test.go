@@ -11,14 +11,14 @@ import (
 //
 //	func TestSomethingThatUsesstringValidator(t *testing.T) {
 //
-//		// make and configure a mocked indexrepository.stringValidator
+//		// make and configure a mocked indexrepo.stringValidator
 //		mockedstringValidator := &stringValidatorMock{
 //			ValidateFunc: func(s string) error {
 //				panic("mock out the Validate method")
 //			},
 //		}
 //
-//		// use mockedstringValidator in code that requires indexrepository.stringValidator
+//		// use mockedstringValidator in code that requires indexrepo.stringValidator
 //		// and then make assertions.
 //
 //	}

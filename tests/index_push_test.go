@@ -8,6 +8,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	indexproto "github.com/ashep/ujds/sdk/proto/ujds/index/v1"
 	"github.com/ashep/ujds/tests/testapp"
@@ -70,7 +71,7 @@ func TestIndex_Push(tt *testing.T) {
 			Title:  "theIndexTitle",
 			Schema: `{"foo":"bar"}`,
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
@@ -93,7 +94,7 @@ func TestIndex_Push(tt *testing.T) {
 			Schema: "{}",
 			Title:  "",
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
@@ -116,7 +117,7 @@ func TestIndex_Push(tt *testing.T) {
 			Title:  "theIndexTitle",
 			Schema: "",
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
@@ -139,14 +140,14 @@ func TestIndex_Push(tt *testing.T) {
 			Title:  "theIndexTitle",
 			Schema: `{"foo":"bar"}`,
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle",
 			Schema: `{"foo":"bar"}`,
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
@@ -169,14 +170,14 @@ func TestIndex_Push(tt *testing.T) {
 			Title:  "theIndexTitle1",
 			Schema: `{"foo1":"bar1"}`,
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
 			Name:   "theIndexName",
 			Title:  "theIndexTitle2",
 			Schema: `{"foo2":"bar2"}`,
 		}))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		idx := ta.DB().GetIndices()
 		assert.Len(t, idx, 1)
