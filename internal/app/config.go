@@ -1,6 +1,7 @@
 package app
 
 type Server struct {
+	Addr      string `json:"addr" yaml:"addr"`
 	AuthToken string `json:"auth_token" yaml:"auth_token"`
 }
 

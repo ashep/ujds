@@ -1,6 +1,6 @@
 services:
   tests:
-    image: golang:1.24.6-alpine3.22
+    image: golang:1.25.1-alpine3.22
     volumes:
       - type: bind
         source: ./
@@ -10,7 +10,7 @@ services:
   postgres:
     image: postgres:15-alpine
     ports:
-      - 5433:5432
+      - "5433:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
     environment:

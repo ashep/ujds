@@ -18,17 +18,17 @@ import (
 
 func TestRecord_History(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("anInvalidAuthToken")
 
 		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("NoRecords", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		res, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{
@@ -39,11 +39,11 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, res.Msg.Records)
 		assert.Zero(t, res.Msg.Cursor)
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{
@@ -52,11 +52,11 @@ func TestRecord_History(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("EmptyRecordID", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{
@@ -65,11 +65,11 @@ func TestRecord_History(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -102,11 +102,11 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[1].Index)
 		assert.Equal(t, `{"foo1": "bar1"}`, res.Msg.Records[1].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkPaginated", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -149,11 +149,11 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
 		assert.Equal(t, `{"foo1": "bar1"}`, res.Msg.Records[0].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkSince", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -204,6 +204,6 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
 		assert.Equal(t, `{"foo2": "bar2"}`, res.Msg.Records[0].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 }

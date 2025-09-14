@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/ashep/go-app/health"
+	"github.com/ashep/go-app/httpserver"
+	"github.com/ashep/go-app/metrics"
 	"github.com/ashep/go-app/runner"
 	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/ashep/ujds/internal/recordrepo"
@@ -21,24 +24,9 @@ import (
 	"github.com/ashep/ujds/migration"
 	indexconnect "github.com/ashep/ujds/sdk/proto/ujds/index/v1/v1connect"
 	recordconnect "github.com/ashep/ujds/sdk/proto/ujds/record/v1/v1connect"
-	"github.com/rs/zerolog"
 )
 
-type App struct {
-	cfg *Config
-	rt  *runner.Runtime
-	l   zerolog.Logger
-}
-
-func New(cfg *Config, rt *runner.Runtime) (*App, error) {
-	return &App{
-		cfg: cfg,
-		rt:  rt,
-		l:   rt.Logger,
-	}, nil
-}
-
-func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
+func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	args := []string{os.Args[0]}
 
 	for _, v := range os.Args[1:] {
@@ -55,7 +43,7 @@ func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
 		return fmt.Errorf("command line arguments parse failed: %w", err)
 	}
 
-	db, err := dbConn(ctx, a.cfg.DB.DSN)
+	db, err := dbConn(rt.Ctx, rt.Cfg.DB.DSN)
 	if err != nil {
 		return fmt.Errorf("database connection failed: %w", err)
 	}
@@ -64,7 +52,7 @@ func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
 		if err := migration.Up(db); err != nil {
 			return fmt.Errorf("migrration apply failed: %w", err)
 		}
-		a.l.Info().Msg("migrations applied")
+		rt.Log.Info().Msg("migrations applied")
 		return nil
 	}
 
@@ -72,38 +60,42 @@ func (a *App) Run(ctx context.Context) error { //nolint:cyclop // to do
 		if err := migration.Down(db); err != nil {
 			return fmt.Errorf("migrration revert failed: %w", err)
 		}
-		a.l.Info().Msg("migrations reverted")
+		rt.Log.Info().Msg("migrations reverted")
 		return nil
 	}
 
-	ir := indexrepo.New(db, validation.NewIndexNameValidator(), a.l)
+	srv := httpserver.New(httpserver.WithAddr(rt.Cfg.Server.Addr))
+	health.RegisterServer(srv)
+	metrics.RegisterServer(rt.AppName, rt.AppVersion, srv)
+
+	ir := indexrepo.New(db, validation.NewIndexNameValidator(), rt.Log)
 	rr := recordrepo.New(
 		db,
 		validation.NewIndexNameValidator(),
 		validation.NewRecordIDValidator(),
 		validation.NewJSONValidator(),
-		a.l,
+		rt.Log,
 	)
 
 	interceptors := connect.WithInterceptors(
-		auth(a.cfg.Server.AuthToken),
+		auth(rt.Cfg.Server.AuthToken),
 	)
 
 	indexPath, indexHandler := indexconnect.NewIndexServiceHandler(
-		indexhandler.New(ir, time.Now, a.l),
+		indexhandler.New(ir, time.Now, rt.Log),
 		interceptors,
 	)
-	a.rt.Server.Handle(indexPath, cors(indexHandler))
+	srv.Handle(indexPath, cors(indexHandler))
 
 	recordPath, recordHandler := recordconnect.NewRecordServiceHandler(
-		recordhandler.New(ir, rr, time.Now, a.l),
+		recordhandler.New(ir, rr, time.Now, rt.Log),
 		interceptors,
 	)
-	a.rt.Server.Handle(recordPath, cors(recordHandler))
+	srv.Handle(recordPath, cors(recordHandler))
 
 	var resErr error
-	a.rt.Logger.Info().Str("addr", a.rt.Server.Listener().Addr().String()).Msg("starting server")
-	if srvErr := <-a.rt.Server.Start(ctx); srvErr != nil {
+	rt.Log.Info().Str("addr", srv.Listener().Addr().String()).Msg("starting server")
+	if srvErr := srv.Run(rt.Ctx); srvErr != nil {
 		if !errors.Is(srvErr, http.ErrServerClosed) {
 			resErr = errors.Join(resErr, fmt.Errorf("server: %w", err))
 		}

@@ -52,6 +52,10 @@ func newDB(t *testing.T, dsn string) *TestDB {
 	require.NoError(t, err)
 	require.NoError(t, db.Ping())
 
+	t.Cleanup(func() {
+		require.NoError(t, db.Close())
+	})
+
 	return &TestDB{
 		t: t,
 		d: db,

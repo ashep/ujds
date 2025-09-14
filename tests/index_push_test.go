@@ -16,17 +16,17 @@ import (
 
 func TestIndex_Push(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -34,11 +34,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("InvalidIndexName", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -46,11 +46,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("InvalidSchema", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -59,11 +59,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid schema: invalid character ']' looking for beginning of object key string")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -82,11 +82,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkEmptyTitle", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -105,11 +105,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkEmptySchema", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -128,11 +128,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkPushTheSame", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -158,11 +158,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkPushUpdate", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -188,6 +188,6 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 }

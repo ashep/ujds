@@ -19,27 +19,27 @@ import (
 
 func TestRecord_Find(tt *testing.T) {
 	tt.Run("InvalidAuthorization", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("anInvalidAuthToken")
 
 		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("EmptyIndexName", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("NoRecordsFound", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
@@ -49,11 +49,11 @@ func TestRecord_Find(tt *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, res.Msg.Records)
 		assert.Zero(t, res.Msg.Cursor)
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex1"}))
@@ -95,11 +95,11 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].CreatedAt, res.Msg.Records[1].TouchedAt)
 		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[1].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkWithSearch", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex1"}))
@@ -134,11 +134,11 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[0].CreatedAt, res.Msg.Records[0].TouchedAt)
 		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[0].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkOffsetLimit", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -175,11 +175,11 @@ func TestRecord_Find(tt *testing.T) {
 			cur = res.Msg.Cursor
 		}
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkSince", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -228,11 +228,11 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].TouchedAt, res.Msg.Records[1].UpdatedAt)
 		assert.Equal(t, `{"foo55": "bar55"}`, res.Msg.Records[1].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 
 	tt.Run("OkNotTouchedSince", func(t *testing.T) {
-		ta := testapp.New(t).Start()
+		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
@@ -287,6 +287,6 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].TouchedAt, res.Msg.Records[1].UpdatedAt)
 		assert.Equal(t, `{"foo5": "bar5"}`, res.Msg.Records[1].Data)
 
-		ta.AssertNoLogErrors()
+		ta.AssertLogNoErrors()
 	})
 }
