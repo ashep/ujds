@@ -43,9 +43,8 @@ func New(t *testing.T) *TestApp {
 		},
 	}
 
-	rnr := testrunner.New(t, app.Run, cfg)
-	rnr.SetTCPPortStartWaiter(srvAddr)
-	rnr.Start()
+	rnr := testrunner.New(t, app.Run, cfg).
+		SetTCPPortStartWaiter(srvAddr).Start()
 
 	ta := &TestApp{
 		t:   t,

@@ -5,7 +5,7 @@ go 1.25
 require (
 	connectrpc.com/connect v1.18.1
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/ashep/go-app v0.0.0-20250914101553-e53b9cf255f8
+	github.com/ashep/go-app v0.0.0-20250917171013-99e0ae493c96
 	github.com/ashep/go-apperrors v0.0.0-20230816175101-fd34c483d2f1
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/lib/pq v1.10.9
