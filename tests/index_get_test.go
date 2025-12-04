@@ -14,18 +14,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestIndex_Get(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestIndex_Get(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -34,10 +38,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("InvalidIndexName", func(t *testing.T) {
+	main.Run("InvalidIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -46,10 +51,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("IndexNotExists", func(t *testing.T) {
+	main.Run("IndexNotExists", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -58,10 +64,11 @@ func TestIndex_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: index is not found")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		ta.DB().InsertIndex("theIndexName", "theIndexTitle", `{"foo":"bar"}`)
@@ -79,6 +86,6 @@ func TestIndex_Get(tt *testing.T) {
 		assert.NotZero(t, res.Msg.CreatedAt)
 		assert.NotZero(t, res.Msg.UpdatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

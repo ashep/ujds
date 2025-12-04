@@ -15,18 +15,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestIndex_Clear(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestIndex_Clear(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -35,10 +39,11 @@ func TestIndex_Clear(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("InvalidIndexName", func(t *testing.T) {
+	main.Run("InvalidIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -47,10 +52,11 @@ func TestIndex_Clear(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -95,6 +101,6 @@ func TestIndex_Clear(tt *testing.T) {
 		rcs = ta.DB().GetRecords("theIndex2")
 		assert.Len(t, rcs, 3)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

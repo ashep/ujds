@@ -3,21 +3,17 @@ package testapp
 import (
 	"net/http"
 	"testing"
+	"time"
 
+	"github.com/ashep/go-app/testlogger"
 	"github.com/ashep/go-app/testrunner"
 	"github.com/ashep/ujds/internal/app"
 	"github.com/ashep/ujds/sdk/client"
 	_ "github.com/lib/pq" // it's ok in tests
 )
 
-const (
-	dbDSN = "postgres://postgres:postgres@postgres:5432/postgres?sslmode=disable"
-)
-
 type tRunner interface {
-	Logs() string
-	AssertLogNoErrors()
-	AssertLogNoWarns()
+	Logger() *testlogger.Logger
 }
 
 type TestApp struct {
@@ -30,21 +26,20 @@ type TestApp struct {
 func New(t *testing.T) *TestApp {
 	t.Helper()
 
-	db := newDB(t, dbDSN).Reset()
-	srvAddr := testrunner.RandLocalTCPAddr(t)
-
+	db := newDB(t)
 	cfg := app.Config{
 		DB: app.Database{
-			DSN: dbDSN,
+			DSN: db.DSN,
 		},
 		Server: app.Server{
-			Addr:      srvAddr.String(),
+			Addr:      testrunner.RandLocalTCPAddr(t).String(),
 			AuthToken: "theAuthToken",
 		},
 	}
 
 	rnr := testrunner.New(t, app.Run, cfg).
-		SetTCPPortStartWaiter(srvAddr).Start()
+		SetHTTPReadyStartWaiter("http://"+cfg.Server.Addr+"/metrics", time.Second*5).
+		Start()
 
 	ta := &TestApp{
 		t:   t,
@@ -63,16 +58,8 @@ func (ta *TestApp) Client(authToken string) *client.Client {
 	return client.New("http://"+ta.cfg.Server.Addr, authToken, http.DefaultClient)
 }
 
-func (ta *TestApp) Logs() string {
-	return ta.rnr.Logs()
-}
-
-func (ta *TestApp) AssertLogNoErrors() {
-	ta.rnr.AssertLogNoErrors()
-}
-
-func (ta *TestApp) AssertLogNoWarns() {
-	ta.rnr.AssertLogNoWarns()
+func (ta *TestApp) AssertNoWarnsAndErrors() {
+	ta.rnr.Logger().AssertNoWarnsAndErrors()
 }
 
 func (ta *TestApp) DB() *TestDB {

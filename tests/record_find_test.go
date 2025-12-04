@@ -17,28 +17,33 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestRecord_Find(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestRecord_Find(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("anInvalidAuthToken")
 
 		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
 		_, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("NoRecordsFound", func(t *testing.T) {
+	main.Run("NoRecordsFound", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -49,10 +54,11 @@ func TestRecord_Find(tt *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, res.Msg.Records)
 		assert.Zero(t, res.Msg.Cursor)
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -95,10 +101,11 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].CreatedAt, res.Msg.Records[1].TouchedAt)
 		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[1].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkWithSearch", func(t *testing.T) {
+	main.Run("OkWithSearch", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -134,10 +141,11 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[0].CreatedAt, res.Msg.Records[0].TouchedAt)
 		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[0].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkOffsetLimit", func(t *testing.T) {
+	main.Run("OkOffsetLimit", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -175,10 +183,11 @@ func TestRecord_Find(tt *testing.T) {
 			cur = res.Msg.Cursor
 		}
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkSince", func(t *testing.T) {
+	main.Run("OkSince", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -228,10 +237,92 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].TouchedAt, res.Msg.Records[1].UpdatedAt)
 		assert.Equal(t, `{"foo55": "bar55"}`, res.Msg.Records[1].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkNotTouchedSince", func(t *testing.T) {
+	main.Run("OkTouchedSince", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t)
+		cli := ta.Client("")
+
+		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{Name: "theIndex"}))
+		require.NoError(t, err)
+
+		// Create initial records
+		for i := 0; i < 10; i++ {
+			_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+				Records: []*recordproto.PushRequest_Record{
+					{Index: "theIndex", Id: fmt.Sprintf("theRecord%d", i), Data: fmt.Sprintf(`{"foo%d":"bar%d"}`, i, i)},
+				},
+			}))
+			require.NoError(t, err)
+		}
+
+		// Wait to ensure a time difference
+		time.Sleep(time.Second * 2)
+
+		// Update some records to change their TouchedAt timestamp.
+		// They are not updated, just "touched", because their content is the same.
+		_, err = cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{
+			Records: []*recordproto.PushRequest_Record{
+				{Index: "theIndex", Id: "theRecord1", Data: `{"foo1":"bar1"}`},
+				{Index: "theIndex", Id: "theRecord3", Data: `{"foo3":"bar3"}`},
+				{Index: "theIndex", Id: "theRecord5", Data: `{"foo5":"bar5"}`},
+				{Index: "theIndex", Id: "theRecord7", Data: `{"foo7":"bar7"}`},
+				{Index: "theIndex", Id: "theRecord9", Data: `{"foo9":"bar9"}`},
+			},
+		}))
+		require.NoError(t, err)
+
+		// Find records touched since the specified time
+		res, err := cli.R.Find(context.Background(), connect.NewRequest(&recordproto.FindRequest{
+			Index:        "theIndex",
+			TouchedSince: time.Now().Add(-time.Second).Unix(),
+		}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Records, 5)
+
+		assert.Equal(t, "theRecord1", res.Msg.Records[0].Id)
+		assert.Equal(t, uint64(2), res.Msg.Records[0].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
+		assert.NotZero(t, res.Msg.Records[0].CreatedAt)
+		assert.Greater(t, res.Msg.Records[0].TouchedAt, res.Msg.Records[0].CreatedAt)
+		assert.Equal(t, `{"foo1": "bar1"}`, res.Msg.Records[0].Data)
+
+		assert.Equal(t, "theRecord3", res.Msg.Records[1].Id)
+		assert.Equal(t, uint64(4), res.Msg.Records[1].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[1].Index)
+		assert.NotZero(t, res.Msg.Records[1].CreatedAt)
+		assert.Greater(t, res.Msg.Records[1].TouchedAt, res.Msg.Records[1].CreatedAt)
+		assert.Equal(t, `{"foo3": "bar3"}`, res.Msg.Records[1].Data)
+
+		assert.Equal(t, "theRecord5", res.Msg.Records[2].Id)
+		assert.Equal(t, uint64(6), res.Msg.Records[2].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[2].Index)
+		assert.NotZero(t, res.Msg.Records[2].CreatedAt)
+		assert.Greater(t, res.Msg.Records[2].TouchedAt, res.Msg.Records[2].CreatedAt)
+		assert.Equal(t, `{"foo5": "bar5"}`, res.Msg.Records[2].Data)
+
+		assert.Equal(t, "theRecord7", res.Msg.Records[3].Id)
+		assert.Equal(t, uint64(8), res.Msg.Records[3].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[3].Index)
+		assert.NotZero(t, res.Msg.Records[3].CreatedAt)
+		assert.Greater(t, res.Msg.Records[3].TouchedAt, res.Msg.Records[3].CreatedAt)
+		assert.Equal(t, `{"foo7": "bar7"}`, res.Msg.Records[3].Data)
+
+		assert.Equal(t, "theRecord9", res.Msg.Records[4].Id)
+		assert.Equal(t, uint64(10), res.Msg.Records[4].Rev)
+		assert.Equal(t, "theIndex", res.Msg.Records[4].Index)
+		assert.NotZero(t, res.Msg.Records[4].CreatedAt)
+		assert.Greater(t, res.Msg.Records[4].TouchedAt, res.Msg.Records[4].CreatedAt)
+		assert.Equal(t, `{"foo9": "bar9"}`, res.Msg.Records[4].Data)
+
+		ta.AssertNoWarnsAndErrors()
+	})
+
+	main.Run("OkNotTouchedSince", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -287,6 +378,6 @@ func TestRecord_Find(tt *testing.T) {
 		assert.Equal(t, res.Msg.Records[1].TouchedAt, res.Msg.Records[1].UpdatedAt)
 		assert.Equal(t, `{"foo5": "bar5"}`, res.Msg.Records[1].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

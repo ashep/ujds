@@ -12,9 +12,10 @@ type FindRequest struct {
 	Index           string
 	Query           string
 	Since           time.Time
+	TouchedSince    *time.Time
+	NotTouchedSince *time.Time
 	Cursor          uint64
 	Limit           uint32
-	NotTouchedSince *time.Time
 }
 
 func (r *Repository) Find(ctx context.Context, req FindRequest) ([]Record, uint64, error) {
@@ -48,6 +49,11 @@ func (r *Repository) Find(ctx context.Context, req FindRequest) ([]Record, uint6
 	if req.NotTouchedSince != nil {
 		q += fmt.Sprintf(` AND r.touched_at < $%d`, len(qArgs)+1)
 		qArgs = append(qArgs, req.NotTouchedSince)
+	}
+
+	if req.TouchedSince != nil {
+		q += fmt.Sprintf(` AND r.touched_at >= $%d`, len(qArgs)+1)
+		qArgs = append(qArgs, req.TouchedSince)
 	}
 
 	q += fmt.Sprintf(` ORDER BY l.id LIMIT $%d`, len(qArgs)+1)
