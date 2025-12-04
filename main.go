@@ -13,6 +13,8 @@ import (
 func main() {
 	res := runner.New(app.Run).
 		AddConsoleLogWriter().
+		LoadEnvConfig().
+		LoadConfigFile("config.yml").
 		AddHTTPLogWriter().
 		Run()
 
