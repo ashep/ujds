@@ -40,6 +40,7 @@ message FindRequest {
   uint32 limit = 4;
   uint64 cursor = 5;
   int64 not_touched_since = 6;
+  int64 touched_since = 7;
 }
 
 message FindResponse {

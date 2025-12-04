@@ -2,71 +2,56 @@ package app
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/ashep/go-app/dbmigrator"
 	"github.com/ashep/go-app/health"
 	"github.com/ashep/go-app/httpserver"
-	"github.com/ashep/go-app/metrics"
+	"github.com/ashep/go-app/prommetrics"
 	"github.com/ashep/go-app/runner"
 	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/ashep/ujds/internal/recordrepo"
 	"github.com/ashep/ujds/internal/rpc/indexhandler"
 	"github.com/ashep/ujds/internal/rpc/recordhandler"
 	"github.com/ashep/ujds/internal/validation"
-	"github.com/ashep/ujds/migration"
 	indexconnect "github.com/ashep/ujds/sdk/proto/ujds/index/v1/v1connect"
 	recordconnect "github.com/ashep/ujds/sdk/proto/ujds/record/v1/v1connect"
+	"github.com/ashep/ujds/sql"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
-	args := []string{os.Args[0]}
+	l := rt.Log
+	cfg := rt.Cfg
 
-	for _, v := range os.Args[1:] {
-		if !strings.HasPrefix(v, "-test.") {
-			args = append(args, v)
-		}
-	}
-
-	flagSet := flag.NewFlagSet(args[0], flag.ContinueOnError)
-	migUp := flagSet.Bool("migrate-up", false, "apply database migrations")
-	migDown := flagSet.Bool("migrate-down", false, "revert database migrations")
-
-	if err := flagSet.Parse(args[1:]); err != nil {
-		return fmt.Errorf("command line arguments parse failed: %w", err)
-	}
-
-	db, err := dbConn(rt.Ctx, rt.Cfg.DB.DSN)
+	migRes, err := dbmigrator.RunPostgres(cfg.DB.DSN, sql.FS, "migrations", l)
 	if err != nil {
-		return fmt.Errorf("database connection failed: %w", err)
+		return fmt.Errorf("migrate db: %w", err)
+	}
+	if migRes.PrevVersion != migRes.NewVersion {
+		l.Info().
+			Uint("from", migRes.PrevVersion).
+			Uint("to", migRes.NewVersion).
+			Msg("database migrated")
 	}
 
-	if *migUp {
-		if err := migration.Up(db); err != nil {
-			return fmt.Errorf("migrration apply failed: %w", err)
-		}
-		rt.Log.Info().Msg("migrations applied")
-		return nil
+	pgx, err := pgxpool.New(rt.Ctx, cfg.DB.DSN)
+	if err != nil {
+		return fmt.Errorf("connect to db: %w", err)
 	}
+	defer pgx.Close()
 
-	if *migDown {
-		if err := migration.Down(db); err != nil {
-			return fmt.Errorf("migrration revert failed: %w", err)
-		}
-		rt.Log.Info().Msg("migrations reverted")
-		return nil
-	}
+	db := stdlib.OpenDBFromPool(pgx)
 
 	srv := httpserver.New(httpserver.WithAddr(rt.Cfg.Server.Addr))
 	health.RegisterServer(srv)
-	metrics.RegisterServer(rt.AppName, rt.AppVersion, srv)
+	prommetrics.RegisterServer(rt.AppName, rt.AppVersion, srv)
 
 	ir := indexrepo.New(db, validation.NewIndexNameValidator(), rt.Log)
 	rr := recordrepo.New(
@@ -94,34 +79,14 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	srv.Handle(recordPath, cors(recordHandler))
 
 	var resErr error
-	rt.Log.Info().Str("addr", srv.Listener().Addr().String()).Msg("starting server")
+	rt.Log.Info().Str("addr", srv.Listener().Addr().String()).Msg("starting")
 	if srvErr := srv.Run(rt.Ctx); srvErr != nil {
 		if !errors.Is(srvErr, http.ErrServerClosed) {
-			resErr = errors.Join(resErr, fmt.Errorf("server: %w", err))
+			resErr = errors.Join(resErr, fmt.Errorf("server: %w", srvErr))
 		}
-	}
-	if dbCloseErr := db.Close(); dbCloseErr != nil {
-		resErr = errors.Join(resErr, fmt.Errorf("db close: %w", dbCloseErr))
 	}
 
 	return resErr
-}
-
-func dbConn(ctx context.Context, dsn string) (*sql.DB, error) {
-	if dsn == "" {
-		dsn = "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-	}
-
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("open failed: %w", err)
-	}
-
-	if err = db.PingContext(ctx); err != nil {
-		return nil, fmt.Errorf("ping failed: %w", err)
-	}
-
-	return db, nil
 }
 
 func auth(token string) connect.UnaryInterceptorFunc {

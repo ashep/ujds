@@ -14,18 +14,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestIndex_Push(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestIndex_Push(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -34,10 +38,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("InvalidIndexName", func(t *testing.T) {
+	main.Run("InvalidIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -46,10 +51,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must match the regexp ^[a-zA-Z0-9.-]{1,255}$")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("InvalidSchema", func(t *testing.T) {
+	main.Run("InvalidSchema", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -59,10 +65,11 @@ func TestIndex_Push(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid schema: invalid character ']' looking for beginning of object key string")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -82,10 +89,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkEmptyTitle", func(t *testing.T) {
+	main.Run("OkEmptyTitle", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -105,10 +113,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkEmptySchema", func(t *testing.T) {
+	main.Run("OkEmptySchema", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -128,10 +137,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkPushTheSame", func(t *testing.T) {
+	main.Run("OkPushTheSame", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -158,10 +168,11 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkPushUpdate", func(t *testing.T) {
+	main.Run("OkPushUpdate", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
@@ -188,6 +199,6 @@ func TestIndex_Push(tt *testing.T) {
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

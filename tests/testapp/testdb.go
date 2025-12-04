@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ashep/go-app/testpostgres"
+	"github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/lib/pq" // ok in tests
 	"github.com/stretchr/testify/require"
-
-	"github.com/ashep/ujds/migration"
 )
 
 type Index struct {
@@ -40,33 +40,23 @@ type Record struct {
 }
 
 type TestDB struct {
+	DSN string
+
 	t *testing.T
 	d *sql.DB
 }
 
-func newDB(t *testing.T, dsn string) *TestDB {
+func newDB(t *testing.T) *TestDB {
 	t.Helper()
 
-	db, err := sql.Open("postgres", dsn)
-
-	require.NoError(t, err)
-	require.NoError(t, db.Ping())
-
-	t.Cleanup(func() {
-		require.NoError(t, db.Close())
-	})
+	tp := testpostgres.New(t)
 
 	return &TestDB{
+		DSN: tp.DSN(),
+
 		t: t,
-		d: db,
+		d: stdlib.OpenDBFromPool(tp.DB()),
 	}
-}
-
-func (d *TestDB) Reset() *TestDB {
-	require.NoError(d.t, migration.Down(d.d))
-	require.NoError(d.t, migration.Up(d.d))
-
-	return d
 }
 
 func (d *TestDB) GetIndex(name string) Index {

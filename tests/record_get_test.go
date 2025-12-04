@@ -15,18 +15,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestRecord_Get(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestRecord_Get(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("anInvalidAuthToken")
 
 		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -35,10 +39,11 @@ func TestRecord_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyRecordId", func(t *testing.T) {
+	main.Run("EmptyRecordId", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -48,10 +53,11 @@ func TestRecord_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("IndexNotExists", func(t *testing.T) {
+	main.Run("IndexNotExists", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -61,10 +67,11 @@ func TestRecord_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: record is not found")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("RecordNotExists", func(t *testing.T) {
+	main.Run("RecordNotExists", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -77,10 +84,11 @@ func TestRecord_Get(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "not_found: record is not found")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -108,6 +116,6 @@ func TestRecord_Get(tt *testing.T) {
 		assert.Equal(t, res.Msg.Record.TouchedAt, res.Msg.Record.CreatedAt)
 		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Record.Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

@@ -21,6 +21,12 @@ func (h *Handler) Find(
 		req.Msg.Limit = perPageMax
 	}
 
+	var tSince *time.Time
+	if req.Msg.TouchedSince != 0 {
+		t := time.Unix(req.Msg.TouchedSince, 0)
+		tSince = &t
+	}
+
 	var ntSince *time.Time
 	if req.Msg.NotTouchedSince != 0 {
 		t := time.Unix(req.Msg.NotTouchedSince, 0)
@@ -31,9 +37,10 @@ func (h *Handler) Find(
 		Index:           req.Msg.Index,
 		Query:           req.Msg.Search,
 		Since:           time.Unix(req.Msg.Since, 0),
+		TouchedSince:    tSince,
+		NotTouchedSince: ntSince,
 		Cursor:          req.Msg.Cursor,
 		Limit:           req.Msg.Limit,
-		NotTouchedSince: ntSince,
 	})
 
 	switch {

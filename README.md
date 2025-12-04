@@ -270,8 +270,9 @@ Returns all records from the index.
 - Request fields:
     - *required* **string** `index`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
     - *optional* **string** `search`: search query. TODO: describe search query syntax.
-    - *optional* **int** `since`: return only records, that have been modified since provided UNIX timestamp.
-    - *optional* **int** `notTouchedSince`: return only records, that have not been touched since a UNIX timestamp.
+    - *optional* **int** `since`: return only records, that have been **modified** since provided UNIX timestamp.
+    - *optional* **int** `touchedSince`: return only records, that have been **touched** since a UNIX timestamp.
+    - *optional* **int** `notTouchedSince`: return only records, that have not been **touched** since a UNIX timestamp.
     - *optional* **int** `cursor`: pagination: return records starting from provided position.
     - *optional* **int** `limit`: get only specified number of records; default and maximum is `500`.
 - Response fields:
@@ -397,6 +398,11 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog
+
+### 0.7 (2025-12-04)
+
+`RecordService/Find` request got the new `touchedSince` argument.
+
 
 ### 0.6 (2025-09-02)
 

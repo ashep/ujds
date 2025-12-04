@@ -16,18 +16,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestRecord_History(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestRecord_History(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("anInvalidAuthToken")
 
 		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("NoRecords", func(t *testing.T) {
+	main.Run("NoRecords", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -39,10 +43,11 @@ func TestRecord_History(tt *testing.T) {
 		require.NoError(t, err)
 		assert.Empty(t, res.Msg.Records)
 		assert.Zero(t, res.Msg.Cursor)
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyIndexName", func(t *testing.T) {
+	main.Run("EmptyIndexName", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -52,10 +57,11 @@ func TestRecord_History(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("EmptyRecordID", func(t *testing.T) {
+	main.Run("EmptyRecordID", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -65,10 +71,11 @@ func TestRecord_History(tt *testing.T) {
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -102,10 +109,11 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[1].Index)
 		assert.Equal(t, `{"foo1": "bar1"}`, res.Msg.Records[1].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkPaginated", func(t *testing.T) {
+	main.Run("OkPaginated", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -149,10 +157,11 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
 		assert.Equal(t, `{"foo1": "bar1"}`, res.Msg.Records[0].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkSince", func(t *testing.T) {
+	main.Run("OkSince", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
 
@@ -204,6 +213,6 @@ func TestRecord_History(tt *testing.T) {
 		assert.Equal(t, "theIndex", res.Msg.Records[0].Index)
 		assert.Equal(t, `{"foo2": "bar2"}`, res.Msg.Records[0].Data)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }

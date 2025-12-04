@@ -14,18 +14,22 @@ import (
 	"github.com/ashep/ujds/tests/testapp"
 )
 
-func TestIndex_List(tt *testing.T) {
-	tt.Run("InvalidAuthorization", func(t *testing.T) {
+func TestIndex_List(main *testing.T) {
+	main.Parallel()
+
+	main.Run("InvalidAuthorization", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("anInvalidAuthToken")
 		_, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
 
 		assert.EqualError(t, err, "unauthenticated: not authorized")
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	main.Run("Ok", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		ta.DB().InsertIndex("theIndexName1", "theIndexTitle1", `{}`)
@@ -43,10 +47,11 @@ func TestIndex_List(tt *testing.T) {
 		assert.Equal(t, "theIndexName2", res.Msg.Indices[1].Name)
 		assert.Equal(t, "theIndexTitle2", res.Msg.Indices[1].Title)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 
-	tt.Run("OkWithFilter", func(t *testing.T) {
+	main.Run("OkWithFilter", func(t *testing.T) {
+		t.Parallel()
 		ta := testapp.New(t)
 
 		ta.DB().InsertIndex("theIndexName1Foo", "theIndexTitle1", `{}`)
@@ -65,6 +70,6 @@ func TestIndex_List(tt *testing.T) {
 		assert.Equal(t, "theIndexName2Bar", res.Msg.Indices[0].Name)
 		assert.Equal(t, "theIndexTitle2", res.Msg.Indices[0].Title)
 
-		ta.AssertLogNoErrors()
+		ta.AssertNoWarnsAndErrors()
 	})
 }
