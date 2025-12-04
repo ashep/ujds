@@ -30,6 +30,10 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	l := rt.Log
 	cfg := rt.Cfg
 
+	if cfg.Server.Addr == "" {
+		cfg.Server.Addr = ":9000"
+	}
+
 	migRes, err := dbmigrator.RunPostgres(cfg.DB.DSN, sql.FS, "migrations", l)
 	if err != nil {
 		return fmt.Errorf("migrate db: %w", err)
