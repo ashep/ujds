@@ -82,7 +82,7 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	rt.Log.Info().Str("addr", srv.Listener().Addr().String()).Msg("starting")
 	if srvErr := srv.Run(rt.Ctx); srvErr != nil {
 		if !errors.Is(srvErr, http.ErrServerClosed) {
-			resErr = errors.Join(resErr, fmt.Errorf("server: %w", err))
+			resErr = errors.Join(resErr, fmt.Errorf("server: %w", srvErr))
 		}
 	}
 
