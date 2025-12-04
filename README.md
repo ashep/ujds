@@ -399,6 +399,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.7.1 (2025-12-04)
+
+Fixed HTTP server default address configuration.
+
 ### 0.7 (2025-12-04)
 
 `RecordService/Find` request got the new `touchedSince` argument.
