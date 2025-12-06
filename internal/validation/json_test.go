@@ -3,6 +3,7 @@ package validation_test
 import (
 	"testing"
 
+	"github.com/ashep/go-apperrors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -10,31 +11,58 @@ import (
 )
 
 func Test_ValidateJSON(tt *testing.T) {
-	tt.Run("EmptyJSON", func(t *testing.T) {
-		assert.EqualError(t, validation.NewJSONValidator().Validate(nil, nil), "invalid json: empty")
+	tt.Run("EmptySchema", func(t *testing.T) {
+		v := validation.NewJSONValidator("")
+		require.NotNil(t, v)
+		// Empty schema ("") should use default schema
+		err := v.Validate(`{"foo":"bar"}`)
+		assert.NoError(t, err)
 	})
 
-	tt.Run("NilSchema", func(t *testing.T) {
-		require.NoError(t, validation.NewJSONValidator().Validate(nil, []byte(`{"foo":"bar"}`)))
+	tt.Run("EmptyJSON", func(t *testing.T) {
+		v := validation.NewJSONValidator(`{}`)
+
+		err := v.Validate("")
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{
+			Subj:   "json",
+			Reason: "empty",
+		})
 	})
 
 	tt.Run("MalformedSchema", func(t *testing.T) {
-		err := validation.NewJSONValidator().Validate([]byte("{]"), []byte(`{"foo":"bar"}`))
-		require.EqualError(t, err, "invalid json schema or data: invalid character ']' looking for beginning of object key string")
+		v := validation.NewJSONValidator("{]")
+
+		err := v.Validate(`{"foo":"bar"}`)
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{
+			Subj:   "json schema or data",
+			Reason: "invalid character ']' looking for beginning of object key string",
+		})
 	})
 
 	tt.Run("MalformedData", func(t *testing.T) {
-		err := validation.NewJSONValidator().Validate(nil, []byte(`{]`))
-		require.EqualError(t, err, "invalid json schema or data: invalid character ']' looking for beginning of object key string")
+		v := validation.NewJSONValidator(`{}`)
+
+		err := v.Validate(`{]`)
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{
+			Subj:   "json schema or data",
+			Reason: "invalid character ']' looking for beginning of object key string",
+		})
 	})
 
 	tt.Run("DataValidationError", func(t *testing.T) {
-		err := validation.NewJSONValidator().Validate([]byte(`{"properties":{"foo":{"type":"number"}}}`), []byte(`{"foo":"bar"}`))
-		require.EqualError(t, err, "invalid json: foo: Invalid type. Expected: number, given: string")
+		v := validation.NewJSONValidator(`{"properties":{"foo":{"type":"number"}}}`)
+
+		err := v.Validate(`{"foo":"bar"}`)
+		assert.ErrorIs(t, err, apperrors.InvalidArgError{
+			Subj:   "json",
+			Reason: "foo: Invalid type. Expected: number, given: string",
+		})
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		err := validation.NewJSONValidator().Validate([]byte(`{"properties":{"foo":{"type":"string"}}}`), []byte(`{"foo":"bar"}`))
-		require.NoError(t, err)
+		v := validation.NewJSONValidator(`{"properties":{"foo":{"type":"string"}}}`)
+
+		err := v.Validate(`{"foo":"bar"}`)
+		assert.NoError(t, err)
 	})
 }

@@ -61,14 +61,12 @@ func TestIndex_Clear(main *testing.T) {
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex1",
-			Schema: "",
+			Name: "theIndex1",
 		}))
 		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex2",
-			Schema: "",
+			Name: "theIndex2",
 		}))
 		require.NoError(t, err)
 

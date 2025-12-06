@@ -54,29 +54,14 @@ func TestIndex_Push(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("InvalidSchema", func(t *testing.T) {
-		t.Parallel()
-		ta := testapp.New(t)
-
-		cli := ta.Client("")
-		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{]",
-		}))
-
-		assert.EqualError(t, err, "invalid_argument: invalid schema: invalid character ']' looking for beginning of object key string")
-		ta.AssertNoWarnsAndErrors()
-	})
-
 	main.Run("Ok", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle",
-			Schema: `{"foo":"bar"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle",
 		}))
 		require.NoError(t, err)
 
@@ -85,7 +70,6 @@ func TestIndex_Push(main *testing.T) {
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
 		assert.Equal(t, "theIndexTitle", idx[0].Title.String)
-		assert.Equal(t, `{"foo": "bar"}`, idx[0].Schema)
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
@@ -98,9 +82,8 @@ func TestIndex_Push(main *testing.T) {
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
-			Title:  "",
+			Name:  "theIndexName",
+			Title: "",
 		}))
 		require.NoError(t, err)
 
@@ -108,32 +91,7 @@ func TestIndex_Push(main *testing.T) {
 		assert.Len(t, idx, 1)
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
-		assert.Equal(t, `{}`, idx[0].Schema)
 		assert.Equal(t, "", idx[0].Title.String)
-		assert.NotZero(t, idx[0].CreatedAt)
-		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
-
-		ta.AssertNoWarnsAndErrors()
-	})
-
-	main.Run("OkEmptySchema", func(t *testing.T) {
-		t.Parallel()
-		ta := testapp.New(t)
-
-		cli := ta.Client("")
-		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle",
-			Schema: "",
-		}))
-		require.NoError(t, err)
-
-		idx := ta.DB().GetIndices()
-		assert.Len(t, idx, 1)
-		assert.Equal(t, 1, idx[0].ID)
-		assert.Equal(t, "theIndexName", idx[0].Name)
-		assert.Equal(t, "theIndexTitle", idx[0].Title.String)
-		assert.Equal(t, `{}`, idx[0].Schema)
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Equal(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
@@ -146,16 +104,14 @@ func TestIndex_Push(main *testing.T) {
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle",
-			Schema: `{"foo":"bar"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle",
 		}))
 		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle",
-			Schema: `{"foo":"bar"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle",
 		}))
 		require.NoError(t, err)
 
@@ -164,7 +120,6 @@ func TestIndex_Push(main *testing.T) {
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
 		assert.Equal(t, "theIndexTitle", idx[0].Title.String)
-		assert.Equal(t, `{"foo": "bar"}`, idx[0].Schema)
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 
@@ -177,16 +132,14 @@ func TestIndex_Push(main *testing.T) {
 
 		cli := ta.Client("")
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle1",
-			Schema: `{"foo1":"bar1"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle1",
 		}))
 		require.NoError(t, err)
 
 		_, err = cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle2",
-			Schema: `{"foo2":"bar2"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle2",
 		}))
 		require.NoError(t, err)
 
@@ -195,7 +148,6 @@ func TestIndex_Push(main *testing.T) {
 		assert.Equal(t, 1, idx[0].ID)
 		assert.Equal(t, "theIndexName", idx[0].Name)
 		assert.Equal(t, "theIndexTitle2", idx[0].Title.String)
-		assert.Equal(t, `{"foo2": "bar2"}`, idx[0].Schema)
 		assert.NotZero(t, idx[0].CreatedAt)
 		assert.Greater(t, idx[0].UpdatedAt, idx[0].CreatedAt)
 

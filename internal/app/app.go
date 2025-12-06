@@ -57,28 +57,24 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	health.RegisterServer(srv)
 	prommetrics.RegisterServer(rt.AppName, rt.AppVersion, srv)
 
-	ir := indexrepo.New(db, validation.NewIndexNameValidator(), rt.Log)
-	rr := recordrepo.New(
-		db,
-		validation.NewIndexNameValidator(),
-		validation.NewRecordIDValidator(),
-		validation.NewJSONValidator(),
-		rt.Log,
-	)
+	idxNameValidator := validation.NewIndexNameValidator()
+	recIDValidator := validation.NewRecordIDValidator()
+	recDataValidator := validation.NewJSONValidator(cfg.Validation.Record)
 
-	interceptors := connect.WithInterceptors(
-		auth(rt.Cfg.Server.AuthToken),
-	)
+	ir := indexrepo.New(db, idxNameValidator, rt.Log)
+	rr := recordrepo.New(db, idxNameValidator, recIDValidator, rt.Log)
+
+	icps := connect.WithInterceptors(auth(rt.Cfg.Server.AuthToken))
 
 	indexPath, indexHandler := indexconnect.NewIndexServiceHandler(
 		indexhandler.New(ir, time.Now, rt.Log),
-		interceptors,
+		icps,
 	)
 	srv.Handle(indexPath, cors(indexHandler))
 
 	recordPath, recordHandler := recordconnect.NewRecordServiceHandler(
-		recordhandler.New(ir, rr, time.Now, rt.Log),
-		interceptors,
+		recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, time.Now, rt.Log),
+		icps,
 	)
 	srv.Handle(recordPath, cors(recordHandler))
 

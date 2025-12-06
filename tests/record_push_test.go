@@ -94,7 +94,7 @@ func TestRecord_Push(main *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record id: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: record 0, id=: validation failed: invalid record id: must not be empty")
 		ta.AssertNoWarnsAndErrors()
 	})
 
@@ -116,11 +116,11 @@ func TestRecord_Push(main *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data: must not be empty")
+		assert.EqualError(t, err, "invalid_argument: record 0, id=theRecordID: validation failed: invalid json: empty")
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("InvalidDataJSON", func(t *testing.T) {
+	main.Run("MalformedDataJSON", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 		cli := ta.Client("")
@@ -138,18 +138,17 @@ func TestRecord_Push(main *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json schema or data: invalid character ']' looking for beginning of object key string")
+		assert.EqualError(t, err, "invalid_argument: record 0, id=theRecordID: validation failed: invalid json schema or data: invalid character ']' looking for beginning of object key string")
 		ta.AssertNoWarnsAndErrors()
 	})
 
 	main.Run("DataValidationFailed", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t)
+		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex",
 		}))
 		require.NoError(t, err)
 
@@ -163,18 +162,17 @@ func TestRecord_Push(main *testing.T) {
 			},
 		}))
 
-		assert.EqualError(t, err, "invalid_argument: invalid record data: invalid json: (root): foo is required")
+		assert.EqualError(t, err, `invalid_argument: record 0, id=theRecordID: validation failed: invalid json: (root): foo is required`)
 		ta.AssertNoWarnsAndErrors()
 	})
 
 	main.Run("Ok", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t)
+		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex",
 		}))
 		require.NoError(t, err)
 
@@ -214,12 +212,11 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdate", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t)
+		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex",
 		}))
 		require.NoError(t, err)
 
@@ -279,12 +276,11 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdateWithSameData", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t)
+		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
-			Name:   "theIndex",
-			Schema: `{"required": ["foo"]}`,
+			Name: "theIndex",
 		}))
 		require.NoError(t, err)
 

@@ -24,16 +24,36 @@ func (h *Handler) Push(
 	cache := make(map[string]indexrepo.Index)
 	updates := make([]recordrepo.RecordUpdate, 0)
 
-	for _, rec := range req.Msg.GetRecords() {
+	for i, rec := range req.Msg.GetRecords() {
 		index, err := h.getIndex(ctx, req.Spec().Procedure, rec.Index, cache)
 		if err != nil {
 			return nil, err
 		}
 
+		if vErr := h.idxNameValidator.Validate(rec.GetIndex()); vErr != nil {
+			return nil, connect.NewError(
+				connect.CodeInvalidArgument,
+				fmt.Errorf("record %d, index=%s: validation failed: %w", i, rec.GetIndex(), vErr),
+			)
+		}
+
+		if vErr := h.recIDValidator.Validate(rec.GetId()); vErr != nil {
+			return nil, connect.NewError(
+				connect.CodeInvalidArgument,
+				fmt.Errorf("record %d, id=%s: validation failed: %w", i, rec.GetId(), vErr),
+			)
+		}
+
+		if vErr := h.recDataValidator.Validate(rec.GetData()); vErr != nil {
+			return nil, connect.NewError(
+				connect.CodeInvalidArgument,
+				fmt.Errorf("record %d, id=%s: validation failed: %w", i, rec.GetId(), vErr),
+			)
+		}
+
 		updates = append(updates, recordrepo.RecordUpdate{
 			ID:      rec.GetId(),
 			IndexID: index.ID,
-			Schema:  index.Schema,
 			Data:    rec.GetData(),
 		})
 	}

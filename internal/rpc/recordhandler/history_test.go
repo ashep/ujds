@@ -35,7 +35,11 @@ func TestRecordHandler_History(tt *testing.T) {
 				Reason: "theRecordRepoReason",
 			})
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid theRecordRepoSubj: theRecordRepoReason")
@@ -52,7 +56,11 @@ func TestRecordHandler_History(tt *testing.T) {
 		rr.On("History", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
 			Return([]recordrepo.Record(nil), uint64(0), errors.New("theRecordRepoInternalError"))
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
@@ -86,7 +94,11 @@ func TestRecordHandler_History(tt *testing.T) {
 				},
 			}, uint64(78), nil)
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		res, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{
 			Index:  "theIndexName",
 			Id:     "theRecordID",

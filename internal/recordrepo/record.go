@@ -9,7 +9,6 @@ import (
 type RecordUpdate struct {
 	ID      string
 	IndexID uint64
-	Schema  []byte
 	Data    string
 }
 

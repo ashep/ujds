@@ -24,12 +24,11 @@ func TestRecordRepository_Find(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		req := recordrepo.FindRequest{
 			Index:           "theIndex",
 			Query:           "",
@@ -49,13 +48,12 @@ func TestRecordRepository_Find(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
 
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		req := recordrepo.FindRequest{
 			Index:           "theIndex",
 			Query:           "foo bar baz",
@@ -77,7 +75,6 @@ func TestRecordRepository_Find(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -85,7 +82,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnError(errors.New("theDbError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		req := recordrepo.FindRequest{
 			Index:           "theIndex",
 			Query:           "",
@@ -107,7 +104,6 @@ func TestRecordRepository_Find(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -119,7 +115,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(rows)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		req := recordrepo.FindRequest{
 			Index:           "theIndex",
 			Query:           "",
@@ -141,7 +137,6 @@ func TestRecordRepository_Find(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -149,7 +144,7 @@ func TestRecordRepository_Find(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		req := recordrepo.FindRequest{
 			Index:           "theIndex",
 			Query:           "",

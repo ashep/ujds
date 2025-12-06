@@ -32,8 +32,8 @@ func TestIndex_List(main *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 
-		ta.DB().InsertIndex("theIndexName1", "theIndexTitle1", `{}`)
-		ta.DB().InsertIndex("theIndexName2", "theIndexTitle2", `{}`)
+		ta.DB().InsertIndex("theIndexName1", "theIndexTitle1")
+		ta.DB().InsertIndex("theIndexName2", "theIndexTitle2")
 
 		cli := ta.Client("")
 		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
@@ -54,8 +54,8 @@ func TestIndex_List(main *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 
-		ta.DB().InsertIndex("theIndexName1Foo", "theIndexTitle1", `{}`)
-		ta.DB().InsertIndex("theIndexName2Bar", "theIndexTitle2", `{}`)
+		ta.DB().InsertIndex("theIndexName1Foo", "theIndexTitle1")
+		ta.DB().InsertIndex("theIndexName2Bar", "theIndexTitle2")
 
 		cli := ta.Client("")
 		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{

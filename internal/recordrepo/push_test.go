@@ -20,12 +20,11 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("EmptyUpdates", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{})
 		require.ErrorIs(t, err, apperrors.InvalidArgError{
@@ -37,14 +36,13 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("DbBeginError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectBegin().WillReturnError(errors.New("theBeginError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{{}})
 		require.EqualError(t, err, "db begin: theBeginError")
@@ -53,7 +51,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("DbPrepareSelectError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -62,7 +59,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare("SELECT log_id FROM record").
 			WillReturnError(errors.New("thePrepareSelectError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{{}})
 		require.EqualError(t, err, "prepare statements: get record by log id: thePrepareSelectError")
@@ -71,7 +68,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("DbPrepareInsertRecordLogError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -81,7 +77,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare("INSERT INTO record_log").
 			WillReturnError(errors.New("thePrepareInsertRecordLogError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{{}})
 		require.EqualError(t, err, "prepare statements: insert record log: thePrepareInsertRecordLogError")
@@ -90,7 +86,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("DbPrepareInsertRecordError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -101,7 +96,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare(`INSERT INTO record`).
 			WillReturnError(errors.New("thePrepareInsertRecordError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{{}})
 		require.EqualError(t, err, "prepare statements: insert record: thePrepareInsertRecordError")
@@ -110,7 +105,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 	tt.Run("DbPrepareTouchRecordError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
@@ -122,7 +116,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare(`UPDATE record`).
 			WillReturnError(errors.New("thePrepareTouchRecordError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{{}})
 		require.EqualError(t, err, "prepare statements: update record touch time: thePrepareTouchRecordError")
@@ -130,7 +124,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 
 	tt.Run("ZeroIndexID", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
+
 		recordIDValidator := &stringValidatorMock{}
 
 		db, dbm, err := sqlmock.New()
@@ -142,7 +136,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare(`INSERT INTO record`)
 		dbm.ExpectPrepare(`UPDATE record`)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 0, ID: "theRecordID"},
@@ -152,7 +146,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 
 	tt.Run("RecordIDValidationError", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
@@ -169,7 +162,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare(`INSERT INTO record`)
 		dbm.ExpectPrepare(`UPDATE record`)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID"},
@@ -179,7 +172,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 
 	tt.Run("EmptyRecordData", func(t *testing.T) {
 		indexNameValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
@@ -196,43 +188,12 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectPrepare(`INSERT INTO record`)
 		dbm.ExpectPrepare(`UPDATE record`)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: ""},
 		})
 		require.EqualError(t, err, "invalid record data: must not be empty")
-	})
-
-	tt.Run("JSONValidatorError", func(t *testing.T) {
-		indexNameValidator := &stringValidatorMock{}
-
-		recordIDValidator := &stringValidatorMock{}
-		recordIDValidator.ValidateFunc = func(s string) error {
-			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
-			return errors.New("theJSONValidatorError")
-		}
-
-		db, dbm, err := sqlmock.New()
-		require.NoError(t, err)
-
-		dbm.ExpectBegin()
-		dbm.ExpectPrepare("SELECT log_id FROM record")
-		dbm.ExpectPrepare("INSERT INTO record_log")
-		dbm.ExpectPrepare(`INSERT INTO record`)
-		dbm.ExpectPrepare(`UPDATE record`)
-
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
-
-		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
-			{IndexID: 123, ID: "theRecordID", Data: "{]"},
-		})
-		require.EqualError(t, err, "invalid record data: theJSONValidatorError")
 	})
 
 	tt.Run("DbGetRecordByChecksumError", func(t *testing.T) {
@@ -241,11 +202,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -261,7 +217,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectQuery("SELECT log_id FROM record").
 			WillReturnError(errors.New("theSelectError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -279,11 +235,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
-			return nil
-		}
-
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
@@ -298,7 +249,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectQuery("INSERT INTO record_log").
 			WillReturnError(errors.New("theInsertLogError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -313,11 +264,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -340,7 +286,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectExec("INSERT INTO record").
 			WillReturnError(errors.New("theInsertRecordError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -355,11 +301,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -384,7 +325,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 		dbm.ExpectCommit().
 			WillReturnError(errors.New("theCommitError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -399,11 +340,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -427,7 +363,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(345, 1))
 		dbm.ExpectCommit()
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -442,11 +378,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -468,7 +399,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 			WillReturnError(errors.New("theDbUpdateTouchedAtError"))
 		dbm.ExpectCommit()
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},
@@ -483,11 +414,6 @@ func TestRecordRepository_Push(tt *testing.T) {
 		recordIDValidator := &stringValidatorMock{}
 		recordIDValidator.ValidateFunc = func(s string) error {
 			assert.Equal(t, s, "theRecordID")
-			return nil
-		}
-
-		jsonValidator := &jsonValidatorMock{}
-		jsonValidator.ValidateFunc = func(schema []byte, data []byte) error {
 			return nil
 		}
 
@@ -509,7 +435,7 @@ func TestRecordRepository_Push(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		dbm.ExpectCommit()
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		err = repo.Push(context.Background(), []recordrepo.RecordUpdate{
 			{IndexID: 123, ID: "theRecordID", Data: `{"foo":"bar"}`},

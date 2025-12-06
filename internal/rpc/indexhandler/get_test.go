@@ -90,7 +90,6 @@ func TestIndexHandler_Get(tt *testing.T) {
 				ID:        123,
 				Name:      "theIndexName",
 				Title:     sql.NullString{String: "theIndexTitle", Valid: true},
-				Schema:    []byte(`{"foo":"bar"}`),
 				CreatedAt: time.Unix(123, 0),
 				UpdatedAt: time.Unix(234, 0),
 			}, nil)
@@ -107,6 +106,5 @@ func TestIndexHandler_Get(tt *testing.T) {
 		assert.Equal(t, "theIndexTitle", res.Msg.Title)
 		assert.Equal(t, uint64(time.Unix(123, 0).Unix()), res.Msg.CreatedAt)
 		assert.Equal(t, uint64(time.Unix(234, 0).Unix()), res.Msg.UpdatedAt)
-		assert.Equal(t, `{"foo":"bar"}`, res.Msg.Schema)
 	})
 }

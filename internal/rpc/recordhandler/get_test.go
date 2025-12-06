@@ -34,7 +34,11 @@ func TestRecordHandler_Get(tt *testing.T) {
 				Reason: "theRecordRepoReason",
 			})
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid theRecordRepoSubj: theRecordRepoReason")
@@ -53,7 +57,11 @@ func TestRecordHandler_Get(tt *testing.T) {
 				Subj: "theRecordRepoSubj",
 			})
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
 		assert.EqualError(t, err, "not_found: theRecordRepoSubj is not found")
@@ -70,7 +78,11 @@ func TestRecordHandler_Get(tt *testing.T) {
 		rr.On("Get", mock.Anything, mock.Anything, mock.Anything).
 			Return(recordrepo.Record{}, errors.New("theRecordRepoError"))
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
@@ -95,7 +107,11 @@ func TestRecordHandler_Get(tt *testing.T) {
 				TouchedAt: time.Unix(113, 0),
 			}, nil)
 
-		h := recordhandler.New(ir, rr, now, l)
+		idxNameValidator := &stringValidatorMock{}
+		recIDValidator := &stringValidatorMock{}
+		recDataValidator := &stringValidatorMock{}
+
+		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Index: "theIndexName",
 			Id:    "theRecordID",

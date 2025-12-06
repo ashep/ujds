@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
-	"github.com/ashep/go-apperrors"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,27 +24,9 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 		require.NoError(t, err)
 
 		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "", "", "")
+		err = repo.Upsert(context.Background(), "", "")
 
 		assert.EqualError(t, err, "theValidatorError")
-	})
-
-	tt.Run("InvalidSchema", func(t *testing.T) {
-		nameValidator := &stringValidatorMock{}
-		nameValidator.ValidateFunc = func(s string) error {
-			return nil
-		}
-
-		db, _, err := sqlmock.New()
-		require.NoError(t, err)
-
-		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "theIndex", "", "{]")
-
-		require.ErrorIs(t, err, apperrors.InvalidArgError{
-			Subj:   "schema",
-			Reason: "invalid character ']' looking for beginning of object key string",
-		})
 	})
 
 	tt.Run("DBExecError", func(t *testing.T) {
@@ -62,7 +43,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			WillReturnError(errors.New("theDBExecError"))
 
 		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
+		err = repo.Upsert(context.Background(), "theIndex", "theTitle")
 
 		require.EqualError(t, err, "db query failed: theDBExecError")
 	})
@@ -81,26 +62,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
 		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "{}")
-
-		require.NoError(t, err)
-	})
-
-	tt.Run("OkEmptySchema", func(t *testing.T) {
-		nameValidator := &stringValidatorMock{}
-		nameValidator.ValidateFunc = func(s string) error {
-			return nil
-		}
-
-		db, dbm, err := sqlmock.New()
-		require.NoError(t, err)
-
-		dbm.
-			ExpectExec(`INSERT INTO index`).
-			WillReturnResult(sqlmock.NewResult(123, 234))
-
-		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "theIndex", "theTitle", "")
+		err = repo.Upsert(context.Background(), "theIndex", "theTitle")
 
 		require.NoError(t, err)
 	})
@@ -119,7 +81,7 @@ func TestIndexRepository_Upsert(tt *testing.T) {
 			WillReturnResult(sqlmock.NewResult(123, 234))
 
 		repo := indexrepo.New(db, nameValidator, zerolog.Nop())
-		err = repo.Upsert(context.Background(), "theIndex", "", "{}")
+		err = repo.Upsert(context.Background(), "theIndex", "")
 
 		require.NoError(t, err)
 	})

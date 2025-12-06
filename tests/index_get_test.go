@@ -71,7 +71,7 @@ func TestIndex_Get(main *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 
-		ta.DB().InsertIndex("theIndexName", "theIndexTitle", `{"foo":"bar"}`)
+		ta.DB().InsertIndex("theIndexName", "theIndexTitle")
 
 		cli := ta.Client("")
 
@@ -82,7 +82,6 @@ func TestIndex_Get(main *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "theIndexName", res.Msg.Name)
 		assert.Equal(t, "theIndexTitle", res.Msg.Title)
-		assert.Equal(t, `{"foo": "bar"}`, res.Msg.Schema)
 		assert.NotZero(t, res.Msg.CreatedAt)
 		assert.NotZero(t, res.Msg.UpdatedAt)
 

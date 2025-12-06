@@ -22,13 +22,36 @@ type recordRepo interface {
 	History(ctx context.Context, index, id string, since time.Time, cursor uint64, limit uint32) ([]recordrepo.Record, uint64, error)
 }
 
-type Handler struct {
-	ir  indexRepo
-	rr  recordRepo
-	now func() time.Time
-	l   zerolog.Logger
+type stringValidator interface {
+	Validate(s string) error
 }
 
-func New(ir indexRepo, rr recordRepo, now func() time.Time, l zerolog.Logger) *Handler {
-	return &Handler{ir: ir, rr: rr, now: now, l: l}
+type Handler struct {
+	ir               indexRepo
+	rr               recordRepo
+	idxNameValidator stringValidator
+	recIDValidator   stringValidator
+	recDataValidator stringValidator
+	now              func() time.Time
+	l                zerolog.Logger
+}
+
+func New(
+	ir indexRepo,
+	rr recordRepo,
+	idxNameValidator,
+	recIDValidator,
+	recDataValidator stringValidator,
+	now func() time.Time,
+	l zerolog.Logger,
+) *Handler {
+	return &Handler{
+		ir:               ir,
+		rr:               rr,
+		idxNameValidator: idxNameValidator,
+		recIDValidator:   recIDValidator,
+		recDataValidator: recDataValidator,
+		now:              now,
+		l:                l,
+	}
 }

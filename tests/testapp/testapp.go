@@ -23,7 +23,15 @@ type TestApp struct {
 	db  *TestDB
 }
 
-func New(t *testing.T) *TestApp {
+type ConfigOption func(*app.Config)
+
+func WithConfigOptionValidationRecord(v string) ConfigOption {
+	return func(cfg *app.Config) {
+		cfg.Validation.Record = v
+	}
+}
+
+func New(t *testing.T, opts ...ConfigOption) *TestApp {
 	t.Helper()
 
 	db := newDB(t)
@@ -35,6 +43,10 @@ func New(t *testing.T) *TestApp {
 			Addr:      testrunner.RandLocalTCPAddr(t).String(),
 			AuthToken: "theAuthToken",
 		},
+	}
+
+	for _, opt := range opts {
+		opt(&cfg)
 	}
 
 	rnr := testrunner.New(t, app.Run, cfg).

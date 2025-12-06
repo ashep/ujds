@@ -28,7 +28,6 @@ func (h *Handler) Get(
 	return connect.NewResponse(&proto.GetResponse{
 		Name:      index.Name,
 		Title:     index.Title.String,
-		Schema:    string(index.Schema),
 		CreatedAt: uint64(index.CreatedAt.Unix()), //nolint:gosec // ok
 		UpdatedAt: uint64(index.UpdatedAt.Unix()), //nolint:gosec // ok
 	}), nil

@@ -24,12 +24,11 @@ func TestRecordRepository_History(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "theIndexNameValidationError")
 	})
@@ -47,12 +46,10 @@ func TestRecordRepository_History(tt *testing.T) {
 			return fmt.Errorf("theRecordIDValidationError")
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "theRecordIDValidationError")
 	})
@@ -70,15 +67,13 @@ func TestRecordRepository_History(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnError(errors.New("theDbQueryError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "db query: theDbQueryError")
 	})
@@ -96,8 +91,6 @@ func TestRecordRepository_History(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		rows := sqlmock.NewRows([]string{"id", "index_id", "data", "created_at"}).
 			RowError(0, errors.New("theRowError"))
 		rows.AddRow(123, 234, `{}`, time.Time{})
@@ -108,7 +101,7 @@ func TestRecordRepository_History(tt *testing.T) {
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(rows)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, _, err = repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.EqualError(t, err, "db rows iteration: theRowError")
 	})
@@ -126,15 +119,13 @@ func TestRecordRepository_History(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
 		dbm.ExpectQuery(`SELECT`).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		res, cur, err := repo.History(context.Background(), "theIndexName", "theRecordID", time.Unix(0, 0), 0, 0)
 		require.NoError(t, err)
 		assert.Len(t, res, 0)

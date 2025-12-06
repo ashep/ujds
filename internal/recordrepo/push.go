@@ -114,10 +114,6 @@ func (r *Repository) upsertOrTouch(ctx context.Context, stmt *statements, upd Re
 		return apperrors.InvalidArgError{Subj: "record data", Reason: "must not be empty"}
 	}
 
-	if err := r.jsonValidator.Validate(upd.Schema, []byte(upd.Data)); err != nil {
-		return apperrors.InvalidArgError{Subj: "record data", Reason: err.Error()}
-	}
-
 	row := stmt.getLog.QueryRowContext(ctx, upd.Checksum())
 
 	logID := uint64(0)

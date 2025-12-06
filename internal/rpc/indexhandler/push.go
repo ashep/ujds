@@ -14,7 +14,7 @@ func (h *Handler) Push(
 	ctx context.Context,
 	req *connect.Request[proto.PushRequest],
 ) (*connect.Response[proto.PushResponse], error) {
-	err := h.repo.Upsert(ctx, req.Msg.Name, req.Msg.Title, req.Msg.Schema)
+	err := h.repo.Upsert(ctx, req.Msg.Name, req.Msg.Title)
 
 	switch {
 	case errors.As(err, &apperrors.InvalidArgError{}):

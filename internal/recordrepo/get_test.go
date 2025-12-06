@@ -24,12 +24,11 @@ func TestRecordRepository_Get(tt *testing.T) {
 		}
 
 		recordIDValidator := &stringValidatorMock{}
-		jsonValidator := &jsonValidatorMock{}
 
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "theIndexNameValidationError")
 	})
@@ -47,12 +46,10 @@ func TestRecordRepository_Get(tt *testing.T) {
 			return fmt.Errorf("theRecordIDValidationError")
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "theRecordIDValidationError")
 	})
@@ -70,8 +67,6 @@ func TestRecordRepository_Get(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
@@ -79,7 +74,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT`).
 			WillReturnRows(sqlmock.NewRows([]string{}))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.ErrorIs(t, err, apperrors.NotFoundError{Subj: "record"})
@@ -98,8 +93,6 @@ func TestRecordRepository_Get(tt *testing.T) {
 			return nil
 		}
 
-		jsonValidator := &jsonValidatorMock{}
-
 		db, dbm, err := sqlmock.New()
 		require.NoError(t, err)
 
@@ -107,7 +100,7 @@ func TestRecordRepository_Get(tt *testing.T) {
 			ExpectQuery(`SELECT`).
 			WillReturnError(errors.New("theSQLError"))
 
-		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, jsonValidator, zerolog.Nop())
+		repo := recordrepo.New(db, indexNameValidator, recordIDValidator, zerolog.Nop())
 
 		_, err = repo.Get(context.Background(), "theIndexName", "theRecordID")
 		require.EqualError(t, err, "db scan: theSQLError")

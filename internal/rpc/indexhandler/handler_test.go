@@ -11,8 +11,8 @@ type repoMock struct {
 	mock.Mock
 }
 
-func (m *repoMock) Upsert(ctx context.Context, name, title, schema string) error {
-	args := m.Called(ctx, name, title, schema)
+func (m *repoMock) Upsert(ctx context.Context, name, title string) error {
+	args := m.Called(ctx, name, title)
 	return args.Error(0)
 }
 

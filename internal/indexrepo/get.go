@@ -15,10 +15,10 @@ func (r *Repository) Get(ctx context.Context, name string) (Index, error) {
 	}
 
 	idx := Index{Name: name}
-	q := `SELECT id, title, schema, created_at, updated_at FROM index WHERE name=$1`
+	q := `SELECT id, title, created_at, updated_at FROM index WHERE name=$1`
 
 	row := r.db.QueryRowContext(ctx, q, name)
-	if err := row.Scan(&idx.ID, &idx.Title, &idx.Schema, &idx.CreatedAt, &idx.UpdatedAt); errors.Is(err, sql.ErrNoRows) {
+	if err := row.Scan(&idx.ID, &idx.Title, &idx.CreatedAt, &idx.UpdatedAt); errors.Is(err, sql.ErrNoRows) {
 		return Index{}, apperrors.NotFoundError{Subj: "index"}
 	} else if err != nil {
 		return Index{}, fmt.Errorf("db scan: %w", err)

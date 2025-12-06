@@ -399,6 +399,11 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.8 (2025-12-05)
+
+- Get rid of per-index schema.
+- Global schema introduced.
+
 ### 0.7.1 (2025-12-04)
 
 Fixed HTTP server default address configuration.

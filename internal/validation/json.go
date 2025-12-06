@@ -5,25 +5,33 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-type JSONValidator struct{}
-
-func NewJSONValidator() *JSONValidator {
-	return &JSONValidator{}
+type JSONValidator struct {
+	ldr gojsonschema.JSONLoader
 }
 
-func (v *JSONValidator) Validate(schema, data []byte) error {
-	if len(data) == 0 {
+func NewJSONValidator(sch string) *JSONValidator {
+	if len(sch) == 0 {
+		sch = "{}"
+	}
+
+	return &JSONValidator{
+		ldr: gojsonschema.NewBytesLoader([]byte(sch)),
+	}
+}
+
+func (v *JSONValidator) Validate(data string) error {
+	if v.ldr == nil {
+		return nil
+	}
+
+	if data == "" {
 		return apperrors.InvalidArgError{
 			Subj:   "json",
 			Reason: "empty",
 		}
 	}
 
-	if schema == nil {
-		schema = []byte("{}")
-	}
-
-	res, err := gojsonschema.Validate(gojsonschema.NewBytesLoader(schema), gojsonschema.NewBytesLoader(data))
+	res, err := gojsonschema.Validate(v.ldr, gojsonschema.NewBytesLoader([]byte(data)))
 	if err != nil {
 		return apperrors.InvalidArgError{
 			Subj:   "json schema or data",

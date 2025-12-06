@@ -25,13 +25,12 @@ func TestIndexHandler_Push(tt *testing.T) {
 
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
-		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
+			Name: "theIndexName",
 		}))
 
 		assert.EqualError(t, err, "invalid_argument: invalid theSubj: theReason")
@@ -45,13 +44,12 @@ func TestIndexHandler_Push(tt *testing.T) {
 
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
-		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("theRepoError"))
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
+			Name: "theIndexName",
 		}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
@@ -65,13 +63,12 @@ func TestIndexHandler_Push(tt *testing.T) {
 
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
-		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything, mock.Anything).
+		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(apperrors.NotFoundError{Subj: "theNotFoundSubj"})
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Schema: "{}",
+			Name: "theIndexName",
 		}))
 
 		assert.EqualError(t, err, "not_found: theNotFoundSubj is not found")
@@ -85,14 +82,13 @@ func TestIndexHandler_Push(tt *testing.T) {
 
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
-		rm.On("Upsert", mock.Anything, "theIndexName", "", `{"foo":"bar"}`).
+		rm.On("Upsert", mock.Anything, "theIndexName", "").
 			Return(nil)
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "",
-			Schema: `{"foo":"bar"}`,
+			Name:  "theIndexName",
+			Title: "",
 		}))
 
 		assert.NoError(t, err)
@@ -106,14 +102,13 @@ func TestIndexHandler_Push(tt *testing.T) {
 
 		rm := &repoMock{}
 		defer rm.AssertExpectations(t)
-		rm.On("Upsert", mock.Anything, "theIndexName", "theIndexTitle", `{"foo":"bar"}`).
+		rm.On("Upsert", mock.Anything, "theIndexName", "theIndexTitle").
 			Return(nil)
 
 		h := indexhandler.New(rm, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
-			Name:   "theIndexName",
-			Title:  "theIndexTitle",
-			Schema: `{"foo":"bar"}`,
+			Name:  "theIndexName",
+			Title: "theIndexTitle",
 		}))
 
 		assert.NoError(t, err)
