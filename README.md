@@ -7,7 +7,7 @@ The **Universal JSON Data Storage** stores arbitrary JSON data and keeps changes
 
 ## Configuration
 
-The service can be configured in three ways: via YAML file, via env variables or using both. Env variables takes
+The service can be configured in three ways: via YAML file, via env variables or using both. Env variables take 
 precedence over config file.
 
 If the `config.yaml` file is found in the current directory, it will be loaded before env variables. It is possible to
@@ -74,7 +74,6 @@ Creates a new index or updates an existing one.
 - Request fields:
     - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
     - *optional* **string** `title`: index title.
-    - *optional* **string** `schema`: JSON validation schema.
 
 Request example:
 
@@ -85,8 +84,7 @@ curl --request POST \
   --header 'Content-Type: application/json' \
   --data '{
 	"name": "books",
-	"title": "The books",
-	"schema": "{\"required\":[\"author\",\"title\"]}"
+	"title": "The books"
 }'
 ```
 
@@ -99,7 +97,6 @@ Returns an index metadata.
 - Response fields:
     - **string** `name`: index name.
     - **string** `title`: index title.
-    - **string** `schema`: JSON validation schema.
     - **int** `createdAt`: creation UNIX timestamp.
     - **int** `updatedAt`: update UNIX timestamp.
 
@@ -119,7 +116,6 @@ Response example:
 {
   "name": "books",
   "title": "The books",
-  "schema": "{\"required\": [\"author\", \"title\"]}",
   "createdAt": "1693768684",
   "updatedAt": "1693769057"
 }
