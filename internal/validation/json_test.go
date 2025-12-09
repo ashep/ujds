@@ -47,7 +47,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		err := v.Validate("test", "   ")
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json schema or data",
-			Reason: "invalid character ' ' looking for beginning of value",
+			Reason: "EOF",
 		})
 	})
 
@@ -187,7 +187,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		err = v.Validate("product_123", `{"id":123,"name":"Widget"}`)
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json",
-			Reason: "price is required",
+			Reason: "(root): price is required",
 		})
 
 		// Invalid type
@@ -255,7 +255,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		err = v.Validate("strict_obj", `{"name":"test","extra":"field"}`)
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json",
-			Reason: "Additional property extra is not allowed",
+			Reason: "(root): Additional property extra is not allowed",
 		})
 	})
 
@@ -302,7 +302,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		err = v.Validate("number_field", `"not a number"`)
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json",
-			Reason: "Invalid type. Expected: number, given: string",
+			Reason: "(root): Invalid type. Expected: number, given: string",
 		})
 	})
 
@@ -343,7 +343,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		}`)
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json",
-			Reason: "address.city is required",
+			Reason: "address: city is required",
 		})
 	})
 
@@ -419,7 +419,7 @@ func Test_ValidateJSON(tt *testing.T) {
 		err = v.Validate("user_789", `{}`)
 		assert.ErrorIs(t, err, apperrors.InvalidArgError{
 			Subj:   "json",
-			Reason: "name is required",
+			Reason: "(root): name is required",
 		})
 	})
 }
