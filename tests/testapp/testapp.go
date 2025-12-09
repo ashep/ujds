@@ -25,9 +25,9 @@ type TestApp struct {
 
 type ConfigOption func(*app.Config)
 
-func WithConfigOptionValidationRecord(v string) ConfigOption {
+func WithConfigOptionValidationIndex(k, v string) ConfigOption {
 	return func(cfg *app.Config) {
-		cfg.Validation.Record = v
+		cfg.Validation.IndexStruct[k] = v
 	}
 }
 
@@ -42,6 +42,9 @@ func New(t *testing.T, opts ...ConfigOption) *TestApp {
 		Server: app.Server{
 			Addr:      testrunner.RandLocalTCPAddr(t).String(),
 			AuthToken: "theAuthToken",
+		},
+		Validation: app.Validation{
+			IndexStruct: make(map[string]string),
 		},
 	}
 

@@ -44,7 +44,7 @@ func (h *Handler) Push(
 			)
 		}
 
-		if vErr := h.recDataValidator.Validate(rec.GetData()); vErr != nil {
+		if vErr := h.recJSONValidator.Validate(rec.GetIndex(), rec.GetData()); vErr != nil {
 			return nil, connect.NewError(
 				connect.CodeInvalidArgument,
 				fmt.Errorf("record %d, id=%s: validation failed: %w", i, rec.GetId(), vErr),

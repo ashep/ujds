@@ -34,7 +34,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{}))
@@ -61,7 +61,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
@@ -89,7 +89,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
@@ -115,7 +115,7 @@ func TestRecordHandler_Push(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
@@ -150,9 +150,9 @@ func TestRecordHandler_Push(tt *testing.T) {
 		recIDValidator.On("Validate", "anID").
 			Return(nil)
 
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 		defer recDataValidator.AssertExpectations(t)
-		recDataValidator.On("Validate", "aData").
+		recDataValidator.On("Validate", "anIndex", "aData").
 			Return(errors.New("validation error"))
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
@@ -196,9 +196,9 @@ func TestRecordHandler_Push(tt *testing.T) {
 		recIDValidator.On("Validate", "anID").
 			Return(nil)
 
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 		defer recDataValidator.AssertExpectations(t)
-		recDataValidator.On("Validate", "aData").
+		recDataValidator.On("Validate", "anIndex", "aData").
 			Return(nil)
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
@@ -239,9 +239,9 @@ func TestRecordHandler_Push(tt *testing.T) {
 		recIDValidator.On("Validate", "anID").
 			Return(nil)
 
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 		defer recDataValidator.AssertExpectations(t)
-		recDataValidator.On("Validate", "aData").
+		recDataValidator.On("Validate", "anIndex", "aData").
 			Return(nil)
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
@@ -291,9 +291,9 @@ func TestRecordHandler_Push(tt *testing.T) {
 		recIDValidator.On("Validate", "theRecordID").
 			Return(nil)
 
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 		defer recDataValidator.AssertExpectations(t)
-		recDataValidator.On("Validate", "theRecordData").
+		recDataValidator.On("Validate", "theIndex", "theRecordData").
 			Return(nil)
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)

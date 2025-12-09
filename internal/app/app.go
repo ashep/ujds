@@ -59,7 +59,7 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 
 	idxNameValidator := validation.NewIndexNameValidator()
 	recIDValidator := validation.NewRecordIDValidator()
-	recDataValidator := validation.NewJSONValidator(cfg.Validation.Record)
+	recDataValidator := validation.NewJSONValidator(cfg.Validation.IndexStruct)
 
 	ir := indexrepo.New(db, idxNameValidator, rt.Log)
 	rr := recordrepo.New(db, idxNameValidator, recIDValidator, rt.Log)

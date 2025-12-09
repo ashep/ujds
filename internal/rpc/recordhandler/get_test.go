@@ -36,7 +36,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
@@ -59,7 +59,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
@@ -80,7 +80,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{}))
@@ -109,7 +109,7 @@ func TestRecordHandler_Get(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{

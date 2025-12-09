@@ -26,12 +26,16 @@ type stringValidator interface {
 	Validate(s string) error
 }
 
+type keyStringValidator interface {
+	Validate(k, v string) error
+}
+
 type Handler struct {
 	ir               indexRepo
 	rr               recordRepo
 	idxNameValidator stringValidator
 	recIDValidator   stringValidator
-	recDataValidator stringValidator
+	recJSONValidator keyStringValidator
 	now              func() time.Time
 	l                zerolog.Logger
 }
@@ -40,8 +44,8 @@ func New(
 	ir indexRepo,
 	rr recordRepo,
 	idxNameValidator,
-	recIDValidator,
-	recDataValidator stringValidator,
+	recIDValidator stringValidator,
+	recDataValidator keyStringValidator,
 	now func() time.Time,
 	l zerolog.Logger,
 ) *Handler {
@@ -50,7 +54,7 @@ func New(
 		rr:               rr,
 		idxNameValidator: idxNameValidator,
 		recIDValidator:   recIDValidator,
-		recDataValidator: recDataValidator,
+		recJSONValidator: recDataValidator,
 		now:              now,
 		l:                l,
 	}

@@ -1,48 +1,54 @@
 package validation
 
 import (
+	"regexp"
+
 	"github.com/ashep/go-apperrors"
 	"github.com/xeipuuv/gojsonschema"
 )
 
 type JSONValidator struct {
-	ldr gojsonschema.JSONLoader
+	ldr map[*regexp.Regexp]gojsonschema.JSONLoader
 }
 
-func NewJSONValidator(sch string) *JSONValidator {
-	if len(sch) == 0 {
-		sch = "{}"
+func NewJSONValidator(schemas map[string]string) *JSONValidator {
+	ldr := make(map[*regexp.Regexp]gojsonschema.JSONLoader)
+	for pattern, sch := range schemas {
+		re := regexp.MustCompile(pattern)
+		ldr[re] = gojsonschema.NewBytesLoader([]byte(sch))
 	}
 
 	return &JSONValidator{
-		ldr: gojsonschema.NewBytesLoader([]byte(sch)),
+		ldr: ldr,
 	}
 }
 
-func (v *JSONValidator) Validate(data string) error {
-	if v.ldr == nil {
-		return nil
-	}
-
-	if data == "" {
+func (v *JSONValidator) Validate(k, s string) error {
+	if s == "" {
 		return apperrors.InvalidArgError{
 			Subj:   "json",
 			Reason: "empty",
 		}
 	}
 
-	res, err := gojsonschema.Validate(v.ldr, gojsonschema.NewBytesLoader([]byte(data)))
-	if err != nil {
-		return apperrors.InvalidArgError{
-			Subj:   "json schema or data",
-			Reason: err.Error(),
+	for re, ldr := range v.ldr {
+		if !re.MatchString(k) {
+			continue
 		}
-	}
 
-	if !res.Valid() {
-		return apperrors.InvalidArgError{
-			Subj:   "json",
-			Reason: res.Errors()[0].String(),
+		res, err := gojsonschema.Validate(ldr, gojsonschema.NewBytesLoader([]byte(s)))
+		if err != nil {
+			return apperrors.InvalidArgError{
+				Subj:   "json schema or data",
+				Reason: err.Error(),
+			}
+		}
+
+		if !res.Valid() {
+			return apperrors.InvalidArgError{
+				Subj:   "json",
+				Reason: res.Errors()[0].String(),
+			}
 		}
 	}
 

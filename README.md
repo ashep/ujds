@@ -399,6 +399,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.9 (2025-12-09)
+
+- Add config-based per-index schema validation.
+
 ### 0.8 (2025-12-05)
 
 - Get rid of per-index schema.

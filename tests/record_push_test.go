@@ -142,9 +142,9 @@ func TestRecord_Push(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("DataValidationFailed", func(t *testing.T) {
+	main.Run("SchemaValidationFailed", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -168,7 +168,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("Ok", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -212,7 +212,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdate", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -276,7 +276,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdateWithSameData", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationRecord(`{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{

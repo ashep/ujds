@@ -37,7 +37,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
@@ -58,7 +58,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		_, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{}))
@@ -96,7 +96,7 @@ func TestRecordHandler_History(tt *testing.T) {
 
 		idxNameValidator := &stringValidatorMock{}
 		recIDValidator := &stringValidatorMock{}
-		recDataValidator := &stringValidatorMock{}
+		recDataValidator := &keyStringValidatorMock{}
 
 		h := recordhandler.New(ir, rr, idxNameValidator, recIDValidator, recDataValidator, now, l)
 		res, err := h.History(context.Background(), connect.NewRequest(&proto.HistoryRequest{

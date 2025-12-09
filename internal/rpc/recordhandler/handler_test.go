@@ -61,3 +61,12 @@ func (m *stringValidatorMock) Validate(data string) error {
 	args := m.Called(data)
 	return args.Error(0)
 }
+
+type keyStringValidatorMock struct {
+	mock.Mock
+}
+
+func (m *keyStringValidatorMock) Validate(k, v string) error {
+	args := m.Called(k, v)
+	return args.Error(0)
+}
