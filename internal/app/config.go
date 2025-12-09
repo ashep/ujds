@@ -37,6 +37,6 @@ func (c *Config) Validate() error {
 	}
 
 	c.Validation.IndexStruct[".*"] = json.RawMessage(`{}`) // validate all for valid JSON
-	
+
 	return nil
 }
