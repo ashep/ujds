@@ -1,6 +1,7 @@
 package testapp
 
 import (
+	"encoding/json"
 	"net/http"
 	"testing"
 	"time"
@@ -25,7 +26,7 @@ type TestApp struct {
 
 type ConfigOption func(*app.Config)
 
-func WithConfigOptionValidationIndex(k, v string) ConfigOption {
+func WithConfigOptionValidationIndex(k string, v json.RawMessage) ConfigOption {
 	return func(cfg *app.Config) {
 		cfg.Validation.IndexStruct[k] = v
 	}
@@ -44,7 +45,7 @@ func New(t *testing.T, opts ...ConfigOption) *TestApp {
 			AuthToken: "theAuthToken",
 		},
 		Validation: app.Validation{
-			IndexStruct: make(map[string]string),
+			IndexStruct: make(map[string]json.RawMessage),
 		},
 	}
 

@@ -1,6 +1,7 @@
 package validation_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/ashep/go-apperrors"
@@ -20,7 +21,7 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("EmptySchemaMap", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{})
+		v := validation.NewJSONValidator(map[string]json.RawMessage{})
 		require.NotNil(t, v)
 		// Empty schema map should skip validation
 		err := v.Validate("test", `{"foo":"bar"}`)
@@ -28,8 +29,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("EmptyJSON", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{}`),
 		})
 
 		err := v.Validate("test", "")
@@ -40,8 +41,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("WhitespaceOnlyJSON", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{}`),
 		})
 
 		err := v.Validate("test", "   ")
@@ -52,8 +53,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("MalformedSchema", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": "{]",
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage("{]"),
 		})
 
 		err := v.Validate("test", `{"foo":"bar"}`)
@@ -64,8 +65,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("MalformedData", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{}`),
 		})
 
 		err := v.Validate("test", `{]`)
@@ -76,8 +77,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("DataValidationError", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{"properties":{"foo":{"type":"number"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{"properties":{"foo":{"type":"number"}}}`),
 		})
 
 		err := v.Validate("test", `{"foo":"bar"}`)
@@ -88,8 +89,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("Ok", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{"properties":{"foo":{"type":"string"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{"properties":{"foo":{"type":"string"}}}`),
 		})
 
 		err := v.Validate("test", `{"foo":"bar"}`)
@@ -97,11 +98,11 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("ValidJSONArray", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^array_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^array_.*": json.RawMessage(`{
 				"type": "array",
 				"items": {"type": "string"}
-			}`,
+			}`),
 		})
 
 		err := v.Validate("array_test", `["foo", "bar", "baz"]`)
@@ -109,11 +110,11 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("InvalidJSONArrayItems", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^array_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^array_.*": json.RawMessage(`{
 				"type": "array",
 				"items": {"type": "string"}
-			}`,
+			}`),
 		})
 
 		err := v.Validate("array_test", `["foo", 123, "baz"]`)
@@ -124,9 +125,9 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("NoMatchingPattern", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^user_.*": `{"properties":{"name":{"type":"string"}}}`,
-			"^post_.*": `{"properties":{"title":{"type":"string"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^user_.*": json.RawMessage(`{"properties":{"name":{"type":"string"}}}`),
+			"^post_.*": json.RawMessage(`{"properties":{"title":{"type":"string"}}}`),
 		})
 
 		// Key doesn't match any pattern, should skip validation
@@ -135,9 +136,9 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("MatchingPatternWithValidData", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^user_.*": `{"properties":{"name":{"type":"string"}}}`,
-			"^post_.*": `{"properties":{"title":{"type":"string"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^user_.*": json.RawMessage(`{"properties":{"name":{"type":"string"}}}`),
+			"^post_.*": json.RawMessage(`{"properties":{"title":{"type":"string"}}}`),
 		})
 
 		err := v.Validate("user_123", `{"name":"John"}`)
@@ -148,9 +149,9 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("MatchingPatternWithInvalidData", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^user_.*": `{"properties":{"name":{"type":"string"}}}`,
-			"^post_.*": `{"properties":{"title":{"type":"string"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^user_.*": json.RawMessage(`{"properties":{"name":{"type":"string"}}}`),
+			"^post_.*": json.RawMessage(`{"properties":{"title":{"type":"string"}}}`),
 		})
 
 		err := v.Validate("user_123", `{"name":123}`)
@@ -167,8 +168,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("ComplexSchemaValidation", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^product_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^product_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"id": {"type": "integer"},
@@ -176,7 +177,7 @@ func Test_ValidateJSON(tt *testing.T) {
 					"price": {"type": "number", "minimum": 0}
 				},
 				"required": ["id", "name", "price"]
-			}`,
+			}`),
 		})
 
 		// Valid data
@@ -208,9 +209,9 @@ func Test_ValidateJSON(tt *testing.T) {
 	tt.Run("MultipleMatchingPatterns", func(t *testing.T) {
 		// When multiple patterns match, the first matching one should be used
 		// (based on map iteration, which is non-deterministic, but at least one should match)
-		v := validation.NewJSONValidator(map[string]string{
-			".*":      `{"properties":{"any":{"type":"string"}}}`,
-			"^test.*": `{"properties":{"test":{"type":"number"}}}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*":      json.RawMessage(`{"properties":{"any":{"type":"string"}}}`),
+			"^test.*": json.RawMessage(`{"properties":{"test":{"type":"number"}}}`),
 		})
 
 		// This should match one of the patterns and validate accordingly
@@ -224,8 +225,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("EmptySchemaString", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{}`),
 		})
 
 		// Empty schema {} should accept any valid JSON
@@ -237,14 +238,14 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("AdditionalPropertiesValidation", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^strict_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^strict_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"name": {"type": "string"}
 				},
 				"additionalProperties": false
-			}`,
+			}`),
 		})
 
 		// Valid - only defined properties
@@ -260,13 +261,13 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("NullValue", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			".*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			".*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"nullable": {"type": ["string", "null"]}
 				}
-			}`,
+			}`),
 		})
 
 		// Valid null value
@@ -279,10 +280,10 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("PrimitiveJSONValues", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^number_.*": `{"type": "number"}`,
-			"^string_.*": `{"type": "string"}`,
-			"^bool_.*":   `{"type": "boolean"}`,
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^number_.*": json.RawMessage(`{"type": "number"}`),
+			"^string_.*": json.RawMessage(`{"type": "string"}`),
+			"^bool_.*":   json.RawMessage(`{"type": "boolean"}`),
 		})
 
 		// Valid primitive values
@@ -307,8 +308,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("NestedObjectValidation", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^user_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^user_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"name": {"type": "string"},
@@ -321,7 +322,7 @@ func Test_ValidateJSON(tt *testing.T) {
 						"required": ["city"]
 					}
 				}
-			}`,
+			}`),
 		})
 
 		// Valid nested object
@@ -348,8 +349,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("EnumValidation", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^status_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^status_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"status": {
@@ -357,7 +358,7 @@ func Test_ValidateJSON(tt *testing.T) {
 						"enum": ["active", "inactive", "pending"]
 					}
 				}
-			}`,
+			}`),
 		})
 
 		// Valid enum value
@@ -373,8 +374,8 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("StringFormatValidation", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"^email_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"^email_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"email": {
@@ -382,7 +383,7 @@ func Test_ValidateJSON(tt *testing.T) {
 						"format": "email"
 					}
 				}
-			}`,
+			}`),
 		})
 
 		// Valid email format
@@ -398,14 +399,14 @@ func Test_ValidateJSON(tt *testing.T) {
 	})
 
 	tt.Run("CaseInsensitivePatternMatching", func(t *testing.T) {
-		v := validation.NewJSONValidator(map[string]string{
-			"(?i)^user_.*": `{
+		v := validation.NewJSONValidator(map[string]json.RawMessage{
+			"(?i)^user_.*": json.RawMessage(`{
 				"type": "object",
 				"properties": {
 					"name": {"type": "string"}
 				},
 				"required": ["name"]
-			}`,
+			}`),
 		})
 
 		// Should match with case-insensitive pattern

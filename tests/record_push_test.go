@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -144,7 +145,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("SchemaValidationFailed", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", json.RawMessage(`{"required": ["foo"]}`)))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -168,7 +169,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("Ok", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", json.RawMessage(`{"required": ["foo"]}`)))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -212,7 +213,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdate", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", json.RawMessage(`{"required": ["foo"]}`)))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{
@@ -276,7 +277,7 @@ func TestRecord_Push(main *testing.T) {
 
 	main.Run("OkUpdateWithSameData", func(t *testing.T) {
 		t.Parallel()
-		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", `{"required": ["foo"]}`))
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex("theIndex", json.RawMessage(`{"required": ["foo"]}`)))
 		cli := ta.Client("")
 
 		_, err := cli.I.Push(context.Background(), connect.NewRequest(&indexproto.PushRequest{

@@ -1,6 +1,7 @@
 package validation
 
 import (
+	"encoding/json"
 	"regexp"
 
 	"github.com/ashep/go-apperrors"
@@ -11,11 +12,11 @@ type JSONValidator struct {
 	ldr map[*regexp.Regexp]gojsonschema.JSONLoader
 }
 
-func NewJSONValidator(schemas map[string]string) *JSONValidator {
+func NewJSONValidator(schemas map[string]json.RawMessage) *JSONValidator {
 	ldr := make(map[*regexp.Regexp]gojsonschema.JSONLoader)
 	for pattern, sch := range schemas {
 		re := regexp.MustCompile(pattern)
-		ldr[re] = gojsonschema.NewBytesLoader([]byte(sch))
+		ldr[re] = gojsonschema.NewBytesLoader(sch)
 	}
 
 	return &JSONValidator{

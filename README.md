@@ -399,6 +399,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.9.2 (2025-12-09)
+
+Fixed config parsing.
+
 ### 0.9.1 (2025-12-09)
 
 Fixed tests.

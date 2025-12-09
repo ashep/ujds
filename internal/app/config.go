@@ -15,8 +15,8 @@ type Database struct {
 }
 
 type Validation struct {
-	Index       string            // to load from env var
-	IndexStruct map[string]string `json:"index" yaml:"index" env:"ignore"`
+	Index       string                     // to load from env var
+	IndexStruct map[string]json.RawMessage `json:"index" yaml:"index" env:"ignore"`
 }
 
 type Config struct {
@@ -33,10 +33,10 @@ func (c *Config) Validate() error {
 	}
 
 	if c.Validation.IndexStruct == nil {
-		c.Validation.IndexStruct = make(map[string]string)
+		c.Validation.IndexStruct = make(map[string]json.RawMessage)
 	}
 
-	c.Validation.IndexStruct[".*"] = `{}` // validate all for valid JSON
-
+	c.Validation.IndexStruct[".*"] = json.RawMessage(`{}`) // validate all for valid JSON
+	
 	return nil
 }
