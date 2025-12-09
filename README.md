@@ -7,7 +7,7 @@ The **Universal JSON Data Storage** stores arbitrary JSON data and keeps changes
 
 ## Configuration
 
-The service can be configured in three ways: via YAML file, via env variables or using both. Env variables take 
+The service can be configured in three ways: via YAML file, via env variables or using both. Env variables take
 precedence over config file.
 
 If the `config.yaml` file is found in the current directory, it will be loaded before env variables. It is possible to
