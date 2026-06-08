@@ -423,6 +423,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.10ю1 (2026-06-08)
+
+`IndexService.GetSchema()` RPC response improved.
+
 ### 0.10 (2026-06-08)
 
 `IndexService.GetSchema()` RPC added.
