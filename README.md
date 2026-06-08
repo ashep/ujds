@@ -190,10 +190,12 @@ exactly the ones a record pushed to that index would be validated against.
 - Request fields:
     - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
 - Response fields:
-    - **[]object** `schemas`: matching schemas, sorted by pattern. The catch-all `.*` schema (which requires record data
-      to be valid JSON) is always present.
+    - **[]object** `schemas`: matching schemas, sorted by pattern. May be empty if no schema is configured for the
+      index. The implicit catch-all (which only requires record data to be valid JSON) is not included.
         - **string** `pattern`: index name regexp pattern the schema is bound to.
-        - **string** `schema`: the JSON schema, encoded as a string (a valid JSON Schema document).
+        - **string** `schema`: the JSON schema, encoded as a string. A `$schema` dialect declaration is added if the
+          configured schema does not already have one. The service validates against draft-07
+          (`http://json-schema.org/draft-07/schema#`), so that is the dialect stamped onto schemas missing one.
 
 Request example:
 

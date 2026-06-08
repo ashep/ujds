@@ -73,7 +73,7 @@ func TestIndex_GetSchema(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("NoConfiguredSchemasReturnsCatchAll", func(t *testing.T) {
+	main.Run("NoConfiguredSchemasReturnsEmpty", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)
 
@@ -83,11 +83,11 @@ func TestIndex_GetSchema(main *testing.T) {
 		}))
 
 		require.NoError(t, err)
-		assert.Equal(t, map[string]string{".*": "{}"}, pairs(res.Msg.Schemas))
+		assert.Empty(t, res.Msg.Schemas)
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("MatchingNameReturnsCatchAllAndMatch", func(t *testing.T) {
+	main.Run("MatchingNameReturnsMatchWithoutCatchAll", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex(
 			"books.*", json.RawMessage(`{"type":"object","required":["title"]}`)))
@@ -98,15 +98,14 @@ func TestIndex_GetSchema(main *testing.T) {
 		}))
 
 		require.NoError(t, err)
-		assert.Equal(t, []string{".*", "books.*"}, patterns(res.Msg.Schemas))
+		assert.Equal(t, []string{"books.*"}, patterns(res.Msg.Schemas))
 		assert.Equal(t, map[string]string{
-			".*":      "{}",
-			"books.*": `{"type":"object","required":["title"]}`,
+			"books.*": `{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["title"]}`,
 		}, pairs(res.Msg.Schemas))
 		ta.AssertNoWarnsAndErrors()
 	})
 
-	main.Run("NonMatchingNameReturnsCatchAllOnly", func(t *testing.T) {
+	main.Run("NonMatchingNameReturnsEmpty", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex(
 			"books.*", json.RawMessage(`{"type":"object"}`)))
@@ -117,7 +116,7 @@ func TestIndex_GetSchema(main *testing.T) {
 		}))
 
 		require.NoError(t, err)
-		assert.Equal(t, map[string]string{".*": "{}"}, pairs(res.Msg.Schemas))
+		assert.Empty(t, res.Msg.Schemas)
 		ta.AssertNoWarnsAndErrors()
 	})
 }

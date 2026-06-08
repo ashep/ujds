@@ -35,7 +35,7 @@ func TestIndexHandler_GetSchema(tt *testing.T) {
 		assert.Empty(t, lb.String())
 	})
 
-	tt.Run("Ok", func(t *testing.T) {
+	tt.Run("ExcludesCatchAllAndInjectsDraft07Dialect", func(t *testing.T) {
 		now := func() time.Time { return time.Unix(123456789, 0) }
 		lb := &strings.Builder{}
 		l := zerolog.New(lb)
@@ -55,14 +55,63 @@ func TestIndexHandler_GetSchema(tt *testing.T) {
 		res, err := h.GetSchema(context.Background(), connect.NewRequest(&proto.GetSchemaRequest{Name: "books"}))
 
 		require.NoError(t, err)
-		require.Len(t, res.Msg.Schemas, 2)
+		require.Len(t, res.Msg.Schemas, 1)
 
-		assert.Equal(t, ".*", res.Msg.Schemas[0].Pattern)
-		assert.Equal(t, `{}`, res.Msg.Schemas[0].Schema)
+		assert.Equal(t, "books.*", res.Msg.Schemas[0].Pattern)
+		assert.Equal(t,
+			`{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["title"]}`,
+			res.Msg.Schemas[0].Schema)
 
-		assert.Equal(t, "books.*", res.Msg.Schemas[1].Pattern)
-		assert.Equal(t, `{"type":"object","required":["title"]}`, res.Msg.Schemas[1].Schema)
+		assert.Empty(t, lb.String())
+	})
 
+	tt.Run("OnlyCatchAllReturnsEmpty", func(t *testing.T) {
+		now := func() time.Time { return time.Unix(123456789, 0) }
+		lb := &strings.Builder{}
+		l := zerolog.New(lb)
+
+		nm := &nameValidatorMock{}
+		defer nm.AssertExpectations(t)
+		nm.On("Validate", "movies").Return(nil)
+
+		sm := &schemaMock{}
+		defer sm.AssertExpectations(t)
+		sm.On("SchemasFor", "movies").Return([]validation.Schema{
+			{Pattern: ".*", Schema: json.RawMessage(`{}`)},
+		})
+
+		h := indexhandler.New(nil, sm, nm, now, l)
+		res, err := h.GetSchema(context.Background(), connect.NewRequest(&proto.GetSchemaRequest{Name: "movies"}))
+
+		require.NoError(t, err)
+		assert.Empty(t, res.Msg.Schemas)
+		assert.Empty(t, lb.String())
+	})
+
+	tt.Run("PreservesExistingDialect", func(t *testing.T) {
+		now := func() time.Time { return time.Unix(123456789, 0) }
+		lb := &strings.Builder{}
+		l := zerolog.New(lb)
+
+		nm := &nameValidatorMock{}
+		defer nm.AssertExpectations(t)
+		nm.On("Validate", "books").Return(nil)
+
+		sm := &schemaMock{}
+		defer sm.AssertExpectations(t)
+		sm.On("SchemasFor", "books").Return([]validation.Schema{
+			{Pattern: "books.*", Schema: json.RawMessage(
+				`{"$schema":"http://json-schema.org/draft/2020-12/schema","type":"object"}`)},
+		})
+
+		h := indexhandler.New(nil, sm, nm, now, l)
+		res, err := h.GetSchema(context.Background(), connect.NewRequest(&proto.GetSchemaRequest{Name: "books"}))
+
+		require.NoError(t, err)
+		require.Len(t, res.Msg.Schemas, 1)
+		assert.Equal(t,
+			`{"$schema":"http://json-schema.org/draft/2020-12/schema","type":"object"}`,
+			res.Msg.Schemas[0].Schema)
 		assert.Empty(t, lb.String())
 	})
 
