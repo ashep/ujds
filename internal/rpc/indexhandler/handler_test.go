@@ -4,11 +4,30 @@ import (
 	"context"
 
 	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/validation"
 	"github.com/stretchr/testify/mock"
 )
 
 type repoMock struct {
 	mock.Mock
+}
+
+type schemaMock struct {
+	mock.Mock
+}
+
+func (m *schemaMock) SchemasFor(name string) []validation.Schema {
+	args := m.Called(name)
+	return args.Get(0).([]validation.Schema)
+}
+
+type nameValidatorMock struct {
+	mock.Mock
+}
+
+func (m *nameValidatorMock) Validate(name string) error {
+	args := m.Called(name)
+	return args.Error(0)
 }
 
 func (m *repoMock) Upsert(ctx context.Context, name, title string) error {

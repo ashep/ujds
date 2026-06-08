@@ -1,6 +1,6 @@
 services:
   tests:
-    image: golang:1.25.1-alpine3.22
+    image: golang:1.26-alpine3.22
     volumes:
       - type: bind
         source: ./

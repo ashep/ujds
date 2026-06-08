@@ -34,7 +34,7 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 		cfg.Server.Addr = ":9000"
 	}
 
-	migRes, err := dbmigrator.RunPostgres(cfg.DB.DSN, sql.FS, "migrations", l)
+	migRes, err := dbmigrator.RunPostgres(cfg.DB.DSN, l, dbmigrator.Source{FS: sql.FS, Path: "migrations"})
 	if err != nil {
 		return fmt.Errorf("migrate db: %w", err)
 	}
@@ -67,7 +67,7 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	icps := connect.WithInterceptors(auth(rt.Cfg.Server.AuthToken))
 
 	indexPath, indexHandler := indexconnect.NewIndexServiceHandler(
-		indexhandler.New(ir, time.Now, rt.Log),
+		indexhandler.New(ir, recDataValidator, idxNameValidator, time.Now, rt.Log),
 		icps,
 	)
 	srv.Handle(indexPath, cors(indexHandler))

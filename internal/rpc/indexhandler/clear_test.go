@@ -29,7 +29,7 @@ func TestIndexHandler_Clear(tt *testing.T) {
 		rm.On("Clear", mock.Anything, mock.Anything).
 			Return(apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))
@@ -48,7 +48,7 @@ func TestIndexHandler_Clear(tt *testing.T) {
 		rm.On("Clear", mock.Anything, mock.Anything).
 			Return(errors.New("theRepoError"))
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))
@@ -67,7 +67,7 @@ func TestIndexHandler_Clear(tt *testing.T) {
 		rm.On("Clear", mock.Anything, mock.Anything).
 			Return(nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Clear(context.Background(), connect.NewRequest(&proto.ClearRequest{
 			Name: "theIndexName",
 		}))

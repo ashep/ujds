@@ -47,9 +47,23 @@ message ClearRequest {
 message ClearResponse {
 }
 
+message GetSchemaRequest {
+  string name = 1; // required; index name to return matching schemas for
+}
+
+message GetSchemaResponse {
+  message Schema {
+    string pattern = 1; // index name regexp pattern the schema is bound to
+    string schema = 2;  // JSON schema, encoded as a string (a valid JSON Schema document)
+  }
+
+  repeated Schema schemas = 1;
+}
+
 service IndexService {
   rpc Push(PushRequest) returns (PushResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc List(ListRequest) returns(ListResponse) {}
   rpc Clear(ClearRequest) returns (ClearResponse) {}
+  rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse) {}
 }

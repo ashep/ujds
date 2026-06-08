@@ -31,7 +31,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm.On("Get", mock.Anything, mock.Anything).
 			Return(indexrepo.Index{}, apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
@@ -50,7 +50,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm.On("Get", mock.Anything, mock.Anything).
 			Return(indexrepo.Index{}, apperrors.NotFoundError{Subj: "theSubj"})
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
@@ -69,7 +69,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 		rm.On("Get", mock.Anything, mock.Anything).
 			Return(indexrepo.Index{}, errors.New("theRepoError"))
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
@@ -94,7 +94,7 @@ func TestIndexHandler_Get(tt *testing.T) {
 				UpdatedAt: time.Unix(234, 0),
 			}, nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))

@@ -181,6 +181,32 @@ curl --request POST \
   --data '{}'
 ```
 
+### IndexService/GetSchema
+
+Returns the record validation schemas that apply to the given index. Schemas are bound to index name regexp patterns
+(see `validation.index` configuration) and are applied to record data on `RecordService/Push`. The returned schemas are
+exactly the ones a record pushed to that index would be validated against.
+
+- Request fields:
+    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
+- Response fields:
+    - **[]object** `schemas`: matching schemas, sorted by pattern. The catch-all `.*` schema (which requires record data
+      to be valid JSON) is always present.
+        - **string** `pattern`: index name regexp pattern the schema is bound to.
+        - **string** `schema`: the JSON schema, encoded as a string (a valid JSON Schema document).
+
+Request example:
+
+```shell
+curl --request POST \
+  --url https://localhost:9000/ujds.index.v1.IndexService/GetSchema \
+  --header 'Authorization: Bearer YourAuthToken' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"name": "books"
+}'
+```
+
 ### RecordService/Push
 
 Creates records in the index or updates existing ones.
@@ -394,6 +420,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 ```
 
 ## Changelog
+
+### 0.10 (2026-06-08)
+
+`IndexService.GetSchema()` RPC added.
 
 ### 0.9.2 (2025-12-09)
 

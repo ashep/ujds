@@ -41,6 +41,8 @@ const (
 	IndexServiceListProcedure = "/ujds.index.v1.IndexService/List"
 	// IndexServiceClearProcedure is the fully-qualified name of the IndexService's Clear RPC.
 	IndexServiceClearProcedure = "/ujds.index.v1.IndexService/Clear"
+	// IndexServiceGetSchemaProcedure is the fully-qualified name of the IndexService's GetSchema RPC.
+	IndexServiceGetSchemaProcedure = "/ujds.index.v1.IndexService/GetSchema"
 )
 
 // IndexServiceClient is a client for the ujds.index.v1.IndexService service.
@@ -49,6 +51,7 @@ type IndexServiceClient interface {
 	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
 	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	Clear(context.Context, *connect.Request[v1.ClearRequest]) (*connect.Response[v1.ClearResponse], error)
+	GetSchema(context.Context, *connect.Request[v1.GetSchemaRequest]) (*connect.Response[v1.GetSchemaResponse], error)
 }
 
 // NewIndexServiceClient constructs a client for the ujds.index.v1.IndexService service. By default,
@@ -86,15 +89,22 @@ func NewIndexServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(indexServiceMethods.ByName("Clear")),
 			connect.WithClientOptions(opts...),
 		),
+		getSchema: connect.NewClient[v1.GetSchemaRequest, v1.GetSchemaResponse](
+			httpClient,
+			baseURL+IndexServiceGetSchemaProcedure,
+			connect.WithSchema(indexServiceMethods.ByName("GetSchema")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // indexServiceClient implements IndexServiceClient.
 type indexServiceClient struct {
-	push  *connect.Client[v1.PushRequest, v1.PushResponse]
-	get   *connect.Client[v1.GetRequest, v1.GetResponse]
-	list  *connect.Client[v1.ListRequest, v1.ListResponse]
-	clear *connect.Client[v1.ClearRequest, v1.ClearResponse]
+	push      *connect.Client[v1.PushRequest, v1.PushResponse]
+	get       *connect.Client[v1.GetRequest, v1.GetResponse]
+	list      *connect.Client[v1.ListRequest, v1.ListResponse]
+	clear     *connect.Client[v1.ClearRequest, v1.ClearResponse]
+	getSchema *connect.Client[v1.GetSchemaRequest, v1.GetSchemaResponse]
 }
 
 // Push calls ujds.index.v1.IndexService.Push.
@@ -117,12 +127,18 @@ func (c *indexServiceClient) Clear(ctx context.Context, req *connect.Request[v1.
 	return c.clear.CallUnary(ctx, req)
 }
 
+// GetSchema calls ujds.index.v1.IndexService.GetSchema.
+func (c *indexServiceClient) GetSchema(ctx context.Context, req *connect.Request[v1.GetSchemaRequest]) (*connect.Response[v1.GetSchemaResponse], error) {
+	return c.getSchema.CallUnary(ctx, req)
+}
+
 // IndexServiceHandler is an implementation of the ujds.index.v1.IndexService service.
 type IndexServiceHandler interface {
 	Push(context.Context, *connect.Request[v1.PushRequest]) (*connect.Response[v1.PushResponse], error)
 	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
 	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.Response[v1.ListResponse], error)
 	Clear(context.Context, *connect.Request[v1.ClearRequest]) (*connect.Response[v1.ClearResponse], error)
+	GetSchema(context.Context, *connect.Request[v1.GetSchemaRequest]) (*connect.Response[v1.GetSchemaResponse], error)
 }
 
 // NewIndexServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -156,6 +172,12 @@ func NewIndexServiceHandler(svc IndexServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(indexServiceMethods.ByName("Clear")),
 		connect.WithHandlerOptions(opts...),
 	)
+	indexServiceGetSchemaHandler := connect.NewUnaryHandler(
+		IndexServiceGetSchemaProcedure,
+		svc.GetSchema,
+		connect.WithSchema(indexServiceMethods.ByName("GetSchema")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/ujds.index.v1.IndexService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case IndexServicePushProcedure:
@@ -166,6 +188,8 @@ func NewIndexServiceHandler(svc IndexServiceHandler, opts ...connect.HandlerOpti
 			indexServiceListHandler.ServeHTTP(w, r)
 		case IndexServiceClearProcedure:
 			indexServiceClearHandler.ServeHTTP(w, r)
+		case IndexServiceGetSchemaProcedure:
+			indexServiceGetSchemaHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -189,4 +213,8 @@ func (UnimplementedIndexServiceHandler) List(context.Context, *connect.Request[v
 
 func (UnimplementedIndexServiceHandler) Clear(context.Context, *connect.Request[v1.ClearRequest]) (*connect.Response[v1.ClearResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.Clear is not implemented"))
+}
+
+func (UnimplementedIndexServiceHandler) GetSchema(context.Context, *connect.Request[v1.GetSchemaRequest]) (*connect.Response[v1.GetSchemaResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ujds.index.v1.IndexService.GetSchema is not implemented"))
 }

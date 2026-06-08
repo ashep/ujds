@@ -7,6 +7,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/ashep/ujds/internal/indexrepo"
+	"github.com/ashep/ujds/internal/validation"
 	"github.com/rs/zerolog"
 )
 
@@ -17,14 +18,24 @@ type indexRepo interface {
 	Clear(ctx context.Context, name string) error
 }
 
-type Handler struct {
-	repo indexRepo
-	now  func() time.Time
-	l    zerolog.Logger
+type schemaProvider interface {
+	SchemasFor(name string) []validation.Schema
 }
 
-func New(repo indexRepo, now func() time.Time, l zerolog.Logger) *Handler {
-	return &Handler{repo: repo, now: now, l: l}
+type nameValidator interface {
+	Validate(name string) error
+}
+
+type Handler struct {
+	repo      indexRepo
+	schemas   schemaProvider
+	nameValid nameValidator
+	now       func() time.Time
+	l         zerolog.Logger
+}
+
+func New(repo indexRepo, schemas schemaProvider, nameValid nameValidator, now func() time.Time, l zerolog.Logger) *Handler {
+	return &Handler{repo: repo, schemas: schemas, nameValid: nameValid, now: now, l: l}
 }
 
 func (h *Handler) newInternalError(req connect.AnyRequest, err error, msg string) error {

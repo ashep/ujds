@@ -28,7 +28,7 @@ func TestIndexHandler_Push(tt *testing.T) {
 		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(apperrors.InvalidArgError{Subj: "theSubj", Reason: "theReason"})
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name: "theIndexName",
 		}))
@@ -47,7 +47,7 @@ func TestIndexHandler_Push(tt *testing.T) {
 		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(errors.New("theRepoError"))
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name: "theIndexName",
 		}))
@@ -66,7 +66,7 @@ func TestIndexHandler_Push(tt *testing.T) {
 		rm.On("Upsert", mock.Anything, mock.Anything, mock.Anything).
 			Return(apperrors.NotFoundError{Subj: "theNotFoundSubj"})
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name: "theIndexName",
 		}))
@@ -85,7 +85,7 @@ func TestIndexHandler_Push(tt *testing.T) {
 		rm.On("Upsert", mock.Anything, "theIndexName", "").
 			Return(nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:  "theIndexName",
 			Title: "",
@@ -105,7 +105,7 @@ func TestIndexHandler_Push(tt *testing.T) {
 		rm.On("Upsert", mock.Anything, "theIndexName", "theIndexTitle").
 			Return(nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.Push(context.Background(), connect.NewRequest(&proto.PushRequest{
 			Name:  "theIndexName",
 			Title: "theIndexTitle",

@@ -30,7 +30,7 @@ func TestIndexHandler_List(tt *testing.T) {
 		rm.On("List", mock.Anything).
 			Return([]indexrepo.Index(nil), errors.New("theRepoListError"))
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		_, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{}))
 
 		assert.EqualError(t, err, "internal: err_code: 123456789")
@@ -62,7 +62,7 @@ func TestIndexHandler_List(tt *testing.T) {
 				},
 			}, nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		res, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{}))
 
 		require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestIndexHandler_List(tt *testing.T) {
 				},
 			}, nil)
 
-		h := indexhandler.New(rm, now, l)
+		h := indexhandler.New(rm, nil, nil, now, l)
 		res, err := h.List(context.Background(), connect.NewRequest(&proto.ListRequest{
 			Filter: &proto.ListRequestFilter{
 				Names: []string{"theIndex2*"},
