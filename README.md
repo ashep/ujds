@@ -99,6 +99,13 @@ Returns an index metadata.
     - **string** `title`: index title.
     - **int** `createdAt`: creation UNIX timestamp.
     - **int** `updatedAt`: update UNIX timestamp.
+    - **[]string** `schemas`: the record validation schemas that apply to the index. Schemas are bound to index name
+      regexp patterns (see `validation.index` configuration) and are applied to record data on `RecordService/Push`;
+      these are exactly the ones a record pushed to that index would be validated against. May be empty if no schema is
+      configured for the index. The implicit catch-all (which only requires record data to be valid JSON) is not
+      included. Each item is a JSON schema encoded as a string. A `$schema` dialect declaration is added if the
+      configured schema does not already have one; the service validates against draft-07
+      (`http://json-schema.org/draft-07/schema#`), so that is the dialect stamped onto schemas missing one.
 
 Request example:
 
@@ -117,7 +124,10 @@ Response example:
   "name": "books",
   "title": "The books",
   "createdAt": "1693768684",
-  "updatedAt": "1693769057"
+  "updatedAt": "1693769057",
+  "schemas": [
+    "{\"$schema\":\"http://json-schema.org/draft-07/schema#\",\"type\":\"object\",\"required\":[\"title\"]}"
+  ]
 }
 ```
 
@@ -179,34 +189,6 @@ curl --request POST \
   --header 'Authorization: Bearer YourAuthToken' \
   --header 'Content-Type: application/json' \
   --data '{}'
-```
-
-### IndexService/GetSchema
-
-Returns the record validation schemas that apply to the given index. Schemas are bound to index name regexp patterns
-(see `validation.index` configuration) and are applied to record data on `RecordService/Push`. The returned schemas are
-exactly the ones a record pushed to that index would be validated against.
-
-- Request fields:
-    - *required* **string** `name`: index name. The allowed format: `^[a-zA-Z0-9.-]{1,255}$`.
-- Response fields:
-    - **[]object** `schemas`: matching schemas, sorted by pattern. May be empty if no schema is configured for the
-      index. The implicit catch-all (which only requires record data to be valid JSON) is not included.
-        - **string** `pattern`: index name regexp pattern the schema is bound to.
-        - **string** `schema`: the JSON schema, encoded as a string. A `$schema` dialect declaration is added if the
-          configured schema does not already have one. The service validates against draft-07
-          (`http://json-schema.org/draft-07/schema#`), so that is the dialect stamped onto schemas missing one.
-
-Request example:
-
-```shell
-curl --request POST \
-  --url https://localhost:9000/ujds.index.v1.IndexService/GetSchema \
-  --header 'Authorization: Bearer YourAuthToken' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"name": "books"
-}'
 ```
 
 ### RecordService/Push
@@ -423,7 +405,11 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
-### 0.10ю1 (2026-06-08)
+### 0.11 (2026-06-11)
+
+`IndexService.GetSchema()` RPC removed; `IndexService.Get()` now returns the matching schemas in a `schemas` array.
+
+### 0.10.1 (2026-06-08)
 
 `IndexService.GetSchema()` RPC response improved.
 

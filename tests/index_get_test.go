@@ -4,6 +4,7 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -84,6 +85,29 @@ func TestIndex_Get(main *testing.T) {
 		assert.Equal(t, "theIndexTitle", res.Msg.Title)
 		assert.NotZero(t, res.Msg.CreatedAt)
 		assert.NotZero(t, res.Msg.UpdatedAt)
+		assert.Empty(t, res.Msg.Schemas)
+
+		ta.AssertNoWarnsAndErrors()
+	})
+
+	main.Run("OkWithSchemas", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionValidationIndex(
+			"theIndex.*", json.RawMessage(`{"type":"object","required":["title"]}`)))
+
+		ta.DB().InsertIndex("theIndexName", "theIndexTitle")
+
+		cli := ta.Client("")
+
+		res, err := cli.I.Get(context.Background(), connect.NewRequest(&indexproto.GetRequest{
+			Name: "theIndexName",
+		}))
+
+		require.NoError(t, err)
+		assert.Equal(t, "theIndexName", res.Msg.Name)
+		assert.Equal(t, []string{
+			`{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["title"]}`,
+		}, res.Msg.Schemas)
 
 		ta.AssertNoWarnsAndErrors()
 	})

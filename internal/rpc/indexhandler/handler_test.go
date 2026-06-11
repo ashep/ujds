@@ -21,15 +21,6 @@ func (m *schemaMock) SchemasFor(name string) []validation.Schema {
 	return args.Get(0).([]validation.Schema)
 }
 
-type nameValidatorMock struct {
-	mock.Mock
-}
-
-func (m *nameValidatorMock) Validate(name string) error {
-	args := m.Called(name)
-	return args.Error(0)
-}
-
 func (m *repoMock) Upsert(ctx context.Context, name, title string) error {
 	args := m.Called(ctx, name, title)
 	return args.Error(0)

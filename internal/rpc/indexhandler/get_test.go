@@ -3,6 +3,7 @@ package indexhandler_test
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/ashep/go-apperrors"
 	"github.com/ashep/ujds/internal/indexrepo"
 	"github.com/ashep/ujds/internal/rpc/indexhandler"
+	"github.com/ashep/ujds/internal/validation"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -94,7 +96,14 @@ func TestIndexHandler_Get(tt *testing.T) {
 				UpdatedAt: time.Unix(234, 0),
 			}, nil)
 
-		h := indexhandler.New(rm, nil, nil, now, l)
+		sm := &schemaMock{}
+		defer sm.AssertExpectations(t)
+		sm.On("SchemasFor", "theIndexName").Return([]validation.Schema{
+			{Pattern: ".*", Schema: json.RawMessage(`{}`)},
+			{Pattern: "theIndex.*", Schema: json.RawMessage(`{"type":"object","required":["title"]}`)},
+		})
+
+		h := indexhandler.New(rm, sm, nil, now, l)
 		res, err := h.Get(context.Background(), connect.NewRequest(&proto.GetRequest{
 			Name: "theIndexName",
 		}))
@@ -106,5 +115,8 @@ func TestIndexHandler_Get(tt *testing.T) {
 		assert.Equal(t, "theIndexTitle", res.Msg.Title)
 		assert.Equal(t, uint64(time.Unix(123, 0).Unix()), res.Msg.CreatedAt)
 		assert.Equal(t, uint64(time.Unix(234, 0).Unix()), res.Msg.UpdatedAt)
+		assert.Equal(t, []string{
+			`{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","required":["title"]}`,
+		}, res.Msg.Schemas)
 	})
 }
