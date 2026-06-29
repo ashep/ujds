@@ -19,13 +19,15 @@ change default config file location using `APP_CONFIG_PATH` env variable.
     - *required* **string** `dsn`: database source name.
 - *optional* **object** `server`: server configuration.
     - *optional* **string** `address`: network address, default is `:9000`.
-    - *optional* **string** `auth_token`: authorization token.
+    - *optional* **string** `auth_token`: authorization token (full access).
+    - *optional* **string** `auth_token_ro`: read-only authorization token; grants access to read-only methods only (`IndexService/Get`, `IndexService/List`, `RecordService/Get`, `RecordService/Find`, `RecordService/History`).
 
 ### Env variables
 
 - *required* **string** `UJDS_DB_DSN`: database source name.
 - *optional* **string** `UJDS_SERVER_ADDRESS`: server network address.
-- *optional* **string** `UJDS_SERVER_AUTHTOKEN`: server authorization token.
+- *optional* **string** `UJDS_SERVER_AUTHTOKEN`: server authorization token (full access).
+- *optional* **string** `UJDS_SERVER_AUTHTOKENRO`: read-only server authorization token.
 
 ## HTTP API
 
@@ -40,7 +42,10 @@ Please note that **numerical data in responses are encoded as strings**.
 ### Authorization
 
 If the `server.auth_token` configuration parameter is specified, the server will expect an `Authorization: Bearer XXX`
-HTTP header, where `XXX` must match the configured token value, otherwise the `403` HTTP status will be returned.
+HTTP header where `XXX` matches the configured token, otherwise `401` is returned. If `server.auth_token_ro` is also
+configured, that token may be used instead for read-only methods (`IndexService/Get`, `IndexService/List`,
+`RecordService/Get`, `RecordService/Find`, `RecordService/History`). Using the read-only token on a write method
+returns `403`.
 
 ### Error handling
 
