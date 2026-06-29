@@ -6,8 +6,9 @@ import (
 )
 
 type Server struct {
-	Addr      string `json:"addr" yaml:"addr"`
-	AuthToken string `json:"auth_token" yaml:"auth_token"`
+	Addr        string `json:"addr" yaml:"addr"`
+	AuthToken   string `json:"auth_token" yaml:"auth_token"`
+	AuthTokenRO string `json:"auth_token_ro" yaml:"auth_token_ro"`
 }
 
 type Database struct {
