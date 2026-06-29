@@ -410,6 +410,10 @@ migrate create -ext .sql -dir internal/migration/migrations foobar
 
 ## Changelog
 
+### 0.12 (2026-06-29)
+
+`auth_token_ro` config option added. When set, allows read-only access to `IndexService/Get`, `IndexService/List`, `RecordService/Get`, `RecordService/Find`, and `RecordService/History` without granting write access.
+
 ### 0.11 (2026-06-11)
 
 `IndexService.GetSchema()` RPC removed; `IndexService.Get()` now returns the matching schemas in a `schemas` array.
