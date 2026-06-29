@@ -29,6 +29,17 @@ func TestIndex_Clear(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyTokenNotConfigured", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t)
+
+		cli := ta.Client("theROAuthToken")
+		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{}))
+
+		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("ReadOnlyAuthorizationDenied", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))

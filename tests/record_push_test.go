@@ -30,6 +30,17 @@ func TestRecord_Push(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyTokenNotConfigured", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t)
+
+		cli := ta.Client("theROAuthToken")
+		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
+
+		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("ReadOnlyAuthorizationDenied", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))

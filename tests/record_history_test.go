@@ -30,6 +30,17 @@ func TestRecord_History(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyTokenNotConfigured", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t)
+
+		cli := ta.Client("theROAuthToken")
+		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{}))
+
+		assert.EqualError(t, err, "unauthenticated: not authorized")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("ReadOnlyAuthorizationAllowed", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
