@@ -26,6 +26,30 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 )
 
+var readOnlyProcedures = map[string]bool{
+	indexconnect.IndexServiceGetProcedure:       true,
+	indexconnect.IndexServiceListProcedure:      true,
+	recordconnect.RecordServiceGetProcedure:     true,
+	recordconnect.RecordServiceFindProcedure:    true,
+	recordconnect.RecordServiceHistoryProcedure: true,
+}
+
+func checkAuth(token, tokenRO, presented, procedure string) error {
+	if token == "" {
+		return nil
+	}
+	if presented == token {
+		return nil
+	}
+	if tokenRO != "" && presented == tokenRO {
+		if readOnlyProcedures[procedure] {
+			return nil
+		}
+		return connect.NewError(connect.CodePermissionDenied, errors.New("permission denied"))
+	}
+	return connect.NewError(connect.CodeUnauthenticated, errors.New("not authorized"))
+}
+
 func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	l := rt.Log
 	cfg := rt.Cfg
@@ -64,7 +88,7 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	ir := indexrepo.New(db, idxNameValidator, rt.Log)
 	rr := recordrepo.New(db, idxNameValidator, recIDValidator, rt.Log)
 
-	icps := connect.WithInterceptors(auth(rt.Cfg.Server.AuthToken))
+	icps := connect.WithInterceptors(auth(rt.Cfg.Server.AuthToken, rt.Cfg.Server.AuthTokenRO))
 
 	indexPath, indexHandler := indexconnect.NewIndexServiceHandler(
 		indexhandler.New(ir, recDataValidator, idxNameValidator, time.Now, rt.Log),
@@ -89,18 +113,14 @@ func Run(rt *runner.Runtime[Config]) error { //nolint:cyclop // to do
 	return resErr
 }
 
-func auth(token string) connect.UnaryInterceptorFunc {
+func auth(token, tokenRO string) connect.UnaryInterceptorFunc {
 	return func(next connect.UnaryFunc) connect.UnaryFunc {
 		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
-			if token == "" {
-				return next(ctx, req)
+			presented := strings.ReplaceAll(req.Header().Get("Authorization"), "Bearer ", "")
+			if err := checkAuth(token, tokenRO, presented, req.Spec().Procedure); err != nil {
+				return nil, err
 			}
-
-			if token == strings.ReplaceAll(req.Header().Get("Authorization"), "Bearer ", "") {
-				return next(ctx, req)
-			}
-
-			return nil, connect.NewError(connect.CodeUnauthenticated, errors.New("not authorized"))
+			return next(ctx, req)
 		}
 	}
 }
