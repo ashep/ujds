@@ -29,6 +29,17 @@ func TestRecord_Get(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyAuthorizationAllowed", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
+
+		cli := ta.ROClient()
+		_, err := cli.R.Get(context.Background(), connect.NewRequest(&recordproto.GetRequest{}))
+
+		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("EmptyIndexName", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)

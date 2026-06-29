@@ -29,6 +29,17 @@ func TestIndex_Clear(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyAuthorizationDenied", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
+
+		cli := ta.ROClient()
+		_, err := cli.I.Clear(context.Background(), connect.NewRequest(&indexproto.ClearRequest{}))
+
+		assert.EqualError(t, err, "permission_denied: permission denied")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("EmptyIndexName", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)

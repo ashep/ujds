@@ -30,6 +30,17 @@ func TestRecord_Push(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyAuthorizationDenied", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
+
+		cli := ta.ROClient()
+		_, err := cli.R.Push(context.Background(), connect.NewRequest(&recordproto.PushRequest{}))
+
+		assert.EqualError(t, err, "permission_denied: permission denied")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("EmptyRecords", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)

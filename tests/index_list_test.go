@@ -28,6 +28,18 @@ func TestIndex_List(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyAuthorizationAllowed", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
+
+		cli := ta.ROClient()
+		res, err := cli.I.List(context.Background(), connect.NewRequest(&indexproto.ListRequest{}))
+
+		require.NoError(t, err)
+		assert.Empty(t, res.Msg.Indices)
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("Ok", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)

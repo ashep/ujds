@@ -30,6 +30,17 @@ func TestRecord_History(main *testing.T) {
 		ta.AssertNoWarnsAndErrors()
 	})
 
+	main.Run("ReadOnlyAuthorizationAllowed", func(t *testing.T) {
+		t.Parallel()
+		ta := testapp.New(t, testapp.WithConfigOptionAuthTokenRO("theROAuthToken"))
+
+		cli := ta.ROClient()
+		_, err := cli.R.History(context.Background(), connect.NewRequest(&recordproto.HistoryRequest{}))
+
+		assert.EqualError(t, err, "invalid_argument: invalid index name: must not be empty")
+		ta.AssertNoWarnsAndErrors()
+	})
+
 	main.Run("NoRecords", func(t *testing.T) {
 		t.Parallel()
 		ta := testapp.New(t)

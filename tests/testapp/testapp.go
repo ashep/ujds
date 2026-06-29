@@ -32,6 +32,12 @@ func WithConfigOptionValidationIndex(k string, v json.RawMessage) ConfigOption {
 	}
 }
 
+func WithConfigOptionAuthTokenRO(token string) ConfigOption {
+	return func(cfg *app.Config) {
+		cfg.Server.AuthTokenRO = token
+	}
+}
+
 func New(t *testing.T, opts ...ConfigOption) *TestApp {
 	t.Helper()
 
@@ -72,6 +78,10 @@ func (ta *TestApp) Client(authToken string) *client.Client {
 		authToken = ta.cfg.Server.AuthToken
 	}
 	return client.New("http://"+ta.cfg.Server.Addr, authToken, http.DefaultClient)
+}
+
+func (ta *TestApp) ROClient() *client.Client {
+	return client.New("http://"+ta.cfg.Server.Addr, ta.cfg.Server.AuthTokenRO, http.DefaultClient)
 }
 
 func (ta *TestApp) AssertNoWarnsAndErrors() {
